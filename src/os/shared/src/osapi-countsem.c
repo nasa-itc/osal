@@ -93,7 +93,7 @@ int32 OS_CountSemAPI_Init(void)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_CountSemCreate (osal_id_t *sem_id, const char *sem_name, uint32 sem_initial_value,
+int32 OS_CountSemCreate (uint32 *sem_id, const char *sem_name, uint32 sem_initial_value,
                         uint32 options)
 {
    OS_common_record_t *record;
@@ -139,7 +139,7 @@ int32 OS_CountSemCreate (osal_id_t *sem_id, const char *sem_name, uint32 sem_ini
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_CountSemDelete (osal_id_t sem_id)
+int32 OS_CountSemDelete (uint32 sem_id)
 {
    OS_common_record_t *record;
    uint32 local_id;
@@ -150,8 +150,14 @@ int32 OS_CountSemDelete (osal_id_t sem_id)
    {
       return_code = OS_CountSemDelete_Impl(local_id);
 
-      /* Complete the operation via the common routine */
-      return_code = OS_ObjectIdFinalizeDelete(return_code, record);
+      /* Free the entry in the master table now while still locked */
+      if (return_code == OS_SUCCESS)
+      {
+         /* Only need to clear the ID as zero is the "unused" flag */
+         record->active_id = 0;
+      }
+
+      OS_Unlock_Global(LOCAL_OBJID_TYPE);
    }
 
    return return_code;
@@ -168,7 +174,7 @@ int32 OS_CountSemDelete (osal_id_t sem_id)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_CountSemGive ( osal_id_t sem_id )
+int32 OS_CountSemGive ( uint32 sem_id )
 {
    OS_common_record_t *record;
    uint32 local_id;
@@ -194,7 +200,7 @@ int32 OS_CountSemGive ( osal_id_t sem_id )
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_CountSemTake ( osal_id_t sem_id )
+int32 OS_CountSemTake ( uint32 sem_id )
 {
    OS_common_record_t *record;
    uint32 local_id;
@@ -219,7 +225,7 @@ int32 OS_CountSemTake ( osal_id_t sem_id )
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_CountSemTimedWait ( osal_id_t sem_id, uint32 msecs )
+int32 OS_CountSemTimedWait ( uint32 sem_id, uint32 msecs )
 {
    OS_common_record_t *record;
    uint32 local_id;
@@ -244,7 +250,7 @@ int32 OS_CountSemTimedWait ( osal_id_t sem_id, uint32 msecs )
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_CountSemGetIdByName (osal_id_t *sem_id, const char *sem_name)
+int32 OS_CountSemGetIdByName (uint32 *sem_id, const char *sem_name)
 {
    int32 return_code;
 
@@ -267,7 +273,7 @@ int32 OS_CountSemGetIdByName (osal_id_t *sem_id, const char *sem_name)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_CountSemGetInfo (osal_id_t sem_id, OS_count_sem_prop_t *count_prop)
+int32 OS_CountSemGetInfo (uint32 sem_id, OS_count_sem_prop_t *count_prop)
 {
    OS_common_record_t *record;
    uint32 local_id;

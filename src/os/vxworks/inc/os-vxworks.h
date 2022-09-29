@@ -59,19 +59,6 @@ typedef struct
     SEM_ID vxid;
 } VxWorks_GlobalMutex_t;
 
-/*
- * Union to facilitate passing an osal_id_t through
- * a function/api designed to take an "int"
- *
- * This relies on sizeof(int) >= sizeof(osal_id_t)
- */
-typedef union
-{
-    osal_id_t id;
-    int arg;
-} VxWorks_ID_Buffer_t;
-
-
 /****************************************************************************************
                                    GLOBAL DATA
 ****************************************************************************************/

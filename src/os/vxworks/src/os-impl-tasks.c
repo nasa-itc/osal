@@ -33,7 +33,6 @@
 
 #include "os-shared-task.h"
 #include "os-shared-idmap.h"
-#include "os-shared-timebase.h"
 
 #include <errnoLib.h>
 #include <taskLib.h>
@@ -83,12 +82,7 @@ OS_impl_task_internal_record_t  OS_impl_task_table      [OS_MAX_TASKS];
 ---------------------------------------------------------------------------------------*/
 int OS_VxWorks_TaskEntry(int arg)
 {
-    VxWorks_ID_Buffer_t id;
-
-    id.arg = arg;
-
-    OS_TaskEntryPoint(id.id);
-
+    OS_TaskEntryPoint((uint32)arg);
     return 0;
 } /* end OS_VxWorksEntry */
 
@@ -130,7 +124,6 @@ int32 OS_TaskCreate_Impl (uint32 task_id, uint32 flags)
     long userstackbase;
     long actualstackbase;
     OS_impl_task_internal_record_t *lrec;
-    VxWorks_ID_Buffer_t id;
 
     lrec = &OS_impl_task_table[task_id];
 
@@ -243,7 +236,6 @@ int32 OS_TaskCreate_Impl (uint32 task_id, uint32 flags)
     actualstackbase  += actualsz;         /* move to last byte of stack block */
 #endif
 
-    id.id = OS_global_task_table[task_id].active_id;
     status = taskInit(
             &lrec->tcb,                 /* address of new task's TCB */
             (char*)OS_global_task_table[task_id].name_entry,
@@ -252,7 +244,7 @@ int32 OS_TaskCreate_Impl (uint32 task_id, uint32 flags)
             (char *)actualstackbase,    /* base of new task's stack */
             actualsz,                   /* size (bytes) of stack needed */
             (FUNCPTR)OS_VxWorks_TaskEntry,           /* entry point of new task */
-            id.arg,                     /* 1st arg is ID */
+            OS_global_task_table[task_id].active_id, /* 1st arg is ID */
             0,0,0,0,0,0,0,0,0);
 
     if (status != OK)
@@ -324,11 +316,7 @@ int32 OS_TaskDelay_Impl (uint32 milli_second)
     /* msecs rounded to the closest system tick count */
     int sys_ticks;
 
-    /* Convert to ticks if possible */
-    if (OS_Milli2Ticks(milli_second, &sys_ticks) != OS_SUCCESS)
-    {
-        return OS_ERROR;
-    }
+    sys_ticks = OS_Milli2Ticks(milli_second);
 
     /* if successful, the execution of task will pend here until delay finishes */
     if(taskDelay(sys_ticks) != OK)
@@ -392,7 +380,7 @@ int32 OS_TaskMatch_Impl(uint32 task_id)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_TaskRegister_Impl (osal_id_t global_task_id)
+int32 OS_TaskRegister_Impl (uint32 global_task_id)
 {
     return OS_SUCCESS;
 } /* end OS_TaskRegister_Impl */
@@ -406,13 +394,13 @@ int32 OS_TaskRegister_Impl (osal_id_t global_task_id)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-osal_id_t OS_TaskGetId_Impl (void)
+uint32 OS_TaskGetId_Impl (void)
 {
     OS_impl_task_internal_record_t *lrec;
     size_t index;
-    osal_id_t id;
+    uint32 id;
 
-    id = OS_OBJECT_ID_UNDEFINED;
+    id = 0;
     lrec = (OS_impl_task_internal_record_t *)taskTcb(taskIdSelf());
 
     if (lrec != NULL)
@@ -439,6 +427,23 @@ osal_id_t OS_TaskGetId_Impl (void)
  *-----------------------------------------------------------------*/
 int32 OS_TaskGetInfo_Impl (uint32 task_id, OS_task_prop_t *task_prop)
 {
+#ifndef OSAL_OMIT_DEPRECATED
+    union
+    {
+        TASK_ID vxid;
+        uint32 value;
+    } u;
+
+    /*
+     * The "OStask_id" is a broken concept and only included for backward compatibility.
+     * On 32 bit platforms this should produce a backward-compatible result.
+     * But on 64 bit platforms this value should never be used.....
+     * using a union defeats a (valid) warning on 64-bit.
+     */
+    u.vxid = OS_impl_task_table[task_id].vxid;
+    task_prop->OStask_id = u.value;
+#endif
+
     return OS_SUCCESS;
 
 } /* end OS_TaskGetInfo_Impl */

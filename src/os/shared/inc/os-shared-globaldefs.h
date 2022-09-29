@@ -60,7 +60,6 @@ typedef union
    OS_ArgCallback_t arg_callback_func;
    OS_TimerCallback_t timer_callback_func;
    osal_task_entry entry_func;
-   osal_id_t id;
    uint32 value;
 } OS_U32ValueWrapper_t;
 

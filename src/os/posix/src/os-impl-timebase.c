@@ -275,6 +275,7 @@ int32 OS_Posix_TimeBaseAPI_Impl_Init(void)
 
        /*
         * Pre-calculate the clock tick to microsecond conversion factor.
+        * This is used by OS_Tick2Micros(), OS_Milli2Ticks(), etc.
         */
        OS_SharedGlobalVars.TicksPerSecond = sysconf(_SC_CLK_TCK);
        if (OS_SharedGlobalVars.TicksPerSecond <= 0)
@@ -308,7 +309,7 @@ static void *OS_TimeBasePthreadEntry(void *arg)
     OS_U32ValueWrapper_t local_arg;
 
     local_arg.opaque_arg = arg;
-    OS_TimeBase_CallbackThread(local_arg.id);
+    OS_TimeBase_CallbackThread(local_arg.value);
     return NULL;
 }
 
@@ -346,7 +347,7 @@ int32 OS_TimeBaseCreate_Impl(uint32 timer_id)
      * the global table lock.
      */
     arg.opaque_arg = NULL;
-    arg.id = global->active_id;
+    arg.value = global->active_id;
     return_code = OS_Posix_InternalTaskCreate_Impl(&local->handler_thread, 0, 0, OS_TimeBasePthreadEntry, arg.opaque_arg);
     if (return_code != OS_SUCCESS)
     {
@@ -377,7 +378,7 @@ int32 OS_TimeBaseCreate_Impl(uint32 timer_id)
         for(i = 0; i < OS_MAX_TIMEBASES; ++i)
         {
             if (i != timer_id &&
-                    OS_ObjectIdDefined(OS_global_timebase_table[i].active_id) &&
+                    OS_global_timebase_table[i].active_id != 0 &&
                     OS_impl_timebase_table[i].assigned_signal != 0)
             {
                 sigaddset(&local->sigset, OS_impl_timebase_table[i].assigned_signal);
@@ -446,7 +447,7 @@ int32 OS_TimeBaseCreate_Impl(uint32 timer_id)
              *  and doing it this way should still work on a system where sizeof(sival_int) < sizeof(uint32)
              *  (as long as sizeof(sival_int) >= number of bits in OS_OBJECT_INDEX_MASK)
              */
-            evp.sigev_value.sival_int = (int)OS_ObjectIdToSerialNumber_Impl(global->active_id);
+            evp.sigev_value.sival_int = (int)(global->active_id & OS_OBJECT_INDEX_MASK);
 
             /*
             ** Create the timer

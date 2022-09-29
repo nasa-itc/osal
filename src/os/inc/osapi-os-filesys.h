@@ -49,6 +49,24 @@
 #define OS_CHK_ONLY         0  /**< Unused, API takes bool */
 #define OS_REPAIR           1  /**< Unused, API takes bool */
 
+#ifndef OSAL_OMIT_DEPRECATED
+
+/** @defgroup OSVolType OSAL Volume Type Defines
+ * @{
+ */
+#define FS_BASED            0  /**< @deprecated Volume type FS based */
+#define RAM_DISK            1  /**< @deprecated Volume type RAM disk */
+#define EEPROM_DISK         2  /**< @deprecated Volume type EEPROM disk */
+#define ATA_DISK            3  /**< @deprecated Volume type ATA disk */
+/**@}*/
+
+/**
+ * @brief Number of entries in the internal volume table
+ * @deprecated
+ */
+#define NUM_FILE_SYSTEMS    OS_MAX_FILE_SYSTEMS
+
+#endif
 /*
 ** Length of a Device and Volume name
 */
@@ -82,7 +100,56 @@
 #define OS_FS_ERR_DEVICE_NOT_FREE      (-107)  /**< @brief FS device not free */
 #define OS_FS_ERR_PATH_INVALID         (-108)  /**< @brief FS path invalid */
 
+#ifndef OSAL_OMIT_DEPRECATED
+/*
+ * Map some codes used by the file API back to the generic counterparts
+ * where there is overlap between them.  Do not duplicate error codes.
+ */
+#define OS_FS_SUCCESS                  OS_SUCCESS               /**< @deprecated Successful execution */
+#define OS_FS_ERROR                    OS_ERROR                 /**< @deprecated Failed execution */
+#define OS_FS_ERR_INVALID_POINTER      OS_INVALID_POINTER       /**< @deprecated Invalid pointer */
+#define OS_FS_ERR_NO_FREE_FDS          OS_ERR_NO_FREE_IDS       /**< @deprecated No free IDs */
+#define OS_FS_ERR_INVALID_FD           OS_ERR_INVALID_ID        /**< @deprecated Invalid ID */
+#define OS_FS_UNIMPLEMENTED            OS_ERR_NOT_IMPLEMENTED   /**< @deprecated Not implemented */
+#endif
 /**@}*/
+
+#ifndef OSAL_OMIT_DEPRECATED
+/* This typedef is for OS_FS_GetErrorName(), to ensure
+ * everyone is making an array of the same length
+ *
+ * Implementation note for developers:
+ *
+ * os_fs_err_name_t is now equivalent to the OSAL "os_err_name_t" typedef,
+ * to preserve source code compatibility with anything using the OS_FS_GetErrorName api
+ *
+ * The sizes of strings in OSAL functions are built with os_fs_err_name_t's
+ * limits in mind.  Always check the uses of os_fs_err_name_t when changing
+ * os_err_name_t.
+ */
+typedef os_err_name_t os_fs_err_name_t;
+
+/**
+ * @brief Internal structure of the OS volume table for
+ * mounted file systems and path translation
+ *
+ * @deprecated Use the OSAL file system API to register volumes
+ */
+typedef struct
+{
+    char   DeviceName [OS_FS_DEV_NAME_LEN];
+    char   PhysDevName [OS_FS_PHYS_NAME_LEN];
+    uint32 VolumeType;
+    uint8  VolatileFlag;
+    uint8  FreeFlag;
+    uint8  IsMounted;
+    char   VolumeName [OS_FS_VOL_NAME_LEN];
+    char   MountPoint [OS_MAX_PATH_LEN];
+    uint32 BlockSize;
+
+} OS_VolumeInfo_t;
+
+#endif
 
 
 /** @brief OSAL file system info */
@@ -98,7 +165,7 @@ typedef struct
 typedef struct
 {
     char Path[OS_MAX_PATH_LEN];
-    osal_id_t User;
+    uint32 User;
     uint8 IsValid;                /* For backward compatibility -- always true if OS_FDGetInfo returned true */
 }OS_file_prop_t;
 
@@ -154,21 +221,25 @@ typedef struct
    char FileName[OS_MAX_FILE_NAME];
 } os_dirent_t;
 
-/**
- * @brief Flags that can be used with opening of a file (bitmask)
+#ifndef OSAL_OMIT_DEPRECATED
+/*
+ * Preserve the old type names for compatibility;
+ * but instead of DIR* it is now just a void*
  */
-typedef enum
-{
-   OS_FILE_FLAG_NONE,
-   OS_FILE_FLAG_CREATE = 0x01,
-   OS_FILE_FLAG_TRUNCATE = 0x02,
-} OS_file_flag_t;
-
-
-
+/* Provide something to implement os_dirp_t */
+typedef void * os_dirp_t; /**< @deprecated */
+#endif
 
 /** @brief Access filename part of the dirent structure */
 #define OS_DIRENTRY_NAME(x)   ((x).FileName)
+
+#ifndef OSAL_OMIT_DEPRECATED
+/*
+ * Several old type names can be aliases for compatibility
+ */
+typedef int32              os_fshealth_t;  /**< @deprecated type no longer used */
+typedef OS_file_prop_t     OS_FDTableEntry; /**< @deprecated Use OS_file_prop_t */
+#endif
 
 /*
  * Exported Functions
@@ -177,8 +248,6 @@ typedef enum
 /** @defgroup OSAPIFile OSAL Standard File APIs
  * @{
  */
-
-#ifndef OSAL_OMIT_DEPRECATED
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -201,9 +270,6 @@ typedef enum
  * @retval #OS_FS_ERR_NAME_TOO_LONG if the name of the file is too long
  * @retval #OS_ERROR if permissions are unknown or OS call fails
  * @retval #OS_ERR_NO_FREE_IDS if there are no free file descriptors left
- *
- * @deprecated Replaced by OS_OpenCreate() with flags set to
- *             OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE.
  */
 int32           OS_creat  (const char *path, int32  access);
 
@@ -230,32 +296,9 @@ int32           OS_creat  (const char *path, int32  access);
  * @retval #OS_FS_ERR_NAME_TOO_LONG if the name of the file is too long
  * @retval #OS_ERROR if permissions are unknown or OS call fails
  * @retval #OS_ERR_NO_FREE_IDS if there are no free file descriptors left
- *
- * @deprecated Replaced by OS_OpenCreate() with flags set to
- *             OS_FILE_FLAG_NONE.
  */
 int32           OS_open   (const char *path,  int32 access,  uint32 mode);
 
-#endif
-
-/*-------------------------------------------------------------------------------------*/
-/**
- * @brief Open or create a file
- *
- * Implements the same as OS_open/OS_creat but follows the OSAL paradigm
- * of outputting the ID/descriptor separately from the return value, rather
- * than relying on the user to convert it back.
- *
- * @param[out] filedes  The handle ID
- * @param[in] path      File name to create or open
- * @param[in] flags     The file permissions - see @ref OS_file_flag_t
- * @param[in] access    Intended access mode - see @ref OSFileAccess
- *
- * @return Execution status, see @ref OSReturnCodes
- * @retval #OS_SUCCESS @copybrief OS_SUCCESS
- * @retval #OS_ERROR if the command was not executed properly
- */
-int32 OS_OpenCreate(osal_id_t *filedes, const char *path, int32 flags, int32 access);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -271,7 +314,7 @@ int32 OS_OpenCreate(osal_id_t *filedes, const char *path, int32 flags, int32 acc
  * @retval #OS_ERROR if file descriptor could not be closed
  * @retval #OS_ERR_INVALID_ID if the file descriptor passed in is invalid
  */
-int32           OS_close  (osal_id_t  filedes);
+int32           OS_close  (uint32  filedes);
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -292,7 +335,7 @@ int32           OS_close  (osal_id_t  filedes);
  * @retval #OS_ERROR if OS call failed
  * @retval #OS_ERR_INVALID_ID if the file descriptor passed in is invalid
  */
-int32           OS_read   (osal_id_t  filedes, void *buffer, uint32 nbytes);
+int32           OS_read   (uint32  filedes, void *buffer, uint32 nbytes);
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -314,7 +357,7 @@ int32           OS_read   (osal_id_t  filedes, void *buffer, uint32 nbytes);
  * @retval #OS_ERROR if OS call failed
  * @retval #OS_ERR_INVALID_ID if the file descriptor passed in is invalid
  */
-int32           OS_write  (osal_id_t  filedes, const void *buffer, uint32 nbytes);
+int32           OS_write  (uint32  filedes, const void *buffer, uint32 nbytes);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -345,7 +388,7 @@ int32           OS_write  (osal_id_t  filedes, const void *buffer, uint32 nbytes
  * @return Byte count on success, zero for timeout, or appropriate error code,
  *         see @ref OSReturnCodes
  */
-int32           OS_TimedRead(osal_id_t  filedes, void *buffer, uint32 nbytes, int32 timeout);
+int32           OS_TimedRead(uint32  filedes, void *buffer, uint32 nbytes, int32 timeout);
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -377,7 +420,7 @@ int32           OS_TimedRead(osal_id_t  filedes, void *buffer, uint32 nbytes, in
  * @return Byte count on success, zero for timeout, or appropriate error code,
  *         see @ref OSReturnCodes
  */
-int32           OS_TimedWrite(osal_id_t  filedes, const void *buffer, uint32 nbytes, int32 timeout);
+int32           OS_TimedWrite(uint32  filedes, const void *buffer, uint32 nbytes, int32 timeout);
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -429,7 +472,7 @@ int32           OS_stat   (const char *path, os_fstat_t  *filestats);
  * @retval #OS_ERR_INVALID_ID if the file descriptor passed in is invalid
  * @retval #OS_ERROR if OS call failed
  */
-int32           OS_lseek  (osal_id_t  filedes, int32 offset, uint32 whence);
+int32           OS_lseek  (uint32  filedes, int32 offset, uint32 whence);
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -547,7 +590,7 @@ int32 OS_mv (const char *src, const char *dest);
  * @retval #OS_SUCCESS @copybrief OS_SUCCESS
  * @retval #OS_ERR_INVALID_ID if the file descriptor passed in is invalid
  */
-int32 OS_FDGetInfo (osal_id_t filedes, OS_file_prop_t *fd_prop);
+int32 OS_FDGetInfo (uint32 filedes, OS_file_prop_t *fd_prop);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -599,6 +642,33 @@ int32 OS_CloseFileByName(const char *Filename);
  * @{
  */
 
+#ifndef OSAL_OMIT_DEPRECATED
+/**
+ * @brief Opens a directory for searching
+ * @deprecated Replaced by OS_DirectoryOpen()
+ */
+os_dirp_t       OS_opendir (const char *path);
+
+/*
+ * @brief Closes an open directory
+ * @deprecated Replaced by OS_DirectoryClose()
+ */
+int32           OS_closedir(os_dirp_t directory);
+
+/*
+ * @brief Rewinds an open directory
+ * @deprecated Replaced by OS_DirectoryRewind()
+ */
+void            OS_rewinddir(os_dirp_t directory);
+
+/*
+ * @brief Reads the next object in the directory
+ * @deprecated Replaced by OS_DirectoryRead()
+ */
+os_dirent_t *   OS_readdir (os_dirp_t directory);
+
+#endif
+
 /*-------------------------------------------------------------------------------------*/
 /**
  * @brief Opens a directory
@@ -610,7 +680,7 @@ int32 OS_CloseFileByName(const char *Filename);
  *
  * @return Execution status, see @ref OSReturnCodes
  */
-int32           OS_DirectoryOpen(osal_id_t *dir_id, const char *path);
+int32           OS_DirectoryOpen(uint32 *dir_id, const char *path);
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -623,7 +693,7 @@ int32           OS_DirectoryOpen(osal_id_t *dir_id, const char *path);
  *
  * @return Execution status, see @ref OSReturnCodes
  */
-int32           OS_DirectoryClose(osal_id_t dir_id);
+int32           OS_DirectoryClose(uint32 dir_id);
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -636,7 +706,7 @@ int32           OS_DirectoryClose(osal_id_t dir_id);
  *
  * @return Execution status, see @ref OSReturnCodes
  */
-int32           OS_DirectoryRewind(osal_id_t dir_id);
+int32           OS_DirectoryRewind(uint32 dir_id);
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -650,7 +720,7 @@ int32           OS_DirectoryRewind(osal_id_t dir_id);
  *
  * @return Execution status, see @ref OSReturnCodes
  */
-int32           OS_DirectoryRead(osal_id_t dir_id, os_dirent_t *dirent);
+int32           OS_DirectoryRead(uint32 dir_id, os_dirent_t *dirent);
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -712,7 +782,7 @@ int32           OS_rmdir   (const char *path);
  *
  * @return Execution status, see @ref OSReturnCodes
  */
-int32           OS_FileSysAddFixedMap(osal_id_t *filesys_id, const char *phys_path,
+int32           OS_FileSysAddFixedMap(uint32 *filesys_id, const char *phys_path,
                                 const char *virt_path);
 
 /*-------------------------------------------------------------------------------------*/
@@ -940,10 +1010,7 @@ int32       OS_GetFsInfo(os_fsinfo_t  *filesys_info);
  * @retval #OS_ERROR if the command was not executed properly
  * @retval #OS_ERR_INVALID_ID if the file descriptor passed in is invalid
  */
-int32 OS_ShellOutputToFile(const char* Cmd, osal_id_t filedes);
-
-
+int32 OS_ShellOutputToFile(const char* Cmd, uint32 filedes);
 /**@}*/
-
 
 #endif

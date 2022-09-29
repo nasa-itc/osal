@@ -40,7 +40,6 @@
 
 #include "os-shared-task.h"
 #include "os-shared-idmap.h"
-#include "os-shared-timebase.h"
 
 /****************************************************************************************
                                      DEFINES
@@ -63,7 +62,7 @@ OS_impl_task_internal_record_t    OS_impl_task_table          [OS_MAX_TASKS];
 ---------------------------------------------------------------------------------------*/
 static rtems_task OS_RtemsEntry(rtems_task_argument arg)
 {
-    OS_TaskEntryPoint(OS_ObjectIdFromInteger(arg));
+    OS_TaskEntryPoint((uint32)arg);
 } /* end OS_RtemsEntry */
 
 
@@ -107,7 +106,7 @@ int32 OS_TaskCreate_Impl (uint32 task_id, uint32 flags)
     ** It is convenient to use the OSAL task ID in here, as we know it is already unique
     ** and trying to use the real task name would be less than useful (only 4 chars)
     */
-    r_name = OS_ObjectIdToInteger(OS_global_task_table[task_id].active_id);
+    r_name = OS_global_task_table[task_id].active_id;
     r_mode = RTEMS_PREEMPT | RTEMS_NO_ASR | RTEMS_NO_TIMESLICE | RTEMS_INTERRUPT_LEVEL(0);
 
     /*
@@ -139,7 +138,7 @@ int32 OS_TaskCreate_Impl (uint32 task_id, uint32 flags)
     /* will place the task in 'ready for scheduling' state */
     status = rtems_task_start (OS_impl_task_table[task_id].id, /*rtems task id*/
 			     (rtems_task_entry) OS_RtemsEntry, /* task entry point */
-			     (rtems_task_argument) OS_ObjectIdToInteger(OS_global_task_table[task_id].active_id) );  /* passed argument  */
+			     (rtems_task_argument) OS_global_task_table[task_id].active_id );  /* passed argument  */
 
     if (status != RTEMS_SUCCESSFUL )
     {
@@ -200,28 +199,15 @@ void OS_TaskExit_Impl()
  *-----------------------------------------------------------------*/
 int32 OS_TaskDelay_Impl (uint32 milli_second)
 {
-    int     tick_count;
-    int32   return_code;
+    rtems_interval     ticks;
 
-    return_code = OS_Milli2Ticks(milli_second, &tick_count);
+    ticks = OS_Milli2Ticks(milli_second);
 
-    if (return_code != OS_SUCCESS)
-    {
-        /*
-         * always want to do some form of delay, because if
-         * this function becomes a no-op then this might create a
-         * tight loop that doesn't ever yield the CPU - effectively
-         * locking the system in an RTOS environment.
-         */
-        tick_count = 10;
-    }
-
+    rtems_task_wake_after(ticks);
     /*
     ** Always successful ( from RTEMS docs )
     */
-    rtems_task_wake_after((rtems_interval)tick_count);
-
-    return (return_code);
+    return (OS_SUCCESS);
 
 } /* end OS_TaskDelay_Impl */
 
@@ -283,7 +269,7 @@ int32 OS_TaskMatch_Impl(uint32 task_id)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_TaskRegister_Impl (osal_id_t global_task_id)
+int32 OS_TaskRegister_Impl (uint32 global_task_id)
 {
     /*
      * This is supposed to maintain the "reverse lookup" information used
@@ -314,9 +300,9 @@ int32 OS_TaskRegister_Impl (osal_id_t global_task_id)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-osal_id_t OS_TaskGetId_Impl (void)
+uint32 OS_TaskGetId_Impl (void)
 {
-    osal_id_t         global_task_id;
+    uint32            global_task_id;
     rtems_id          task_self;
     rtems_name        self_name;
     rtems_status_code status;
@@ -327,11 +313,11 @@ osal_id_t OS_TaskGetId_Impl (void)
     status = rtems_object_get_classic_name(task_self, &self_name);
     if (status == RTEMS_SUCCESSFUL)
     {
-        global_task_id = OS_ObjectIdFromInteger(self_name);
+        global_task_id = self_name;
     }
     else
     {
-        global_task_id = OS_OBJECT_ID_UNDEFINED;
+        global_task_id = 0;
     }
 
     return global_task_id;
@@ -349,6 +335,9 @@ osal_id_t OS_TaskGetId_Impl (void)
  *-----------------------------------------------------------------*/
 int32 OS_TaskGetInfo_Impl (uint32 task_id, OS_task_prop_t *task_prop)
 {
+#ifndef OSAL_OMIT_DEPRECATED
+    task_prop->OStask_id =  (uint32) OS_impl_task_table[task_id].id;
+#endif
     return OS_SUCCESS;
 
 } /* end OS_TaskGetInfo_Impl */

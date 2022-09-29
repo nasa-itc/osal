@@ -84,10 +84,10 @@ static OS_common_record_t OS_common_table[OS_MAX_TOTAL_RECORDS];
 typedef struct
 {
     /* Keep track of the last successfully-issued object ID of each type */
-    osal_id_t last_id_issued;
+    uint32 last_id_issued;
 
     /* The last task to lock/own this global table */
-    osal_id_t table_owner;
+    uint32 table_owner;
 } OS_objtype_state_t;
 
 OS_objtype_state_t OS_objtype_state[OS_OBJECT_TYPE_USER];
@@ -272,7 +272,7 @@ void OS_ObjectIdInitiateLock(OS_lock_mode_t lock_mode, uint32 idtype)
  *         all lock modes other than OS_LOCK_MODE_NONE.
  *
  *-----------------------------------------------------------------*/
-int32 OS_ObjectIdConvertLock(OS_lock_mode_t lock_mode, uint32 idtype, osal_id_t reference_id, OS_common_record_t *obj)
+int32 OS_ObjectIdConvertLock(OS_lock_mode_t lock_mode, uint32 idtype, uint32 reference_id, OS_common_record_t *obj)
 {
     int32 return_code = OS_ERROR;
     uint32 exclusive_bits = 0;
@@ -282,7 +282,7 @@ int32 OS_ObjectIdConvertLock(OS_lock_mode_t lock_mode, uint32 idtype, osal_id_t 
     {
         /* Validate the integrity of the ID.  As the "active_id" is a single
          * integer, we can do this check regardless of whether global is locked or not. */
-        if (!OS_ObjectIdEqual(obj->active_id, reference_id))
+        if (obj->active_id != reference_id)
         {
             /* The ID does not match, so unlock and return error.
              * This basically means the ID was stale or otherwise no longer invalid */
@@ -424,8 +424,7 @@ int32 OS_ObjectIdSearch(uint32 idtype, OS_ObjectMatchFunc_t MatchFunc, void *arg
         }
         --obj_count;
 
-        if ( OS_ObjectIdDefined(obj->active_id) &&
-                MatchFunc(arg, local_id, obj))
+        if (obj->active_id != 0 && MatchFunc(arg, local_id, obj))
         {
             return_code = OS_SUCCESS;
             break;
@@ -484,7 +483,7 @@ int32 OS_ObjectIdFindNext(uint32 idtype, uint32 *array_index, OS_common_record_t
    else
    {
        return_code = OS_ERR_NO_FREE_IDS;
-       idvalue = OS_ObjectIdToSerialNumber_Impl(OS_objtype_state[idtype].last_id_issued);
+       idvalue = OS_objtype_state[idtype].last_id_issued & OS_OBJECT_INDEX_MASK;
    }
 
    for (i = 0; i < max_id; ++i)
@@ -496,7 +495,7 @@ int32 OS_ObjectIdFindNext(uint32 idtype, uint32 *array_index, OS_common_record_t
           idvalue = local_id;
       }
       obj = &OS_common_table[local_id + base_id];
-      if (!OS_ObjectIdDefined(obj->active_id))
+      if (obj->active_id == 0)
       {
          return_code = OS_SUCCESS;
          break;
@@ -549,7 +548,7 @@ int32 OS_ObjectIdFindNext(uint32 idtype, uint32 *array_index, OS_common_record_t
 void OS_Lock_Global(uint32 idtype)
 {
     int32 return_code;
-    osal_id_t self_task_id;
+    uint32 self_task_id;
     OS_objtype_state_t *objtype;
 
     if (idtype < OS_OBJECT_TYPE_USER)
@@ -568,23 +567,22 @@ void OS_Lock_Global(uint32 idtype)
              * This is done after successfully locking, so this has exclusive access
              * to the state object.
              */
-            if ( !OS_ObjectIdDefined(self_task_id) )
+            if (self_task_id == 0)
             {
                 /*
                  * This just means the calling context is not an OSAL-created task.
                  * This is not necessarily an error, but it should be tracked.
                  * Also note that the root/initial task also does not have an ID.
                  */
-                self_task_id = OS_OBJECT_ID_RESERVED; /* nonzero, but also won't alias a known task */
+                self_task_id = 0xFFFFFFFF; /* nonzero, but also won't alias a known task */
             }
 
-            if ( OS_ObjectIdDefined(objtype->table_owner) )
+            if (objtype->table_owner != 0)
             {
                 /* this is almost certainly a bug */
                 OS_DEBUG("ERROR: global %u acquired by task 0x%lx when already owned by task 0x%lx\n",
-                        (unsigned int)idtype,
-                        OS_ObjectIdToInteger(self_task_id),
-                        OS_ObjectIdToInteger(objtype->table_owner));
+                        (unsigned int)idtype, (unsigned long)self_task_id,
+                        (unsigned long)objtype->table_owner);
             }
             else
             {
@@ -611,7 +609,7 @@ void OS_Lock_Global(uint32 idtype)
 void OS_Unlock_Global(uint32 idtype)
 {
     int32 return_code;
-    osal_id_t self_task_id;
+    uint32 self_task_id;
     OS_objtype_state_t *objtype;
 
     if (idtype < OS_OBJECT_TYPE_USER)
@@ -627,27 +625,26 @@ void OS_Unlock_Global(uint32 idtype)
          * This is done before unlocking, while this has exclusive access
          * to the state object.
          */
-        if ( !OS_ObjectIdDefined(self_task_id) )
+        if (self_task_id == 0)
         {
             /*
              * This just means the calling context is not an OSAL-created task.
              * This is not necessarily an error, but it should be tracked.
              * Also note that the root/initial task also does not have an ID.
              */
-            self_task_id = OS_OBJECT_ID_RESERVED; /* nonzero, but also won't alias a known task */
+            self_task_id = 0xFFFFFFFF; /* nonzero, but also won't alias a known task */
         }
 
-        if ( !OS_ObjectIdEqual(objtype->table_owner, self_task_id) )
+        if (objtype->table_owner != self_task_id)
         {
             /* this is almost certainly a bug */
             OS_DEBUG("ERROR: global %u released by task 0x%lx when owned by task 0x%lx\n",
-                    (unsigned int)idtype,
-                    OS_ObjectIdToInteger(self_task_id),
-                    OS_ObjectIdToInteger(objtype->table_owner));
+                    (unsigned int)idtype, (unsigned long)self_task_id,
+                    (unsigned long)objtype->table_owner);
         }
         else
         {
-            objtype->table_owner = OS_OBJECT_ID_UNDEFINED;
+            objtype->table_owner = 0;
         }
 
         return_code = OS_Unlock_Global_Impl(idtype);
@@ -662,6 +659,58 @@ void OS_Unlock_Global(uint32 idtype)
         OS_DEBUG("ERROR: unable to unlock global %u, error=%d\n", (unsigned int)idtype, (int)return_code);
     }
 }
+
+
+/*----------------------------------------------------------------
+ *
+ * Function: OS_ObjectIdToArrayIndex
+ *
+ *  Purpose: Local helper routine, not part of OSAL API.
+ *           Convert an object ID (which must be of the given type) to a number suitable
+ *           for use as an array index.  The array index will be in the range of:
+ *            0 <= ArrayIndex < OS_MAX_<OBJTYPE>
+ *
+ *            If the passed-in ID type is OS_OBJECT_TYPE_UNDEFINED, then any type
+ *            is allowed.
+ *
+ *  returns: If the passed-in ID is not of the proper type, OS_ERROR is returned
+ *           Otherwise OS_SUCCESS is returned.
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_ObjectIdToArrayIndex(uint32 idtype, uint32 id, uint32 *ArrayIndex)
+{
+   uint32 max_id;
+   uint32 obj_index;
+   uint32 actual_type;
+   int32 return_code;
+
+   obj_index = OS_ObjectIdToSerialNumber_Impl(id);
+   actual_type = OS_ObjectIdToType_Impl(id);
+
+   /*
+    * If requested by the caller, enforce that the ID is of the correct type.
+    * If the caller passed OS_OBJECT_TYPE_UNDEFINED, then anything is allowed.
+    */
+   if (idtype != OS_OBJECT_TYPE_UNDEFINED && actual_type != idtype)
+   {
+       return_code = OS_ERR_INVALID_ID;
+   }
+   else
+   {
+       max_id = OS_GetMaxForObjectType(actual_type);
+       if (max_id == 0)
+       {
+           return_code = OS_ERR_INVALID_ID;
+       }
+       else
+       {
+           return_code = OS_SUCCESS;
+           *ArrayIndex = obj_index % max_id;
+       }
+   }
+
+   return return_code;
+} /* end OS_ObjectIdToArrayIndex */
 
 /*----------------------------------------------------------------
  *
@@ -681,10 +730,9 @@ void OS_Unlock_Global(uint32 idtype)
  *           were detected while validating the ID.
  *
  *-----------------------------------------------------------------*/
-int32 OS_ObjectIdFinalizeNew(int32 operation_status, OS_common_record_t *record, osal_id_t *outid)
+int32 OS_ObjectIdFinalizeNew(int32 operation_status, OS_common_record_t *record, uint32 *outid)
 {
-    uint32 idtype = OS_ObjectIdToType_Impl(record->active_id);
-    osal_id_t callback_id;
+    uint32 idtype = record->active_id >> OS_OBJECT_TYPE_SHIFT;
 
     /* if operation was unsuccessful, then clear
      * the active_id field within the record, so
@@ -695,22 +743,19 @@ int32 OS_ObjectIdFinalizeNew(int32 operation_status, OS_common_record_t *record,
      */
     if (operation_status != OS_SUCCESS)
     {
-        record->active_id = OS_OBJECT_ID_UNDEFINED;
+        record->active_id = 0;
     }
     else if (idtype == 0 || idtype >= OS_OBJECT_TYPE_USER)
     {
         /* should never happen - indicates a bug. */
         operation_status = OS_ERR_INVALID_ID;
-        record->active_id = OS_OBJECT_ID_UNDEFINED;
+        record->active_id = 0;
     }
     else
     {
         /* success */
         OS_objtype_state[idtype].last_id_issued = record->active_id;
     }
-
-    /* snapshot the ID for callback - will be needed after unlock */
-    callback_id = record->active_id;
 
     if (outid != NULL)
     {
@@ -721,48 +766,8 @@ int32 OS_ObjectIdFinalizeNew(int32 operation_status, OS_common_record_t *record,
     /* Either way we must unlock the object type */
     OS_Unlock_Global(idtype);
 
-    /* Give event callback to the application */
-    if (OS_ObjectIdDefined(callback_id))
-    {
-        OS_NotifyEvent(OS_EVENT_RESOURCE_CREATED, callback_id, NULL);
-    }
-
     return operation_status;
 } /* end OS_ObjectIdFinalizeNew */
-
-/*----------------------------------------------------------------
-   Function: OS_ObjectIdFinalizeDelete
-
-    Purpose: Helper routine, not part of OSAL public API.
-             See description in prototype
- ------------------------------------------------------------------*/
-int32 OS_ObjectIdFinalizeDelete(int32 operation_status, OS_common_record_t *record)
-{
-    uint32 idtype = OS_ObjectIdToType_Impl(record->active_id);
-    osal_id_t callback_id;
-
-    /* Clear the OSAL ID if successful - this returns the record to the pool */
-    if (operation_status == OS_SUCCESS)
-    {
-        callback_id = record->active_id;
-        record->active_id = OS_OBJECT_ID_UNDEFINED;
-    }
-    else
-    {
-        callback_id = OS_OBJECT_ID_UNDEFINED;
-    }
-
-    /* Either way we must unlock the object type */
-    OS_Unlock_Global(idtype);
-
-    /* Give event callback to the application */
-    if (OS_ObjectIdDefined(callback_id))
-    {
-        OS_NotifyEvent(OS_EVENT_RESOURCE_DELETED, callback_id, NULL);
-    }
-
-    return operation_status;
-}
 
 
 /*----------------------------------------------------------------
@@ -842,7 +847,7 @@ int32 OS_ObjectIdGetByName (OS_lock_mode_t lock_mode, uint32 idtype, const char 
  *  returns: OS_ERR_NAME_NOT_FOUND if not found, OS_SUCCESS if match is found
  *
  *-----------------------------------------------------------------*/
-int32 OS_ObjectIdFindByName (uint32 idtype, const char *name, osal_id_t *object_id)
+int32 OS_ObjectIdFindByName (uint32 idtype, const char *name, uint32 *object_id)
 {
     int32 return_code;
     OS_common_record_t *global;
@@ -891,7 +896,7 @@ int32 OS_ObjectIdFindByName (uint32 idtype, const char *name, osal_id_t *object_
  *           If this returns something other than OS_SUCCESS then the global is NOT locked.
  *
  *-----------------------------------------------------------------*/
-int32 OS_ObjectIdGetById(OS_lock_mode_t lock_mode, uint32 idtype, osal_id_t id, uint32 *array_index, OS_common_record_t **record)
+int32 OS_ObjectIdGetById(OS_lock_mode_t lock_mode, uint32 idtype, uint32 id, uint32 *array_index, OS_common_record_t **record)
 {
    int32 return_code;
 
@@ -950,9 +955,9 @@ int32 OS_ObjectIdGetById(OS_lock_mode_t lock_mode, uint32 idtype, osal_id_t id, 
 int32 OS_ObjectIdRefcountDecr(OS_common_record_t *record)
 {
    int32 return_code;
-   uint32 idtype = OS_ObjectIdToType_Impl(record->active_id);
+   uint32 idtype = record->active_id >> OS_OBJECT_TYPE_SHIFT;
 
-   if (idtype == 0 || !OS_ObjectIdDefined(record->active_id))
+   if (idtype == 0 || record->active_id == 0)
    {
       return_code = OS_ERR_INVALID_ID;
    }
@@ -1045,11 +1050,6 @@ int32 OS_ObjectIdAllocateNew(uint32 idtype, const char *name, uint32 *array_inde
       return_code = OS_ObjectIdFindNext(idtype, array_index, record);
    }
 
-   if (return_code == OS_SUCCESS)
-   {
-       return_code = OS_NotifyEvent(OS_EVENT_RESOURCE_ALLOCATED, (*record)->active_id, NULL);
-   }
-
    /* If allocation failed for any reason, unlock the global.
     * otherwise the global should stay locked so remaining initialization can be done */
    if (return_code != OS_SUCCESS)
@@ -1074,7 +1074,7 @@ int32 OS_ObjectIdAllocateNew(uint32 idtype, const char *name, uint32 *array_inde
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_ConvertToArrayIndex(osal_id_t object_id, uint32 *ArrayIndex)
+int32 OS_ConvertToArrayIndex(uint32 object_id, uint32 *ArrayIndex)
 {
     /* just pass to the generic internal conversion routine */
     return OS_ObjectIdToArrayIndex(OS_OBJECT_TYPE_UNDEFINED, object_id, ArrayIndex);
@@ -1089,7 +1089,7 @@ int32 OS_ConvertToArrayIndex(osal_id_t object_id, uint32 *ArrayIndex)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-void OS_ForEachObject (osal_id_t creator_id, OS_ArgCallback_t callback_ptr, void *callback_arg)
+void OS_ForEachObject (uint32 creator_id, OS_ArgCallback_t callback_ptr, void *callback_arg)
 {
     uint32 idtype;
 
@@ -1107,11 +1107,11 @@ void OS_ForEachObject (osal_id_t creator_id, OS_ArgCallback_t callback_ptr, void
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-void OS_ForEachObjectOfType     (uint32 idtype, osal_id_t creator_id, OS_ArgCallback_t callback_ptr, void *callback_arg)
+void OS_ForEachObjectOfType     (uint32 idtype, uint32 creator_id, OS_ArgCallback_t callback_ptr, void *callback_arg)
 {
     uint32 obj_index;
     uint32 obj_max;
-    osal_id_t obj_id;
+    uint32 obj_id;
 
     obj_max = OS_GetMaxForObjectType(idtype);
     if (obj_max > 0)
@@ -1125,16 +1125,15 @@ void OS_ForEachObjectOfType     (uint32 idtype, osal_id_t creator_id, OS_ArgCall
              * the specified creator_id
              */
             obj_id = OS_common_table[obj_index].active_id;
-            if (OS_ObjectIdDefined(obj_id) &&
-                    !OS_ObjectIdEqual(creator_id, OS_OBJECT_CREATOR_ANY) &&
-                    !OS_ObjectIdEqual(OS_common_table[obj_index].creator, creator_id))
+            if (obj_id != 0 && creator_id != OS_OBJECT_CREATOR_ANY &&
+                    OS_common_table[obj_index].creator != creator_id)
             {
                 /* valid object but not a creator match -
                  * skip the callback for this object */
-                obj_id = OS_OBJECT_ID_UNDEFINED;
+                obj_id = 0;
             }
 
-            if (OS_ObjectIdDefined(obj_id))
+            if (obj_id != 0)
             {
                 /*
                  * Invoke Callback for the object, which must be done
@@ -1167,7 +1166,7 @@ void OS_ForEachObjectOfType     (uint32 idtype, osal_id_t creator_id, OS_ArgCall
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-uint32 OS_IdentifyObject       (osal_id_t object_id)
+uint32 OS_IdentifyObject       (uint32 object_id)
 {
     return OS_ObjectIdToType_Impl(object_id);
 } /* end OS_IdentifyObject */
@@ -1180,7 +1179,7 @@ uint32 OS_IdentifyObject       (osal_id_t object_id)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_GetResourceName(osal_id_t object_id, char *buffer, uint32 buffer_size)
+int32 OS_GetResourceName(uint32 object_id, char *buffer, uint32 buffer_size)
 {
     uint32 idtype;
     OS_common_record_t *record;
@@ -1222,56 +1221,5 @@ int32 OS_GetResourceName(osal_id_t object_id, char *buffer, uint32 buffer_size)
 
     return return_code;
 } /* end OS_GetResourceName */
-
-
-/*----------------------------------------------------------------
- *
- * Function: OS_ObjectIdToArrayIndex
- *
- *  Purpose: Convert an object ID (which must be of the given type) to a number suitable
- *           for use as an array index.  The array index will be in the range of:
- *            0 <= ArrayIndex < OS_MAX_<OBJTYPE>
- *
- *            If the passed-in ID type is OS_OBJECT_TYPE_UNDEFINED, then any type
- *            is allowed.
- *
- *  returns: If the passed-in ID is not of the proper type, OS_ERROR is returned
- *           Otherwise OS_SUCCESS is returned.
- *
- *-----------------------------------------------------------------*/
-int32 OS_ObjectIdToArrayIndex(uint32 idtype, osal_id_t object_id, uint32 *ArrayIndex)
-{
-   uint32 max_id;
-   uint32 obj_index;
-   uint32 actual_type;
-   int32 return_code;
-
-   obj_index = OS_ObjectIdToSerialNumber_Impl(object_id);
-   actual_type = OS_ObjectIdToType_Impl(object_id);
-
-   /*
-    * If requested by the caller, enforce that the ID is of the correct type.
-    * If the caller passed OS_OBJECT_TYPE_UNDEFINED, then anything is allowed.
-    */
-   if (idtype != OS_OBJECT_TYPE_UNDEFINED && actual_type != idtype)
-   {
-       return_code = OS_ERR_INVALID_ID;
-   }
-   else
-   {
-       max_id = OS_GetMaxForObjectType(actual_type);
-       if (max_id == 0)
-       {
-           return_code = OS_ERR_INVALID_ID;
-       }
-       else
-       {
-           return_code = OS_SUCCESS;
-           *ArrayIndex = obj_index % max_id;
-       }
-   }
-
-   return return_code;
-} /* end OS_ObjectIdToArrayIndex */
 
 

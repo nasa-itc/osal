@@ -46,7 +46,7 @@ struct OS_shared_global_vars
    /*
     * The console device ID used for OS_printf() calls
     */
-   osal_id_t         PrintfConsoleId;
+   uint32            PrintfConsoleId;
 
    /*
     * PrintfEnabled and ShutdownFlag are marked "volatile"
@@ -56,12 +56,6 @@ struct OS_shared_global_vars
    volatile uint32   ShutdownFlag;
    int32             MicroSecPerTick;
    int32             TicksPerSecond;
-
-   /*
-    * The event handler is an application-defined callback
-    * that gets invoked as resources are created/configured/deleted.
-    */
-   OS_EventHandler_t EventHandler;
 
 #ifdef OSAL_CONFIG_DEBUG_PRINTF
    uint8             DebugLevel;
@@ -74,16 +68,6 @@ struct OS_shared_global_vars
  * Shared data structure for global values
  */
 extern OS_SharedGlobalVars_t OS_SharedGlobalVars;
-
-/*---------------------------------------------------------------------------------------
-   Name: OS_NotifyEvent
-
-   Purpose: Notify the user application of a change in the state of an OSAL resource
-
-   returns: OS_SUCCESS on success, or relevant error code
----------------------------------------------------------------------------------------*/
-int32 OS_NotifyEvent(OS_Event_t event, osal_id_t object_id, void *data);
-
 
 /*---------------------------------------------------------------------------------------
    Name: OS_API_Impl_Init

@@ -32,7 +32,6 @@
 #include "os-vxworks.h"
 #include "os-impl-io.h"
 #include "os-shared-shell.h"
-#include "os-shared-file.h"
 
 #include <shellLib.h>
 #include <taskLib.h>
@@ -57,17 +56,17 @@
 int32 OS_ShellOutputToFile_Impl(uint32 file_id, const char *Cmd)
 {
     int32 ReturnCode = OS_ERROR;
-    int32 Result;
-    osal_id_t fdCmd;
+    int32 Result = ERROR;
+    int32 fdCmd;
     uint32 cmdidx;
     char * shellName;
 
     /* Create a file to write the command to (or write over the old one) */
-    Result = OS_OpenCreate(&fdCmd, OS_SHELL_CMD_INPUT_FILE_NAME, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    fdCmd = OS_creat(OS_SHELL_CMD_INPUT_FILE_NAME,OS_READ_WRITE);
 
-    if (Result < OS_SUCCESS)
+    if (fdCmd < OS_SUCCESS)
     {
-        return Result;
+        return OS_ERROR;
     }
 
     if (OS_ConvertToArrayIndex(fdCmd, &cmdidx) == OS_SUCCESS)

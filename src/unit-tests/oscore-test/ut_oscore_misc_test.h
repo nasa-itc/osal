@@ -59,6 +59,9 @@ void UT_os_printf_test(void);
 void UT_os_printfenable_test(void);
 void UT_os_printfdisable_test(void);
 
+void UT_os_tick2micros_test(void);
+void UT_os_milli2ticks_test(void);
+
 void UT_os_getlocaltime_test(void);
 void UT_os_setlocaltime_test(void);
 

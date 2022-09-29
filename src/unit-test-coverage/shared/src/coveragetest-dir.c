@@ -66,11 +66,11 @@ void Test_OS_DirectoryOpen(void)
      * int32 OS_DirectoryOpen(uint32 *dir_id, const char *path)
      */
     int32 expected = OS_SUCCESS;
-    osal_id_t objid;
+    uint32 objid = 0xFFFFFFFF;
     int32 actual = OS_DirectoryOpen(&objid, "Dir");
 
     UtAssert_True(actual == expected, "OS_DirectoryOpen() (%ld) == OS_SUCCESS", (long)actual);
-    OSAPI_TEST_OBJID(objid,!=,OS_OBJECT_ID_UNDEFINED);
+    UtAssert_True(objid != 0, "objid (%lu) != 0", (unsigned long)objid);
 
     OSAPI_TEST_FUNCTION_RC(OS_DirectoryOpen(NULL, NULL), OS_INVALID_POINTER);
 }
@@ -83,7 +83,7 @@ void Test_OS_DirectoryClose(void)
      * int32 OS_DirectoryClose(uint32 dir_id)
      */
     int32 expected = OS_SUCCESS;
-    int32 actual = OS_DirectoryClose(UT_OBJID_1);
+    int32 actual = OS_DirectoryClose(1);
 
     UtAssert_True(actual == expected, "OS_DirectoryClose() (%ld) == OS_SUCCESS", (long)actual);
 }
@@ -98,11 +98,11 @@ void Test_OS_DirectoryRead(void)
     int32 expected = OS_SUCCESS;
     os_dirent_t dirent;
 
-    int32 actual = OS_DirectoryRead(UT_OBJID_1, &dirent);
+    int32 actual = OS_DirectoryRead(1, &dirent);
 
     UtAssert_True(actual == expected, "OS_DirectoryRead() (%ld) == OS_SUCCESS", (long)actual);
 
-    OSAPI_TEST_FUNCTION_RC(OS_DirectoryRead(UT_OBJID_1, NULL), OS_INVALID_POINTER);
+    OSAPI_TEST_FUNCTION_RC(OS_DirectoryRead(1, NULL), OS_INVALID_POINTER);
 }
 
 
@@ -113,7 +113,7 @@ void Test_OS_DirectoryRewind(void)
      * int32 OS_DirectoryRewind(uint32 dir_id)
      */
     int32 expected = OS_SUCCESS;
-    int32 actual = OS_DirectoryRewind(UT_OBJID_1);
+    int32 actual = OS_DirectoryRewind(1);
 
     UtAssert_True(actual == expected, "OS_DirectoryRewind() (%ld) == OS_SUCCESS", (long)actual);
 }
@@ -130,6 +130,65 @@ void Test_OS_rmdir(void)
 
     UtAssert_True(actual == expected, "OS_rmdir() (%ld) == OS_SUCCESS", (long)actual);
 }
+
+
+
+/*
+ * Compatibility layers for old-style API
+ */
+#ifndef OSAL_OMIT_DEPRECATED
+
+void Test_OS_opendir(void)
+{
+    /*
+     * Test Case For:
+     * os_dirp_t OS_opendir (const char *path)
+     */
+    os_dirp_t dirp = OS_opendir("Dir");
+
+    UtAssert_True(dirp != NULL, "OS_opendir() (%p) != NULL", dirp);
+}
+
+
+void Test_OS_closedir(void)
+{
+    /*
+     * Test Case For:
+     * int32 OS_closedir (os_dirp_t directory)
+     */
+    int32 expected = OS_SUCCESS;
+    os_dirp_t dirp = OS_opendir("Dir");
+    int32 actual = OS_closedir(dirp);
+
+    UtAssert_True(actual == expected, "OS_closedir() (%ld) == OS_SUCCESS", (long)actual);
+}
+
+
+void Test_OS_readdir(void)
+{
+    /*
+     * Test Case For:
+     * os_dirent_t *OS_readdir (os_dirp_t directory)
+     */
+    os_dirp_t dirp = OS_opendir("Dir");
+    os_dirent_t *dirent = OS_readdir(dirp);
+
+    UtAssert_True(dirent != NULL, "OS_readdir() (%p) != NULL", (void*)dirent);
+}
+
+
+void Test_OS_rewinddir(void)
+{
+    /*
+     * Test Case For:
+     * void  OS_rewinddir (os_dirp_t directory )
+     */
+    os_dirp_t dirp = OS_opendir("Dir");
+    OS_rewinddir(dirp);
+}
+
+
+#endif
 
 
 
@@ -167,6 +226,12 @@ void UtTest_Setup(void)
     ADD_TEST(OS_DirectoryRead);
     ADD_TEST(OS_DirectoryRewind);
     ADD_TEST(OS_rmdir);
+#ifndef OSAL_OMIT_DEPRECATED
+    ADD_TEST(OS_opendir);
+    ADD_TEST(OS_closedir);
+    ADD_TEST(OS_readdir);
+    ADD_TEST(OS_rewinddir);
+#endif
 }
 
 

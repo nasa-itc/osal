@@ -40,7 +40,6 @@
 
 #include "os-shared-countsem.h"
 #include "os-shared-idmap.h"
-#include "os-shared-timebase.h"
 
 /****************************************************************************************
                                      DEFINES
@@ -106,7 +105,7 @@ int32 OS_CountSemCreate_Impl (uint32 sem_id, uint32 sem_initial_value, uint32 op
     ** It is convenient to use the OSAL ID in here, as we know it is already unique
     ** and trying to use the real name would be less than useful (only 4 chars)
     */
-    r_name = OS_ObjectIdToInteger(OS_global_count_sem_table[sem_id].active_id);
+    r_name = OS_global_count_sem_table[sem_id].active_id;
     status = rtems_semaphore_create( r_name, sem_initial_value,
                                      OSAL_COUNT_SEM_ATTRIBS,
                                      0,
@@ -208,12 +207,9 @@ int32 OS_CountSemTake_Impl (uint32 sem_id)
 int32 OS_CountSemTimedWait_Impl (uint32 sem_id, uint32 msecs)
 {
     rtems_status_code status;
-    int               TimeInTicks;
+    uint32            TimeInTicks;
 
-    if (OS_Milli2Ticks(msecs, &TimeInTicks) != OS_SUCCESS)
-    {
-        return OS_ERROR;
-    }
+    TimeInTicks = OS_Milli2Ticks(msecs);
 
     status = rtems_semaphore_obtain(OS_impl_count_sem_table[sem_id].id, RTEMS_WAIT, TimeInTicks);
     if (status == RTEMS_TIMEOUT)

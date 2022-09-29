@@ -55,7 +55,7 @@ typedef struct
 
 typedef struct
 {
-    UtListHead_t   *DataBasePtr;
+    UtListHead_t    DataBase;
     uint32          ExecutedCount;
 } UtAssert_Global_t;
 

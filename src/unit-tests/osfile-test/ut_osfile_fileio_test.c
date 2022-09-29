@@ -57,8 +57,7 @@ extern char* g_mntName;
 **--------------------------------------------------------------------------------*/
 
 char   g_fNames[UT_OS_FILE_LIST_LEN][UT_OS_FILE_BUFF_SIZE];
-int32       g_fStatus[UT_OS_FILE_LIST_LEN];
-osal_id_t   g_fDescs[UT_OS_FILE_LIST_LEN];
+int32  g_fDescs[UT_OS_FILE_LIST_LEN];
 
 char  g_readBuff[UT_OS_IO_BUFF_SIZE];
 char  g_writeBuff[UT_OS_IO_BUFF_SIZE];
@@ -212,13 +211,11 @@ void UT_os_createfile_test()
 {
     const char* testDesc;
     int32 res=0, i=0, j=0;
-    osal_id_t fd;
 
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    if (OS_OpenCreate(NULL, NULL, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE) ==
-            OS_ERR_NOT_IMPLEMENTED)
+    if (OS_creat(NULL, OS_READ_WRITE) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_createfile_test_exit_tag;
@@ -227,14 +224,7 @@ void UT_os_createfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#1 Null-pointer-arg";
 
-    if (OS_OpenCreate(NULL, "file", OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE) ==
-            OS_INVALID_POINTER)
-        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
-    else
-        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
-
-    if (OS_OpenCreate(&fd, NULL, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE) ==
-            OS_INVALID_POINTER)
+    if (OS_creat(NULL, OS_READ_WRITE) == OS_INVALID_POINTER)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -242,8 +232,7 @@ void UT_os_createfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#2 Invalid-path-arg";
 
-    if (OS_OpenCreate(&fd, g_invalidPath, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE) ==
-            OS_FS_ERR_PATH_INVALID)
+    if (OS_creat(g_invalidPath, OS_READ_WRITE) == OS_FS_ERR_PATH_INVALID)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -251,8 +240,7 @@ void UT_os_createfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#3 Path-too-long-arg";
 
-    if (OS_OpenCreate(&fd, g_longPathName, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE) ==
-            OS_FS_ERR_PATH_TOO_LONG)
+    if (OS_creat(g_longPathName, OS_READ_WRITE) == OS_FS_ERR_PATH_TOO_LONG)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -260,8 +248,7 @@ void UT_os_createfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#4 Name-too-long-arg";
 
-    if (OS_OpenCreate(&fd, g_longFileName, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE) ==
-            OS_FS_ERR_NAME_TOO_LONG)
+    if (OS_creat(g_longFileName, OS_READ_WRITE) == OS_FS_ERR_NAME_TOO_LONG)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -271,13 +258,14 @@ void UT_os_createfile_test()
 
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Create_InvPerm.txt", g_mntName);
-    res = OS_OpenCreate(&fd, g_fNames[0], OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, 123);
+    res = OS_creat(g_fNames[0], 123);
     if (res == OS_ERROR)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
 
     /* Reset test environment */
+    OS_close(res);
     OS_remove(g_fNames[0]);
 
     /*-----------------------------------------------------*/
@@ -292,12 +280,12 @@ void UT_os_createfile_test()
     {
         memset(g_fNames[i], '\0', sizeof(g_fNames[i]));
         UT_os_sprintf(g_fNames[i], "%s/tmpFile%d.txt", g_mntName, (int)i);
-        g_fStatus[i] = OS_OpenCreate(&g_fDescs[i], g_fNames[i], OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_WRITE_ONLY);
-        if (g_fStatus[i] < 0)
+        g_fDescs[i] = OS_creat(g_fNames[i], OS_WRITE_ONLY);
+        if (g_fDescs[i] < 0)
             break;
     }
 
-    if ((i == OS_MAX_NUM_OPEN_FILES) && (g_fStatus[i] == OS_ERR_NO_FREE_IDS))
+    if ((i == OS_MAX_NUM_OPEN_FILES) && (g_fDescs[i] == OS_ERR_NO_FREE_IDS))
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -312,8 +300,8 @@ void UT_os_createfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#8 Nominal";
 
-    g_fStatus[5] = OS_OpenCreate(&g_fDescs[5], g_fNames[5], OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_WRITE_ONLY);
-    g_fStatus[6] = OS_OpenCreate(&g_fDescs[6], g_fNames[6], OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_WRITE_ONLY);
+    g_fDescs[5] = OS_creat(g_fNames[5], OS_WRITE_ONLY);
+    g_fDescs[6] = OS_creat(g_fNames[6], OS_WRITE_ONLY);
 
     if ((OS_close(g_fDescs[5])  != OS_SUCCESS) || (OS_close(g_fDescs[6])  != OS_SUCCESS) ||
         (OS_remove(g_fNames[5]) != OS_SUCCESS) || (OS_remove(g_fNames[6]) != OS_SUCCESS))
@@ -403,13 +391,11 @@ void UT_os_openfile_test()
 {
     const char* testDesc;
     int32 res=0, i=0, j=0, continueFlg=0;
-    osal_id_t fd;
 
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    if (OS_OpenCreate(&fd, NULL, OS_FILE_FLAG_NONE, OS_READ_WRITE) ==
-            OS_ERR_NOT_IMPLEMENTED)
+    if (OS_open(NULL, OS_READ_WRITE, 0644) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_openfile_test_exit_tag;
@@ -418,14 +404,7 @@ void UT_os_openfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#1 Null-pointer-arg";
 
-    if (OS_OpenCreate(&fd, NULL, OS_FILE_FLAG_NONE, OS_READ_WRITE) ==
-            OS_INVALID_POINTER)
-        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
-    else
-        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
-
-    if (OS_OpenCreate(NULL, "file", OS_FILE_FLAG_NONE, OS_READ_WRITE) ==
-            OS_INVALID_POINTER)
+    if (OS_open(NULL, OS_READ_WRITE, 0644) == OS_INVALID_POINTER)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -433,8 +412,7 @@ void UT_os_openfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#2 Invalid-path-arg";
 
-    if (OS_OpenCreate(&fd, g_invalidPath, OS_FILE_FLAG_NONE, OS_READ_WRITE) ==
-            OS_FS_ERR_PATH_INVALID)
+    if (OS_open(g_invalidPath, OS_READ_WRITE, 0644) == OS_FS_ERR_PATH_INVALID)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -442,8 +420,7 @@ void UT_os_openfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#3 Path-too-long-arg";
 
-    if (OS_OpenCreate(&fd, g_longPathName, OS_FILE_FLAG_NONE, OS_READ_WRITE) ==
-            OS_FS_ERR_PATH_TOO_LONG)
+    if (OS_open(g_longPathName, OS_READ_WRITE, 0644) == OS_FS_ERR_PATH_TOO_LONG)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -451,8 +428,7 @@ void UT_os_openfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#4 Name-too-long-arg";
 
-    if (OS_OpenCreate(&fd, g_longFileName, OS_FILE_FLAG_NONE, OS_READ_WRITE) ==
-            OS_FS_ERR_NAME_TOO_LONG)
+    if (OS_open(g_longFileName, OS_READ_WRITE, 0644) == OS_FS_ERR_NAME_TOO_LONG)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -462,13 +438,14 @@ void UT_os_openfile_test()
 
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Open_InvPerm.txt", g_mntName);
-    res = OS_OpenCreate(&fd, g_fNames[0], OS_FILE_FLAG_NONE, 123);
+    res = OS_open(g_fNames[0], 123, 0644);
     if (res == OS_ERROR)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
 
     /* Reset test environment */
+    OS_close(res);
     OS_remove(g_fNames[0]);
 
     /*-----------------------------------------------------*/
@@ -484,8 +461,8 @@ void UT_os_openfile_test()
     {
         memset(g_fNames[i], '\0', sizeof(g_fNames[i]));
         UT_os_sprintf(g_fNames[i], "%s/tmpFile%d.txt", g_mntName, (int)i);
-        g_fStatus[i] = OS_OpenCreate(&g_fDescs[i], g_fNames[i], OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_WRITE_ONLY);
-        if (g_fStatus[i] < OS_SUCCESS)
+        g_fDescs[i] = OS_creat(g_fNames[i], OS_WRITE_ONLY);
+        if (g_fDescs[i] < OS_SUCCESS)
         {
             testDesc = "#7 File-descriptors-full - File-create failed";
             UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -506,12 +483,12 @@ void UT_os_openfile_test()
     {
         for (i=0; i <= OS_MAX_NUM_OPEN_FILES; i++)
         {
-            g_fStatus[i] = OS_OpenCreate(&g_fDescs[i], g_fNames[i], OS_FILE_FLAG_NONE, OS_WRITE_ONLY);
-            if (g_fStatus[i] < 0)
+            g_fDescs[i] = OS_open(g_fNames[i], OS_WRITE_ONLY, 0644);
+            if (g_fDescs[i] < 0)
                 break;
         }
 
-        if ((i == OS_MAX_NUM_OPEN_FILES) && (g_fStatus[i] < OS_SUCCESS))
+        if ((i == OS_MAX_NUM_OPEN_FILES) && (g_fDescs[i] < OS_SUCCESS))
             UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
         else
             UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -527,9 +504,9 @@ void UT_os_openfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#8 Nominal";
 
-    g_fStatus[5] = OS_OpenCreate(&g_fDescs[5], g_fNames[5], OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    g_fStatus[6] = OS_OpenCreate(&g_fDescs[6], g_fNames[6], OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_WRITE_ONLY);
-    if ((g_fStatus[5] < OS_SUCCESS) || (g_fStatus[6] < OS_SUCCESS))
+    g_fDescs[5] = OS_creat(g_fNames[5], OS_READ_WRITE);
+    g_fDescs[6] = OS_creat(g_fNames[6], OS_WRITE_ONLY);
+    if ((g_fDescs[5] < OS_SUCCESS) || (g_fDescs[6] < OS_SUCCESS))
     {
         testDesc = "#8 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -543,8 +520,8 @@ void UT_os_openfile_test()
         goto UT_os_openfile_test_exit_tag;
     }
 
-    g_fStatus[5] = OS_OpenCreate(&g_fDescs[5], g_fNames[5], OS_FILE_FLAG_NONE, OS_READ_WRITE);
-    g_fStatus[6] = OS_OpenCreate(&g_fDescs[6], g_fNames[6], OS_FILE_FLAG_NONE, OS_WRITE_ONLY);
+    g_fDescs[5] = OS_open(g_fNames[5], OS_READ_WRITE, 0644);
+    g_fDescs[6] = OS_open(g_fNames[6], OS_WRITE_ONLY, 0644);
 
     if ((OS_close(g_fDescs[5])  != OS_SUCCESS) || (OS_close(g_fDescs[6])  != OS_SUCCESS) ||
         (OS_remove(g_fNames[5]) != OS_SUCCESS) || (OS_remove(g_fNames[6]) != OS_SUCCESS))
@@ -603,7 +580,7 @@ void UT_os_closefile_test()
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    if (OS_close(UT_OBJID_INCORRECT) == OS_ERR_NOT_IMPLEMENTED)
+    if (OS_close(99999) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_closefile_test_exit_tag;
@@ -612,7 +589,7 @@ void UT_os_closefile_test()
     /*-----------------------------------------------------*/
     testDesc = "#1 Invalid-file-desc-arg";
 
-    if (OS_close(UT_OBJID_INCORRECT) == OS_ERR_INVALID_ID)
+    if (OS_close(99999) == OS_ERR_INVALID_ID)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -628,9 +605,8 @@ void UT_os_closefile_test()
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Close_Nominal.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#3 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -712,7 +688,7 @@ void UT_os_readfile_test()
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    if (OS_read(UT_OBJID_INCORRECT, NULL, 0) == OS_ERR_NOT_IMPLEMENTED)
+    if (OS_read(99999, NULL, 0) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_readfile_test_exit_tag;
@@ -723,9 +699,8 @@ void UT_os_readfile_test()
 
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Read_NullPtr.txt", g_mntName);
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#1 Null-pointer-arg - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -745,7 +720,7 @@ void UT_os_readfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#2 Invalid-file-desc-arg";
 
-    if (OS_read(UT_OBJID_INCORRECT, g_readBuff, sizeof(g_readBuff)) == OS_ERR_INVALID_ID)
+    if (OS_read(99999, g_readBuff, sizeof(g_readBuff)) == OS_ERR_INVALID_ID)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -761,9 +736,8 @@ void UT_os_readfile_test()
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Read_Nominal.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#4 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -795,9 +769,8 @@ void UT_os_readfile_test()
         goto UT_os_readfile_test_exit_tag;
     }
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_NONE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_open(g_fNames[0], OS_READ_WRITE, 0644);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#4 Nominal - File-open failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -886,7 +859,7 @@ void UT_os_writefile_test()
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    if (OS_write(UT_OBJID_INCORRECT, NULL, 0) == OS_ERR_NOT_IMPLEMENTED)
+    if (OS_write(99999, NULL, 0) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_writefile_test_exit_tag;
@@ -897,9 +870,8 @@ void UT_os_writefile_test()
 
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Write_NullPtr.txt", g_mntName);
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#1 Null-pointer-arg - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -919,7 +891,7 @@ void UT_os_writefile_test()
     /*-----------------------------------------------------*/
     testDesc = "#2 Invalid-file-desc-arg";
 
-    if (OS_write(UT_OBJID_INCORRECT, g_writeBuff, sizeof(g_writeBuff)) == OS_ERR_INVALID_ID)
+    if (OS_write(99999, g_writeBuff, sizeof(g_writeBuff)) == OS_ERR_INVALID_ID)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -935,9 +907,8 @@ void UT_os_writefile_test()
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Write_Nominal.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < OS_SUCCESS)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < OS_SUCCESS)
     {
         testDesc = "#4 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -968,9 +939,8 @@ void UT_os_writefile_test()
         goto UT_os_writefile_test_exit_tag;
     }
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_NONE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_open(g_fNames[0], OS_READ_WRITE, 0644);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#4 Nominal - File-open failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -1058,7 +1028,7 @@ void UT_os_lseekfile_test()
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    if (OS_lseek(UT_OBJID_INCORRECT, 0, OS_SEEK_CUR) == OS_ERR_NOT_IMPLEMENTED)
+    if (OS_lseek(99999, 0, OS_SEEK_CUR) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_lseekfile_test_exit_tag;
@@ -1067,7 +1037,7 @@ void UT_os_lseekfile_test()
     /*-----------------------------------------------------*/
     testDesc = "#1 Invalid-file-desc-arg";
 
-    if (OS_lseek(UT_OBJID_INCORRECT, 0, OS_SEEK_SET) == OS_ERR_INVALID_ID)
+    if (OS_lseek(99999, 0, OS_SEEK_SET) == OS_ERR_INVALID_ID)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -1077,9 +1047,8 @@ void UT_os_lseekfile_test()
 
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Seek_InvWhence.txt", g_mntName);
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#2 Invalid-whence-arg - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -1090,11 +1059,10 @@ void UT_os_lseekfile_test()
             UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
         else
             UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
-
-        OS_close(g_fDescs[0]);
     }
 
     /* Reset test environment */
+    OS_close(g_fDescs[0]);
     OS_remove(g_fNames[0]);
 
     /*-----------------------------------------------------*/
@@ -1108,9 +1076,8 @@ void UT_os_lseekfile_test()
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Seek_Nominal.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#4 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -1283,9 +1250,8 @@ void UT_os_statfile_test()
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Stat_Nominal.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#5 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -1444,15 +1410,15 @@ void UT_os_removefile_test()
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Remove_Nominal.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_WRITE_ONLY);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#6 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
         goto UT_os_removefile_test_exit_tag;
     }
 
+    /* TODO: Check to see if OS_remove() can delete an opened file. */
     OS_close(g_fDescs[0]);
 
     if (OS_remove(g_fNames[0]) != OS_SUCCESS)
@@ -1590,9 +1556,8 @@ void UT_os_renamefile_test()
     UT_os_sprintf(g_fNames[0], "%s/Rename_Nom_Old.txt", g_mntName);
     UT_os_sprintf(g_fNames[1], "%s/Rename_Nom_New.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_WRITE_ONLY);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#6 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -1749,9 +1714,8 @@ void UT_os_copyfile_test()
         goto UT_os_copyfile_test_exit_tag;
     }
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_WRITE_ONLY);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#6 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -1918,9 +1882,8 @@ void UT_os_movefile_test()
         goto UT_os_movefile_test_exit_tag;
     }
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_WRITE_ONLY);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#6 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -2015,7 +1978,7 @@ void UT_os_outputtofile_test()
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    if (OS_ShellOutputToFile(NULL, OS_OBJECT_ID_UNDEFINED) == OS_ERR_NOT_IMPLEMENTED)
+    if (OS_ShellOutputToFile(NULL, 0) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_outputtofile_test_exit_tag;
@@ -2024,7 +1987,7 @@ void UT_os_outputtofile_test()
     /*-----------------------------------------------------*/
     testDesc = "#1 Null-pointer-arg";
 
-    if (OS_ShellOutputToFile(NULL, OS_OBJECT_ID_UNDEFINED) == OS_INVALID_POINTER)
+    if (OS_ShellOutputToFile(NULL, 0) == OS_INVALID_POINTER)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -2032,7 +1995,7 @@ void UT_os_outputtofile_test()
     /*-----------------------------------------------------*/
     testDesc = "#2 Invalid-file-desc-arg";
 
-    if (OS_ShellOutputToFile("ls", UT_OBJID_INCORRECT) == OS_ERR_INVALID_ID)
+    if (OS_ShellOutputToFile("ls", 99999) == OS_ERR_INVALID_ID)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -2047,9 +2010,8 @@ void UT_os_outputtofile_test()
 
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Output_Nominal.txt", g_mntName);
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#4 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -2159,7 +2121,7 @@ void UT_os_getfdinfo_test()
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    if (OS_FDGetInfo(OS_OBJECT_ID_UNDEFINED, NULL) == OS_ERR_NOT_IMPLEMENTED)
+    if (OS_FDGetInfo(0, NULL) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_getfdinfo_test_exit_tag;
@@ -2171,32 +2133,28 @@ void UT_os_getfdinfo_test()
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/GetInfo_Null.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#1 Null-pointer-arg - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
     }
+    else if (OS_FDGetInfo(g_fDescs[0], NULL) != OS_INVALID_POINTER)
+    {
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
+    }
     else
     {
-        if (OS_FDGetInfo(g_fDescs[0], NULL) != OS_INVALID_POINTER)
-        {
-            UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
-        }
-        else
-        {
-            UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
-        }
-
-        OS_close(g_fDescs[0]);
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     }
+
+    OS_close(g_fDescs[0]);
     OS_remove(g_fNames[0]);
 
     /*-----------------------------------------------------*/
     testDesc = "#2 Invalid-file-desc-arg";
 
-    if (OS_FDGetInfo(UT_OBJID_INCORRECT, &fdProps) == OS_ERR_INVALID_ID)
+    if (OS_FDGetInfo(99999, &fdProps) == OS_ERR_INVALID_ID)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -2211,9 +2169,8 @@ void UT_os_getfdinfo_test()
 
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/%s", g_mntName, fileName);
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_WRITE_ONLY);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_WRITE_ONLY);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#4 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -2308,28 +2265,24 @@ void UT_os_checkfileopen_test()
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/FChk_UnOpened.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#2 File-not-opened - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
     }
+    else if (OS_close(g_fDescs[0]) != OS_SUCCESS)
+    {
+        testDesc = "#2 File-not-opened - File-close failed";
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
+    }
+    else if (OS_FileOpenCheck(g_fNames[0]) != OS_ERROR)
+    {
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
+    }
     else
     {
-        if (OS_close(g_fDescs[0]) != OS_SUCCESS)
-        {
-            testDesc = "#2 File-not-opened - File-close failed";
-            UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
-        }
-        else if (OS_FileOpenCheck(g_fNames[0]) != OS_ERROR)
-        {
-            UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
-        }
-        else
-        {
-            UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
-        }
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     }
 
     /* Reset test environment */
@@ -2341,9 +2294,8 @@ void UT_os_checkfileopen_test()
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/FileChk_Nominal.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#3 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -2422,13 +2374,10 @@ void UT_os_closeallfiles_test()
     UT_os_sprintf(g_fNames[1], "%s/CloseAll_Nom_2.txt", g_mntName);
     UT_os_sprintf(g_fNames[2], "%s/CloseAll_Nom_3.txt", g_mntName);
 
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    g_fStatus[1] = OS_OpenCreate(&g_fDescs[1], g_fNames[1],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    g_fStatus[2] = OS_OpenCreate(&g_fDescs[2], g_fNames[2],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if ((g_fStatus[0] < 0) || (g_fStatus[1] < 0) || (g_fStatus[2] < 0))
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    g_fDescs[1] = OS_creat(g_fNames[1], OS_READ_WRITE);
+    g_fDescs[2] = OS_creat(g_fNames[2], OS_READ_WRITE);
+    if ((g_fDescs[0] < 0) || (g_fDescs[1] < 0) || (g_fDescs[2] < 0))
     {
         testDesc = "#2 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -2539,9 +2488,8 @@ void UT_os_closefilebyname_test()
 
     memset(g_fNames[0], '\0', sizeof(g_fNames[0]));
     UT_os_sprintf(g_fNames[0], "%s/Close_Nominal.txt", g_mntName);
-    g_fStatus[0] = OS_OpenCreate(&g_fDescs[0], g_fNames[0],
-            OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (g_fStatus[0] < 0)
+    g_fDescs[0] = OS_creat(g_fNames[0], OS_READ_WRITE);
+    if (g_fDescs[0] < 0)
     {
         testDesc = "#4 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);

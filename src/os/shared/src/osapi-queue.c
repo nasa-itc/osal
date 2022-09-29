@@ -93,7 +93,7 @@ int32 OS_QueueAPI_Init(void)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_QueueCreate (osal_id_t *queue_id, const char *queue_name, uint32 queue_depth, uint32 data_size, uint32 flags)
+int32 OS_QueueCreate (uint32 *queue_id, const char *queue_name, uint32 queue_depth, uint32 data_size, uint32 flags)
 {
    OS_common_record_t *record;
    int32             return_code;
@@ -145,7 +145,7 @@ int32 OS_QueueCreate (osal_id_t *queue_id, const char *queue_name, uint32 queue_
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_QueueDelete (osal_id_t queue_id)
+int32 OS_QueueDelete (uint32 queue_id)
 {
    OS_common_record_t *record;
    uint32 local_id;
@@ -156,8 +156,14 @@ int32 OS_QueueDelete (osal_id_t queue_id)
    {
       return_code = OS_QueueDelete_Impl(local_id);
 
-      /* Complete the operation via the common routine */
-      return_code = OS_ObjectIdFinalizeDelete(return_code, record);
+      /* Free the entry in the master table now while still locked */
+      if (return_code == OS_SUCCESS)
+      {
+         /* Only need to clear the ID as zero is the "unused" flag */
+         record->active_id = 0;
+      }
+
+      OS_Unlock_Global(LOCAL_OBJID_TYPE);
    }
 
    return return_code;
@@ -173,7 +179,7 @@ int32 OS_QueueDelete (osal_id_t queue_id)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_QueueGet (osal_id_t queue_id, void *data, uint32 size, uint32 *size_copied, int32 timeout)
+int32 OS_QueueGet (uint32 queue_id, void *data, uint32 size, uint32 *size_copied, int32 timeout)
 {
    OS_common_record_t *record;
    uint32 local_id;
@@ -216,7 +222,7 @@ int32 OS_QueueGet (osal_id_t queue_id, void *data, uint32 size, uint32 *size_cop
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_QueuePut (osal_id_t queue_id, const void *data, uint32 size, uint32 flags)
+int32 OS_QueuePut (uint32 queue_id, const void *data, uint32 size, uint32 flags)
 {
    OS_common_record_t *record;
    uint32 local_id;
@@ -249,7 +255,7 @@ int32 OS_QueuePut (osal_id_t queue_id, const void *data, uint32 size, uint32 fla
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_QueueGetIdByName (osal_id_t *queue_id, const char *queue_name)
+int32 OS_QueueGetIdByName (uint32 *queue_id, const char *queue_name)
 {
    int32 return_code;
 
@@ -273,7 +279,7 @@ int32 OS_QueueGetIdByName (osal_id_t *queue_id, const char *queue_name)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_QueueGetInfo (osal_id_t queue_id, OS_queue_prop_t *queue_prop)
+int32 OS_QueueGetInfo (uint32 queue_id, OS_queue_prop_t *queue_prop)
 {
    OS_common_record_t *record;
    int32             return_code;

@@ -90,10 +90,8 @@ void UT_os_apiinit_test()
 {
     int32 res = 0;
     const char* testDesc;
-    osal_id_t qId;
-    uint32 qDepth = 10, qSize = 4, qFlags = 0;
-    osal_id_t semIds[3];
-    uint32 semInitValue = 1, semOptions = 0;
+    uint32 qId = 0, qDepth = 10, qSize = 4, qFlags = 0;
+    uint32 semIds[3], semInitValue = 1, semOptions = 0;
 
     /*-----------------------------------------------------*/
     testDesc = "#1 Init-not-call-first";
@@ -221,6 +219,116 @@ void UT_os_printfdisable_test()
     UT_OS_LOG("OS_printf_disable() - #1 Nominal [This is the expected stdout output after test reset]\n");
     OS_printf("OS_printf_disable() - #1 Nominal [This is the expected stdout output after test reset]\n");
 
+}
+
+/*--------------------------------------------------------------------------------*
+** Syntax: int32 OS_Tick2Micros(void)
+** Purpose: Returns the number of microseconds per OS tick
+** Parameters: None
+** Returns: Microseconds per OS tick
+**          OS_ERR_NOT_IMPLEMENTED if not implemented
+** -----------------------------------------------------
+** Test #0: Not-implemented condition
+**   1) Call this routine
+**   2) If the returned value is OS_ERR_NOT_IMPLEMENTED, then exit test
+**   3) Otherwise, continue
+** -----------------------------------------------------
+** Test #1: Nominal condition
+**   1) Call this routine
+**   2) Expect the returned value to be
+**       (a) a value greater than or equal to 0
+**--------------------------------------------------------------------------------*/
+void UT_os_tick2micros_test()
+{
+    int32 res = 0;
+    const char* testDesc;
+
+    /*-----------------------------------------------------*/
+    testDesc = "API not implemented";
+
+    res = OS_Tick2Micros();
+    if (res == OS_ERR_NOT_IMPLEMENTED)
+    {
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
+        goto UT_os_tick2micros_test_exit_tag;
+    }
+
+    /*-----------------------------------------------------*/
+    testDesc = "#1 Nominal";
+
+    res = OS_Tick2Micros();
+    if (res >= 0)
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
+    else
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
+
+UT_os_tick2micros_test_exit_tag:
+    return;
+    
+}
+
+/*--------------------------------------------------------------------------------*
+** Syntax: int32 OS_Milli2Ticks(uint32 milli_seconds)
+** Purpose: Returns the equivalent number of system clock ticks for the given period
+**          of time in milliseconds
+** Parameters: milli_seconds - the number of milliseconds to convert to ticks
+** Returns: Number of ticks in the given period of milliseconds
+**          OS_ERR_NOT_IMPLEMENTED if not implemented
+** -----------------------------------------------------
+** Test #0: Not-implemented condition
+**   1) Call this routine
+**   2) If the returned value is OS_ERR_NOT_IMPLEMENTED, then exit test
+**   3) Otherwise, continue
+** -----------------------------------------------------
+** Test #1: Zero-value-argument condition
+**   1) Call this routine with a zero argument
+**   2) Expect the returned value to be
+**        (a) exactly 0
+** -----------------------------------------------------
+** Test #2: Nominal condition
+**   1) Call this routine with a non-zero argument, T, in milli_seconds
+**   2) Expect the returned value to be
+**        (a) a value greater than or equal to 0
+**--------------------------------------------------------------------------------*/
+void UT_os_milli2ticks_test()
+{
+    int32 res = 0;
+    uint32 timeInMillisecs = 0;
+    const char* testDesc;
+
+    /*-----------------------------------------------------*/
+    testDesc = "API not implemented";
+
+    res = OS_Milli2Ticks(timeInMillisecs);
+    if (res == OS_ERR_NOT_IMPLEMENTED)
+    {
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
+        goto UT_os_milli2ticks_test_exit_tag;
+    }
+
+    /*-----------------------------------------------------*/
+    testDesc = "#1 zero-value-arg";
+
+    timeInMillisecs = 0;
+    res = OS_Milli2Ticks(timeInMillisecs);
+    if (res == 0)
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
+    else
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
+
+    /*-----------------------------------------------------*/
+    testDesc = "#2 Nominal";
+
+    timeInMillisecs = 100;
+    res = OS_Milli2Ticks(timeInMillisecs);
+    if (res >= 0)
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
+    else
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
+
+UT_os_milli2ticks_test_exit_tag:
+    return;
+    
 }
 
 /*--------------------------------------------------------------------------------*

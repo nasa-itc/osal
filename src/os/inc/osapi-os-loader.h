@@ -82,6 +82,21 @@ typedef const struct
    const char *Module;
 } OS_static_symbol_record_t;
 
+#ifndef OSAL_OMIT_DEPRECATED
+/*
+ * Define the former "OS_module_record_t" type as equivalent
+ * to the OS_module_prop_t.  This is what the OS_ModuleInfo()
+ * will output.  It used to be the same as the internal record
+ * just without all the fields filled in.  This has been changed
+ * to make it a separate structure, which will allow the internal
+ * implementation to change without further changing the API.
+ *
+ * Ideally OS_module_record_t type should be removed to avoid confusion,
+ * but this would break existing code that calls OS_ModuleInfo().
+ */
+typedef OS_module_prop_t OS_module_record_t; /**< @deprecated Use OS_module_prop_t */
+#endif
+
 /** @defgroup OSAPILoader OSAL Dynamic Loader and Symbol APIs
  * @{
  */
@@ -139,7 +154,7 @@ int32 OS_SymbolTableDump ( const char *filename, uint32 size_limit );
  * @retval #OS_ERR_NO_FREE_IDS if the module table is full
  * @retval #OS_ERR_NAME_TAKEN if the name is in use
  */
-int32 OS_ModuleLoad ( osal_id_t *module_id, const char *module_name, const char *filename );
+int32 OS_ModuleLoad ( uint32 *module_id, const char *module_name, const char *filename );
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -153,7 +168,7 @@ int32 OS_ModuleLoad ( osal_id_t *module_id, const char *module_name, const char 
  * @retval #OS_SUCCESS @copybrief OS_SUCCESS
  * @retval #OS_ERROR if the module is invalid or cannot be unloaded
  */
-int32 OS_ModuleUnload ( osal_id_t module_id );
+int32 OS_ModuleUnload ( uint32 module_id );
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -169,7 +184,7 @@ int32 OS_ModuleUnload ( osal_id_t module_id );
  * @retval #OS_ERR_INVALID_ID if the module id invalid
  * @retval #OS_INVALID_POINTER if the pointer to the ModuleInfo structure is invalid
  */
-int32 OS_ModuleInfo ( osal_id_t module_id, OS_module_prop_t *module_info );
+int32 OS_ModuleInfo ( uint32 module_id, OS_module_prop_t *module_info );
 /**@}*/
 
 #endif

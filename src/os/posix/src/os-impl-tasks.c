@@ -125,7 +125,7 @@ static void *OS_PthreadTaskEntry(void *arg)
    OS_U32ValueWrapper_t local_arg;
 
    local_arg.opaque_arg = arg;
-   OS_TaskEntryPoint(local_arg.id); /* Never returns */
+   OS_TaskEntryPoint(local_arg.value); /* Never returns */
 
    return NULL;
 }
@@ -579,7 +579,7 @@ int32 OS_TaskCreate_Impl (uint32 task_id, uint32 flags)
     int32 return_code;
 
     arg.opaque_arg = NULL;
-    arg.id = OS_global_task_table[task_id].active_id;
+    arg.value = OS_global_task_table[task_id].active_id;
 
     return_code = OS_Posix_InternalTaskCreate_Impl(
            &OS_impl_task_table[task_id].id,
@@ -730,13 +730,13 @@ int32 OS_TaskSetPriority_Impl (uint32 task_id, uint32 new_priority)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_TaskRegister_Impl(osal_id_t global_task_id)
+int32 OS_TaskRegister_Impl(uint32 global_task_id)
 {
    int32 return_code;
    OS_U32ValueWrapper_t arg;
 
    arg.opaque_arg = 0;
-   arg.id = global_task_id;
+   arg.value = global_task_id;
 
    return_code = pthread_setspecific(POSIX_GlobalVars.ThreadKey, arg.opaque_arg);
    if (return_code == 0)
@@ -761,13 +761,13 @@ int32 OS_TaskRegister_Impl(osal_id_t global_task_id)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-osal_id_t OS_TaskGetId_Impl (void)
+uint32 OS_TaskGetId_Impl (void)
 {
    OS_U32ValueWrapper_t self_record;
 
    self_record.opaque_arg = pthread_getspecific(POSIX_GlobalVars.ThreadKey);
 
-   return(self_record.id);
+   return(self_record.value);
 } /* end OS_TaskGetId_Impl */
 
 
@@ -781,6 +781,31 @@ osal_id_t OS_TaskGetId_Impl (void)
  *-----------------------------------------------------------------*/
 int32 OS_TaskGetInfo_Impl (uint32 task_id, OS_task_prop_t *task_prop)
 {
+#ifndef OSAL_OMIT_DEPRECATED
+    size_t copy_sz;
+
+   /*
+    * NOTE - this is not really valid, as you can't officially
+    * cast a pthread_t to an integer
+    * (in fact this fails on cygwin where pthread_t is NOT an integral type)
+    *
+    * This is just a hack to fill the value with something.
+    * To be portable, the application should _NOT_ be using OStask_id for anything.
+    */
+   task_prop->OStask_id = 0;
+
+   if (sizeof(pthread_t) < sizeof(task_prop->OStask_id))
+   {
+      copy_sz = sizeof(pthread_t);
+   }
+   else
+   {
+      copy_sz = sizeof(task_prop->OStask_id);
+   }
+
+   memcpy(&task_prop->OStask_id, &OS_impl_task_table[task_id].id, copy_sz);
+#endif
+
    return OS_SUCCESS;
 } /* end OS_TaskGetInfo_Impl */
 

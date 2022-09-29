@@ -65,35 +65,10 @@ OS_SharedGlobalVars_t OS_SharedGlobalVars =
             .ShutdownFlag = 0,
             .MicroSecPerTick = 0, /* invalid, _must_ be set by implementation init */
             .TicksPerSecond = 0,  /* invalid, _must_ be set by implementation init */
-            .EventHandler = NULL,
 #if defined(OSAL_CONFIG_DEBUG_PRINTF)
             .DebugLevel = 1,
 #endif
       };
-
-
-/*----------------------------------------------------------------
- *
- * Function: OS_NotifyEvent
- *
- *  Purpose: Helper function to invoke the user-defined event handler
- *
- *-----------------------------------------------------------------*/
-int32 OS_NotifyEvent(OS_Event_t event, osal_id_t object_id, void *data)
-{
-    int32 status;
-
-    if (OS_SharedGlobalVars.EventHandler != NULL)
-    {
-        status = OS_SharedGlobalVars.EventHandler(event, object_id, data);
-    }
-    else
-    {
-        status = OS_SUCCESS;
-    }
-
-    return status;
-}
 
 /*
  *********************************************************************************
@@ -224,24 +199,6 @@ int32 OS_API_Init(void)
    return(return_code);
 } /* end OS_API_Init */
 
-/*----------------------------------------------------------------
- *
- * Function: OS_RegisterEventHandler
- *
- *  Purpose: Implemented per public OSAL API
- *           See description in API and header file for detail
- *
- *-----------------------------------------------------------------*/
-int32 OS_RegisterEventHandler (OS_EventHandler_t handler)
-{
-    if (handler == NULL)
-    {
-        return OS_INVALID_POINTER;
-    }
-
-    OS_SharedGlobalVars.EventHandler = handler;
-    return OS_SUCCESS;
-}
 
 /*----------------------------------------------------------------
  *
@@ -280,7 +237,7 @@ void OS_ApplicationExit(int32 Status)
  *  Purpose: Local helper routine, not part of OSAL API.
  *
  *-----------------------------------------------------------------*/
-void OS_CleanUpObject(osal_id_t object_id, void *arg)
+void OS_CleanUpObject(uint32 object_id, void *arg)
 {
     uint32 *ObjectCount;
 
@@ -346,7 +303,7 @@ void OS_DeleteAllObjects(void)
     {
         ObjectCount = 0;
         ++TryCount;
-        OS_ForEachObject(OS_OBJECT_CREATOR_ANY, OS_CleanUpObject, &ObjectCount);
+        OS_ForEachObject(0, OS_CleanUpObject, &ObjectCount);
         if (ObjectCount == 0 || TryCount > 4)
         {
            break;

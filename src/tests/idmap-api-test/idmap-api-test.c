@@ -36,14 +36,14 @@
 #include "utbsp.h"
 
 
-osal_id_t task_id;
-osal_id_t queue_id;
-osal_id_t count_sem_id;
-osal_id_t bin_sem_id;
-osal_id_t mutex_id1;
-osal_id_t mutex_id2;
-osal_id_t mutex_id3;
-osal_id_t time_base_id;
+uint32 task_id;
+uint32 queue_id;
+uint32 count_sem_id;
+uint32 bin_sem_id;
+uint32 mutex_id1;
+uint32 mutex_id2;
+uint32 mutex_id3;
+uint32 time_base_id;
 
 #define UT_EXIT_LOOP_MAX    100
 
@@ -60,7 +60,7 @@ typedef struct
     uint32 OtherCount;
 } Test_OS_ObjTypeCount_t;
 
-static void ObjTypeCounter(osal_id_t object_id, void *arg)
+static void ObjTypeCounter(uint32 object_id, void *arg)
 {
     Test_OS_ObjTypeCount_t *count = arg;
 
@@ -95,7 +95,7 @@ static void ObjTypeCounter(osal_id_t object_id, void *arg)
 */
 void Test_Void_Fn(void)
 {
-    osal_id_t bin_sem_id_my_task;
+    uint32 bin_sem_id_my_task;
     OS_BinSemCreate( &bin_sem_id_my_task, "BinSemTaskMyTask", 1, 0);
     OS_TaskDelay(5);
 
@@ -145,14 +145,7 @@ void TestIdMapApi(void)
     uint32 TestArrayIndex; 
     uint32 TestMutex1Index; 
     uint32 TestMutex2Index; 
-    osal_id_t badid;
     Test_OS_ObjTypeCount_t Count;
-
-    /*
-     * manufacture a "bad" ID value which is neither valid
-     * nor equivalent to OS_OBJECT_ID_UNDEFINED
-     */
-    memset(&badid, 0xFF, sizeof(badid));
 
     /*
      * NOTE: The following objects were not created and tested:
@@ -202,8 +195,8 @@ void TestIdMapApi(void)
      * here.  The only check is that the function doesn't return
      * an error when called
      */
-    OS_IdentifyObject(OS_OBJECT_ID_UNDEFINED);
-    OS_IdentifyObject(badid);
+    OS_IdentifyObject(0x00000); 
+    OS_IdentifyObject(0xFFFFFFFF); 
 
     /*
      * Test Case For:
@@ -254,11 +247,11 @@ void TestIdMapApi(void)
      * Test with extreme cases using invalid inputs and checking
      * for an error return code 
      */
-    actual   = OS_ConvertToArrayIndex(OS_OBJECT_ID_UNDEFINED, &TestArrayIndex);
+    actual   = OS_ConvertToArrayIndex(0x0000, &TestArrayIndex);
     expected = OS_ERR_INVALID_ID;
     UtAssert_True(actual == expected , "OS_ConvertToArrayIndex() (%ld) == %ld ", (long)actual, (long)expected );
 
-    actual   = OS_ConvertToArrayIndex(badid, &TestArrayIndex);
+    actual   = OS_ConvertToArrayIndex(0xFFFFFFFF, &TestArrayIndex);
     expected = OS_ERR_INVALID_ID;
     UtAssert_True(actual == expected , "OS_ConvertToArrayIndex() (%ld) == %ld ", (long)actual, (long)expected );
 
@@ -268,7 +261,7 @@ void TestIdMapApi(void)
      */
     memset(&Count, 0, sizeof(Count));
 
-    OS_ForEachObject (OS_OBJECT_CREATOR_ANY, &ObjTypeCounter, &Count);
+    OS_ForEachObject (0, &ObjTypeCounter, &Count);
 
     /* Verify Outputs */
     UtAssert_True(Count.TaskCount == 0, "OS_ForEachObject() TaskCount (%lu) == 0", (unsigned long)Count.TaskCount);
@@ -292,7 +285,7 @@ void TestIdMapApi(void)
      */
     memset(&Count, 0, sizeof(Count));
     OS_DeleteAllObjects();
-    OS_ForEachObject (OS_OBJECT_CREATOR_ANY, &ObjTypeCounter, &Count);
+    OS_ForEachObject (0, &ObjTypeCounter, &Count);
 
     /* Verify Outputs */
     UtAssert_True(Count.TaskCount == 0, "OS_ForEachObject() TaskCount After Delete (%lu) == 0", (unsigned long)Count.TaskCount);
@@ -305,7 +298,7 @@ void TestIdMapApi(void)
     /*
      * Pass an invalid input, and verify that object counts are not increased
      */
-    OS_ForEachObject (badid, &ObjTypeCounter, &Count);
+    OS_ForEachObject (0xFFFFFFFF, &ObjTypeCounter, &Count); 
 
     /* Verify Outputs */
     UtAssert_True(Count.TaskCount == 0, "OS_ForEachObject() TaskCount Invalid Input (%lu) == 0", (unsigned long)Count.TaskCount);

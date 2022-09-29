@@ -83,7 +83,62 @@ OS_impl_filesys_internal_record_t OS_impl_filesys_table[OS_MAX_FILE_SYSTEMS];
  ***************************************************************************************/
 
 /* --------------------------------------------------------------------------------------
-    Name: OS_Posix_FileSysAPI_Impl_Init
+    Name: OS_FileSysSetupRamdisk
+
+    Purpose: Helper function to setup RTEMS RAM disk 
+
+    Returns: OS_SUCCESS if success
+ ---------------------------------------------------------------------------------------*/
+int32 OS_FileSysSetupRamdisk (char *phys_dev_name, uint32 *address, uint32 block_size, uint32 num_blocks) 
+{
+   rtems_status_code         sc = RTEMS_SUCCESSFUL;
+   ramdisk                  *rd = NULL;
+
+   /*
+   ** check parameters
+   */
+   if ( num_blocks == 0 )
+   {
+       OS_DEBUG("OSAL: Error: Cannot Create RAM disk, num_blocks = 0\n");
+       return(OS_FS_ERROR);
+   }
+   if ( block_size != 512 )
+   {
+       OS_DEBUG("OSAL: Error: RAM Disk currently needs a block size of 512.\n");
+       return(OS_FS_ERROR);
+   }
+
+   /*
+   ** Allocate the memory if address is null
+   ** otherwise, use the address that was passed in
+   */
+   rd = ramdisk_allocate(address, block_size, num_blocks, false);
+   if (rd == NULL)
+   {
+      OS_DEBUG("OSAL: Error: ramdisk_allocate failed.\n");
+      return(OS_FS_ERROR);
+   }
+   sc = rtems_blkdev_create(
+     phys_dev_name,
+     block_size,
+     num_blocks,
+     ramdisk_ioctl,
+     rd
+   );
+
+   if (sc != RTEMS_SUCCESSFUL)
+   {
+      OS_DEBUG("OSAL: Error: rtems_blkdev_create failed.\n");
+      ramdisk_free(rd);
+      return (OS_FS_ERROR);
+   }
+
+   OS_DEBUG("OSAL: RAM disk %s initialized\n", phys_dev_name);
+   return(OS_SUCCESS);
+}
+
+/* --------------------------------------------------------------------------------------
+    Name: OS_Rtems_FileSysAPI_Impl_Init
 
     Purpose: Filesystem API global initialization
 
@@ -112,6 +167,7 @@ int32 OS_FileSysStartVolume_Impl (uint32 filesys_id)
     OS_impl_filesys_internal_record_t *impl = &OS_impl_filesys_table[filesys_id];
     rtems_status_code sc;
     int32  return_code;
+    char  rtems_dev_name[10];
 
     return_code = OS_ERR_NOT_IMPLEMENTED;
     memset(impl,0,sizeof(*impl));
@@ -186,13 +242,13 @@ int32 OS_FileSysStartVolume_Impl (uint32 filesys_id)
         OS_DEBUG("RAM disk initialized: volume=%s device=%s address=0x%08lX\n",
                 local->volume_name, impl->blockdev_name, (unsigned long)local->address);
 
-        return_code = OS_SUCCESS;
+        return_code = OS_FileSysSetupRamdisk (impl->blockdev_name,  (uint32 *)local->address, local->blocksize, local->numblocks); 
+
         break;
     }
     default:
         break;
     }
-
 
     /*
      * If the operation was generally successful but a (real) FS
@@ -206,8 +262,6 @@ int32 OS_FileSysStartVolume_Impl (uint32 filesys_id)
         OS_DEBUG("OSAL: using mount point %s for %s\n",
                 local->system_mountpt, local->volume_name);
     }
-
-
     return return_code;
 
 } /* end OS_FileSysStartVolume_Impl */

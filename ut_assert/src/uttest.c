@@ -35,20 +35,11 @@
  */
 UtAssert_Global_t UtAssert_Global;
 
-enum
-{
-    UTASSERT_GROUP_DEFAULT = 0,
-    UTASSERT_GROUP_SETUP,
-    UTASSERT_GROUP_TEST,
-    UTASSERT_GROUP_TEARDOWN,
-    UTASSERT_GROUP_MAX
-};
-
 /*
  * Function Definitions
  */
 
-void UtTest_AddCommon(void (*Test)(void), void (*Setup)(void), void (*Teardown)(void), const char *TestName, uint32 EntryType)
+void UtTest_Add(void (*Test)(void), void (*Setup)(void), void (*Teardown)(void), const char *TestName)
 {
     UtTestDataBaseEntry_t   UtTestDataBaseEntry;
 
@@ -56,61 +47,23 @@ void UtTest_AddCommon(void (*Test)(void), void (*Setup)(void), void (*Teardown)(
     UtTestDataBaseEntry.Test = Test;
     UtTestDataBaseEntry.Setup = Setup;
     UtTestDataBaseEntry.Teardown = Teardown;
-    if (TestName != NULL)
-    {
-        strncpy(UtTestDataBaseEntry.TestName, TestName, sizeof(UtTestDataBaseEntry.TestName)-1);
-    }
-
-    UtList_Add(UtAssert_Global.DataBasePtr, &UtTestDataBaseEntry, sizeof(UtTestDataBaseEntry_t), EntryType);
+    strncpy(UtTestDataBaseEntry.TestName, TestName, sizeof(UtTestDataBaseEntry.TestName)-1);
+    UtList_Add(&UtAssert_Global.DataBase, &UtTestDataBaseEntry, sizeof(UtTestDataBaseEntry_t), 0);
 }
-
-void UtTest_Add(void (*Test)(void), void (*Setup)(void), void (*Teardown)(void), const char *SequenceName)
-{
-    UtTest_AddCommon(Test, Setup, Teardown, SequenceName, UTASSERT_GROUP_TEST);
-}
-
-void UtTest_AddSetup(void (*Setup)(void), const char *SequenceName)
-{
-    UtTest_AddCommon(NULL, Setup, NULL, SequenceName, UTASSERT_GROUP_SETUP);
-}
-
-void UtTest_AddTeardown(void (*Teardown)(void), const char *SequenceName)
-{
-    UtTest_AddCommon(NULL, NULL, Teardown, SequenceName, UTASSERT_GROUP_TEARDOWN);
-}
-
 
 void UtTest_Run(void)
 {
-    UtListNode_t            *UtListMain;
+    uint32                   i;
     UtListNode_t            *UtListNode;
     UtTestDataBaseEntry_t   *UtTestDataBaseEntry;
     
-    /*
-     * The overall test sequence goes SETUP->TEST->TEARDOWN
-     *
-     * Combine all registered test groups into a merged group for execution.
-     *
-     * This could also (theoretically) randomize the order of the "TEST" group
-     * while assembling this list, if there was a portable source of entropy.
-     */
-    UtListMain = UtList_GetHead(UtAssert_Global.DataBasePtr,UTASSERT_GROUP_DEFAULT);
-    UtList_Merge(UtListMain, UtList_GetHead(UtAssert_Global.DataBasePtr,UTASSERT_GROUP_SETUP));
-    UtList_Merge(UtListMain, UtList_GetHead(UtAssert_Global.DataBasePtr,UTASSERT_GROUP_TEST));
-    UtList_Merge(UtListMain, UtList_GetHead(UtAssert_Global.DataBasePtr,UTASSERT_GROUP_TEARDOWN));
-
-
-    /*
-     * Run through the merged list in order
-     */
-    for (UtListNode = UtList_GetNext(UtListMain);
-            !UtList_IsEnd(UtListMain, UtListNode);
-            UtListNode = UtList_GetNext(UtListNode))
-    {
-        UtTestDataBaseEntry = UtList_GetObject(UtListNode);
+    if (UtAssert_Global.DataBase.NumberOfEntries > 0) {
         
-        if (UtTestDataBaseEntry != NULL)
-        {
+        UtListNode = UtAssert_Global.DataBase.First;
+        for (i=0; i < UtAssert_Global.DataBase.NumberOfEntries; i++) {
+            
+            UtTestDataBaseEntry = UtListNode->Data;
+
             UtAssert_BeginTest(UtTestDataBaseEntry->TestName);
 
             UtAssert_SetContext(UTASSERT_CASETYPE_TSF);
@@ -121,10 +74,12 @@ void UtTest_Run(void)
             if (UtTestDataBaseEntry->Teardown) { UtTestDataBaseEntry->Teardown(); }
 
             UtAssert_EndTest();
+
+            UtListNode = UtListNode->Next;
         }
     }
 
-    UtList_Destroy(UtAssert_Global.DataBasePtr);
+    UtList_Reset(&UtAssert_Global.DataBase);
 
     UT_BSP_EndTest(UtAssert_GetCounters());
 }
@@ -135,7 +90,6 @@ void UtTest_EarlyInit(void)
      * Reset the test global variables, just in case.
      */
     memset(&UtAssert_Global, 0, sizeof(UtAssert_Global));
-    UtAssert_Global.DataBasePtr = UtList_Create(UTASSERT_GROUP_MAX);
 }
 
 

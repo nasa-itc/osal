@@ -37,165 +37,138 @@
  * Function Definitions
  */
 
-UtListHead_t *UtList_Create(uint32 NumTags)
+UtListHead_t *UtList_Create(void)
 {
-    struct ListAllocator
-    {
-        UtListHead_t Head;
-        UtListNode_t Tags[];
-    };
-    struct ListAllocator *NewList;
-    UtListNode_t *TagHead;
-    size_t ActualSize;
-    uint32 i;
+    UtListHead_t *NewList;
 
-    ActualSize = sizeof(struct ListAllocator) + (sizeof(UtListNode_t) * NumTags);
-    NewList = (struct ListAllocator *)malloc(ActualSize);
-
-    memset(NewList, 0, ActualSize);
-
-    NewList->Head.Tags = NewList->Tags;
-    NewList->Head.NumberOfTags = NumTags;
-
-    for (i=0; i < NumTags; ++i)
-    {
-        TagHead = &NewList->Head.Tags[i];
-        TagHead->Tag = i;
-        TagHead->Next = TagHead;
-        TagHead->Prev = TagHead;
-    }
-
-    return (&NewList->Head);
+    NewList = malloc(sizeof(UtListHead_t));
+    NewList->First = NULL;
+    NewList->Last = NULL;
+    NewList->NumberOfEntries = 0;
+    return (NewList);
 }
 
 void UtList_Destroy(UtListHead_t *ListHead)
 {
-    uint32 i;
-
-    for (i=0; i < ListHead->NumberOfTags; ++i)
-    {
-        UtList_Reset(&ListHead->Tags[i]);
-    }
+    UtList_Reset(ListHead);
     free(ListHead);
 }
 
-void UtList_Reset(UtListNode_t *TagHead)
+void UtList_Reset(UtListHead_t *ListHead)
 {
-    while (!UtList_IsEmpty(TagHead))
-    {
-        UtList_DeleteNode(TagHead->Next);
+    while (!UtList_IsEmpty(ListHead)) {
+        UtList_DeleteFirst(ListHead);
     }
 }
-
-void UtList_Merge(UtListNode_t *TagHead1, UtListNode_t *TagHead2)
-{
-    UtListNode_t *Tail1 = TagHead1->Prev;
-    UtListNode_t *Tail2 = TagHead2->Prev;
-
-    Tail1->Next = TagHead2;
-    Tail2->Next = TagHead1;
-    TagHead1->Prev = Tail2;
-    TagHead2->Prev = Tail1;
-}
-
-void UtList_Insert_After(UtListNode_t *ExistingNode, UtListNode_t *NewNode)
-{
-    NewNode->Next = ExistingNode->Next;
-    NewNode->Prev = ExistingNode;
-    NewNode->Prev->Next = NewNode;
-    NewNode->Next->Prev = NewNode;
-}
-
-void UtList_Insert_Before(UtListNode_t *ExistingNode, UtListNode_t *NewNode)
-{
-    NewNode->Next = ExistingNode;
-    NewNode->Prev = ExistingNode->Prev;
-    NewNode->Prev->Next = NewNode;
-    NewNode->Next->Prev = NewNode;
-}
-
-void UtList_Extract(UtListNode_t *ExistingNode)
-{
-    ExistingNode->Next->Prev = ExistingNode->Prev;
-    ExistingNode->Prev->Next = ExistingNode->Next;
-    ExistingNode->Next = ExistingNode;
-    ExistingNode->Prev = ExistingNode;
-}
-
-UtListNode_t *UtList_NewNode(void *Data, uint32 DataSize)
-{
-    union NodeAllocator
-    {
-        UtListNode_t Node;
-        double       AlignDbl;
-        void*        AlignPtr;
-        long         AlignLong;
-    } *AllocNode;
-
-    AllocNode = malloc(sizeof(union NodeAllocator) + DataSize);
-    memset(AllocNode, 0, sizeof(union NodeAllocator));
-    AllocNode->Node.Data = &AllocNode[1];
-    AllocNode->Node.DataSize = DataSize;
-    memcpy(AllocNode->Node.Data, Data, DataSize);
-
-    AllocNode->Node.Next = &AllocNode->Node;
-    AllocNode->Node.Prev = &AllocNode->Node;
-
-    return &AllocNode->Node;
-}
-
 
 void UtList_Add(UtListHead_t *ListHead, void *Data, uint32 DataSize, uint32 Tag)
 {
-    UtListNode_t *TagHead;
-    UtListNode_t *NewNode;
+    UtListNode_t *NewNode = NULL;
+    
+    NewNode = malloc(sizeof(UtListNode_t));
+    if (ListHead->NumberOfEntries == 0) {
 
-    TagHead = UtList_GetHead(ListHead, Tag);
-    if (TagHead != NULL)
-    {
-        NewNode = UtList_NewNode(Data, DataSize);
+        ListHead->First = NewNode;
+        ListHead->Last = NewNode;
+        ListHead->NumberOfEntries++;
+
+        NewNode->Next = NULL;
+        NewNode->Prev = NULL;
         NewNode->Tag = Tag;
-        UtList_Insert_Before(TagHead, NewNode);
+        NewNode->DataSize = DataSize;
+        NewNode->Data = malloc(DataSize);
+        memcpy(NewNode->Data, Data, DataSize);
+    }
+    else {
+
+        NewNode->Next = NULL;
+        NewNode->Prev = ListHead->Last;
+        NewNode->Tag = Tag;
+        NewNode->DataSize = DataSize;
+        NewNode->Data = malloc(DataSize);
+        memcpy(NewNode->Data, Data, DataSize);
+
+        ListHead->Last->Next = NewNode;
+        ListHead->Last = NewNode;
+        ListHead->NumberOfEntries++;
     }
 }
 
-void UtList_DeleteNode(UtListNode_t *DeleteNode)
+void UtList_DeleteFirst(UtListHead_t *ListHead)
 {
-    UtList_Extract(DeleteNode);
+    UtList_DeleteNode(ListHead, ListHead->First);
+}
 
-    /* non-data/header nodes shouldn't be free()'ed */
-    if (DeleteNode->Data != NULL)
-    {
+void UtList_DeleteLast(UtListHead_t *ListHead)
+{
+    UtList_DeleteNode(ListHead, ListHead->Last);
+}
+
+void UtList_DeleteNode(UtListHead_t *ListHead, UtListNode_t *DeleteNode)
+{
+   
+    if (!UtList_IsEmpty(ListHead)) {
+
+        if (ListHead->NumberOfEntries == 1) {
+            ListHead->First = NULL;
+            ListHead->Last = NULL;
+            ListHead->NumberOfEntries = 0;
+        }
+        else if (DeleteNode == ListHead->First) {
+            ListHead->First = DeleteNode->Next;
+            ListHead->First->Prev = NULL;
+            ListHead->NumberOfEntries--;
+        }
+        else if (DeleteNode == ListHead->Last) {
+            ListHead->Last = DeleteNode->Prev;
+            ListHead->Last->Next = NULL;
+            ListHead->NumberOfEntries--;        
+        }
+        else {
+            DeleteNode->Prev->Next = DeleteNode->Next;
+            DeleteNode->Next->Prev = DeleteNode->Prev;
+            ListHead->NumberOfEntries--;
+        }
+
+        free(DeleteNode->Data);
         free(DeleteNode);
     }
 }
 
-bool UtList_IsEmpty(UtListNode_t *TagHead)
+void UtList_RemoveFirst(UtListHead_t *ListHead, void *Data)
 {
-    return(TagHead->Next == TagHead);
+    UtList_RemoveNode(ListHead, Data, ListHead->First);
 }
 
-UtListNode_t *UtList_GetHead(UtListHead_t *ListHead, uint32 Tag)
+void UtList_RemoveLast(UtListHead_t *ListHead, void *Data)
 {
-    if (Tag >= ListHead->NumberOfTags)
-    {
-        return NULL;
+    UtList_RemoveNode(ListHead, Data, ListHead->Last);
+}
+
+void UtList_RemoveNode(UtListHead_t *ListHead, void *Data, UtListNode_t *CurrentNode)
+{
+    if (!UtList_IsEmpty(ListHead)) {
+        memcpy(Data, CurrentNode->Data, CurrentNode->DataSize);
+        UtList_DeleteNode(ListHead, CurrentNode);
     }
-    return &ListHead->Tags[Tag];
 }
 
-UtListNode_t *UtList_GetNext(UtListNode_t *ListNode)
+UtListNode_t *UtList_First(UtListHead_t *ListHead)
 {
-    return ListNode->Next;
+    return(ListHead->First);
 }
 
-void *UtList_GetObject(UtListNode_t *ListNode)
+UtListNode_t *UtList_Last(UtListHead_t *ListHead)
 {
-    return ListNode->Data;
+    return(ListHead->Last);
 }
 
-bool UtList_IsEnd(UtListNode_t *TagHead, UtListNode_t *ListNode)
+bool UtList_IsEmpty(UtListHead_t *ListHead)
 {
-    return(TagHead == ListNode);
+    return(ListHead->NumberOfEntries == 0);
 }
 
+uint32 UtList_Depth(UtListHead_t *ListHead)
+{
+    return(ListHead->NumberOfEntries);
+}

@@ -59,15 +59,10 @@
 #define OS_MAX_TASK_PRIORITY        255
 
 /**
- * @brief Initializer for the osal_id_t type which will not match any valid value
- */
-#define OS_OBJECT_ID_UNDEFINED      ((osal_id_t){0})
-
-/**
  * @brief Constant that may be passed to OS_ForEachObject()/OS_ForEachObjectOfType() to match any
  * creator (i.e. get all objects)
  */
-#define OS_OBJECT_CREATOR_ANY       OS_OBJECT_ID_UNDEFINED
+#define OS_OBJECT_CREATOR_ANY       0
 
 
 /** @defgroup OSSemaphoreStates OSAL Semaphore State Defines
@@ -87,30 +82,32 @@
  */
 #define OS_ERROR_NAME_LENGTH     35
 
-
 /*  Object property structures */
 
 /** @brief OSAL task properties */
 typedef struct
 {
     char name [OS_MAX_API_NAME];
-    osal_id_t creator;
+    uint32 creator;
     uint32 stack_size;
     uint32 priority;
+#ifndef OSAL_OMIT_DEPRECATED
+    uint32 OStask_id;   /**< @deprecated */
+#endif
 }OS_task_prop_t;
     
 /** @brief OSAL queue properties */
 typedef struct
 {
     char name [OS_MAX_API_NAME];
-    osal_id_t creator;
+    uint32 creator;
 }OS_queue_prop_t;
 
 /** @brief OSAL binary semaphore properties */
 typedef struct
 {                     
     char name [OS_MAX_API_NAME];
-    osal_id_t creator;
+    uint32 creator;
     int32  value;
 }OS_bin_sem_prop_t;
 
@@ -118,7 +115,7 @@ typedef struct
 typedef struct
 {                     
     char name [OS_MAX_API_NAME];
-    osal_id_t creator;
+    uint32 creator;
     int32 value;
 }OS_count_sem_prop_t;
 
@@ -126,7 +123,7 @@ typedef struct
 typedef struct
 {
     char name [OS_MAX_API_NAME];
-    osal_id_t creator;
+    uint32 creator;
 }OS_mut_sem_prop_t;
 
 
@@ -177,75 +174,6 @@ typedef enum
 } OS_StreamState_t;
 
 /**
- * @brief A set of events that can be used with event callback routines
- */
-typedef enum
-{
-    OS_EVENT_RESERVED = 0,          /**< no-op/reserved event id value */
-
-    /**
-     * resource/id has been newly allocated but not yet created.
-     *
-     * This event is invoked from WITHIN the locked region, in
-     * the context of the task which is allocating the resource.
-     *
-     * If the handler returns non-success, the error will be returned
-     * to the caller and the creation process is aborted.
-     */
-    OS_EVENT_RESOURCE_ALLOCATED,
-
-    /**
-     * resource/id has been fully created/finalized.
-     *
-     * Invoked outside locked region, in the context
-     * of the task which created the resource.
-     *
-     * Data object is not used, passed as NULL.
-     *
-     * Return value is ignored - this is for information purposes only.
-     */
-    OS_EVENT_RESOURCE_CREATED,
-
-    /**
-     * resource/id has been deleted.
-     *
-     * Invoked outside locked region, in the context
-     * of the task which deleted the resource.
-     *
-     * Data object is not used, passed as NULL.
-     *
-     * Return value is ignored - this is for information purposes only.
-     */
-    OS_EVENT_RESOURCE_DELETED,
-
-    /**
-     * New task is starting.
-     *
-     * Invoked outside locked region, in the context
-     * of the task which is currently starting, before
-     * the entry point is called.
-     *
-     * Data object is not used, passed as NULL.
-     *
-     * If the handler returns non-success, task startup is aborted
-     * and the entry point is not called.
-     */
-    OS_EVENT_TASK_STARTUP,
-
-    OS_EVENT_MAX                    /**< placeholder for end of enum, not used */
-} OS_Event_t;
-
-/**
- * @brief A callback routine for event handling.
- *
- * @param[in]    event      The event that occurred
- * @param[in]    object_id  The associated object_id, or 0 if not associated with an object
- * @param[inout] data       An abstract data/context object associated with the event, or NULL.
- * @return status Execution status, see @ref OSReturnCodes.
- */
-typedef int32 (*OS_EventHandler_t)(OS_Event_t event, osal_id_t object_id, void *data);
-
-/**
  * @brief For the @ref OS_GetErrorName() function, to ensure
  * everyone is making an array of the same length.
  *
@@ -268,7 +196,7 @@ typedef osal_task ((*osal_task_entry)(void)); /**< @brief For task entry point *
  *
  * This may be used by multiple APIS
  */
-typedef void (*OS_ArgCallback_t)(osal_id_t object_id, void *arg);
+typedef void (*OS_ArgCallback_t)(uint32 object_id, void *arg);
 
 /** @defgroup OSAPICore OSAL Core Operation APIs
  *
@@ -370,93 +298,6 @@ void OS_ApplicationExit(int32 Status);
 
 /*-------------------------------------------------------------------------------------*/
 /**
- * @brief Obtain an integer value corresponding to an object ID
- *
- * Obtains an integer representation of an object id, generally
- * for the purpose of printing to the console or system logs.
- *
- * The returned value is of the type "unsigned long" for direct use with
- * printf-style functions. It is recommended to use the "%lx" conversion
- * specifier as the hexidecimal encoding clearly delineates the internal fields.
- *
- * @note This provides the raw integer value and is _not_ suitable for use
- * as an array index, as the result is not zero-based.  See the
- * OS_ConvertToArrayIndex() to obtain a zero-based index value.
- *
- * @param[in]   object_id The object ID
- * @returns     integer value representation of object ID
- *
- * @hidecallgraph
- * @hidecallergraph
- */
-static inline unsigned long OS_ObjectIdToInteger(osal_id_t object_id)
-{
-    return object_id;
-}
-
-/*-------------------------------------------------------------------------------------*/
-/**
- * @brief Obtain an osal ID corresponding to an integer value
- *
- * Provides the inverse of OS_ObjectIdToInteger().  Reconstitutes the original
- * osal_id_t type from an integer representation.
- *
- * @param[in]   value   The integer representation of an OSAL ID
- * @returns     The ID value converted to an osal_id_t
- *
- * @hidecallgraph
- * @hidecallergraph
- */
-static inline osal_id_t OS_ObjectIdFromInteger(unsigned long value)
-{
-    return value;
-}
-
-/*-------------------------------------------------------------------------------------*/
-/**
- * @brief Check two OSAL object ID values for equality
- *
- * The OSAL ID values should be treated as abstract values by applications, and not
- * directly manipulated using standard C operators.
- *
- * This checks two values for equality, replacing the "==" operator.
- *
- * @param[in]   object_id1 The first object ID
- * @param[in]   object_id2 The second object ID
- * @returns     true if the object IDs are equal
- *
- * @hidecallgraph
- * @hidecallergraph
- */
-static inline bool OS_ObjectIdEqual(osal_id_t object_id1, osal_id_t object_id2)
-{
-    return (object_id1 == object_id2);
-}
-
-/*-------------------------------------------------------------------------------------*/
-/**
- * @brief Check if an object ID is defined.
- *
- * The OSAL ID values should be treated as abstract values by applications, and not
- * directly manipulated using standard C operators.
- *
- * This returns false if the ID is NOT a defined resource (i.e. free/empty/invalid).
- *
- * @note OS_ObjectIdDefined(OS_OBJECT_ID_UNDEFINED) is always guaranteed to be false.
- *
- * @param[in]   object_id The first object ID
- *
- * @hidecallgraph
- * @hidecallergraph
- */
-static inline bool OS_ObjectIdDefined(osal_id_t object_id)
-{
-    return (object_id != 0);
-}
-
-
-/*-------------------------------------------------------------------------------------*/
-/**
  * @brief Obtain the name of an object given an arbitrary object ID
  *
  * All OSAL resources generally have a name associated with them.  This
@@ -471,7 +312,7 @@ static inline bool OS_ObjectIdDefined(osal_id_t object_id)
  *          #OS_INVALID_POINTER if the passed-in buffer is invalid
  *          #OS_ERR_NAME_TOO_LONG if the name will not fit in the buffer provided
  */
-int32 OS_GetResourceName(osal_id_t object_id, char *buffer, uint32 buffer_size);
+int32 OS_GetResourceName(uint32 object_id, char *buffer, uint32 buffer_size);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -484,7 +325,7 @@ int32 OS_GetResourceName(osal_id_t object_id, char *buffer, uint32 buffer_size);
  * @return The object type portion of the object_id, see @ref OSObjectTypes for
  *         expected values
  */
-uint32 OS_IdentifyObject       (osal_id_t object_id);
+uint32 OS_IdentifyObject       (uint32 object_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -497,12 +338,6 @@ uint32 OS_IdentifyObject       (osal_id_t object_id);
  * @note This does NOT verify the validity of the ID, that is left to the caller.
  * This is only the conversion logic.
  *
- * This routine accepts any object type, and returns a value based on the
- * maximum number of objects for that type.  This is equivalent to invoking
- * OS_ObjectIdToArrayIndex() with the idtype set to OS_OBJECT_TYPE_UNDEFINED.
- *
- * @sa OS_ObjectIdToArrayIndex
- *
  * @param[in]  object_id    The object ID to operate on
  * @param[out] *ArrayIndex  The Index to return 
  *
@@ -510,40 +345,7 @@ uint32 OS_IdentifyObject       (osal_id_t object_id);
  * @retval #OS_SUCCESS                 @copybrief OS_SUCCESS
  * @retval #OS_ERR_INCORRECT_OBJ_TYPE  @copybrief OS_ERR_INCORRECT_OBJ_TYPE
  */
-int32 OS_ConvertToArrayIndex   (osal_id_t object_id, uint32 *ArrayIndex);
-
-/*-------------------------------------------------------------------------------------*/
-/**
- * @brief Converts an abstract ID into a number suitable for use as an array index.
- *
- * This will return a unique zero-based integer number in the range of [0,MAX) for
- * any valid object ID.  This may be used by application code as an array index
- * for indexing into local tables.
- *
- * This routine operates on a specific object type, and returns a value based on the
- * maximum number of objects for that type.
- *
- * If the idtype is passed as #OS_OBJECT_TYPE_UNDEFINED, then object type verification
- * is skipped and any object ID will be accepted and converted to an index.  In this
- * mode, the range of the output depends on the actual passed-in object type.
- *
- * If the idtype is passed as any other value, the passed-in ID value is first
- * confirmed to be the correct type.  This check will guarantee that the output
- * is within an expected range; for instance, if the type is passed as
- * #OS_OBJECT_TYPE_OS_TASK, then the output index is guaranteed to be between 0 and
- * #OS_MAX_TASKS-1 after successful conversion.
- *
- * @param[in]  idtype       The object type to convert
- * @param[in]  object_id    The object ID to operate on
- * @param[out] *ArrayIndex  The Index to return
- *
- * @return Execution status, see @ref OSReturnCodes
- * @retval #OS_SUCCESS                 @copybrief OS_SUCCESS
- * @retval #OS_ERR_INCORRECT_OBJ_TYPE  @copybrief OS_ERR_INCORRECT_OBJ_TYPE
- * */
-int32 OS_ObjectIdToArrayIndex(uint32 idtype, osal_id_t object_id, uint32 *ArrayIndex);
-
-
+int32 OS_ConvertToArrayIndex   (uint32 object_id, uint32 *ArrayIndex);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -557,7 +359,8 @@ int32 OS_ObjectIdToArrayIndex(uint32 idtype, osal_id_t object_id, uint32 *ArrayI
  * @param[in]  callback_ptr Function to invoke for each matching object ID
  * @param[in]  callback_arg Opaque Argument to pass to callback function
  */
-void OS_ForEachObject           (osal_id_t creator_id, OS_ArgCallback_t callback_ptr, void *callback_arg);
+void OS_ForEachObject           (uint32 creator_id, OS_ArgCallback_t callback_ptr, void *callback_arg);
+/**@}*/
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -572,27 +375,7 @@ void OS_ForEachObject           (osal_id_t creator_id, OS_ArgCallback_t callback
  * @param[in]  callback_ptr Function to invoke for each matching object ID
  * @param[in]  callback_arg Opaque Argument to pass to callback function
   */
-void OS_ForEachObjectOfType     (uint32 objtype, osal_id_t creator_id, OS_ArgCallback_t callback_ptr, void *callback_arg);
-
-/*-------------------------------------------------------------------------------------*/
-/**
- * @brief Callback routine registration
- *
- * This hook enables the application code to perform extra platform-specific
- * operations on various system events such as resource creation/deletion.
- *
- * @note Some events are invoked while the resource is "locked" and therefore
- * application-defined handlers for these events should not block or attempt
- * to access other OSAL resources.
- *
- * @param[in] handler The application-provided event handler
- * @return Execution status, see @ref OSReturnCodes.
- * @retval #OS_SUCCESS @copybrief OS_SUCCESS
- * @retval #OS_ERROR   @copybrief OS_ERROR
- */
-int32 OS_RegisterEventHandler (OS_EventHandler_t handler);
-
-/**@}*/
+void OS_ForEachObjectOfType     (uint32 objtype, uint32 creator_id, OS_ArgCallback_t callback_ptr, void *callback_arg);
 
 
 /** @defgroup OSAPITask OSAL Task APIs
@@ -624,7 +407,7 @@ int32 OS_RegisterEventHandler (OS_EventHandler_t handler);
  * @retval #OS_ERR_NAME_TAKEN if the name specified is already used by a task
  * @retval #OS_ERROR if an unspecified/other error occurs
  */
-int32 OS_TaskCreate            (osal_id_t *task_id, const char *task_name,
+int32 OS_TaskCreate            (uint32 *task_id, const char *task_name, 
                                 osal_task_entry function_pointer,
                                 uint32 *stack_pointer,
                                 uint32 stack_size,
@@ -644,7 +427,7 @@ int32 OS_TaskCreate            (osal_id_t *task_id, const char *task_name,
  * @retval #OS_ERR_INVALID_ID if the ID given to it is invalid
  * @retval #OS_ERROR if the OS delete call fails
  */
-int32 OS_TaskDelete            (osal_id_t task_id);
+int32 OS_TaskDelete            (uint32 task_id); 
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -697,7 +480,7 @@ int32 OS_TaskDelay             (uint32 millisecond);
  * @retval #OS_ERR_INVALID_PRIORITY if the priority is greater than the max allowed
  * @retval #OS_ERROR if the OS call to change the priority fails
  */
-int32 OS_TaskSetPriority       (osal_id_t task_id, uint32 new_priority);
+int32 OS_TaskSetPriority       (uint32 task_id, uint32 new_priority);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -719,7 +502,7 @@ int32 OS_TaskRegister          (void);
  *
  * @return Task ID, or zero if the operation failed (zero is never a valid task ID)
  */
-osal_id_t OS_TaskGetId            (void);
+uint32 OS_TaskGetId            (void);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -736,7 +519,7 @@ osal_id_t OS_TaskGetId            (void);
  * @retval #OS_ERR_NAME_TOO_LONG name length including null terminator greater than #OS_MAX_API_NAME
  * @retval #OS_ERR_NAME_NOT_FOUND if the name wasn't found in the table
  */
-int32 OS_TaskGetIdByName       (osal_id_t *task_id, const char *task_name);
+int32 OS_TaskGetIdByName       (uint32 *task_id, const char *task_name);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -754,7 +537,7 @@ int32 OS_TaskGetIdByName       (osal_id_t *task_id, const char *task_name);
  * @retval #OS_ERR_INVALID_ID if the ID passed to it is invalid
  * @retval #OS_INVALID_POINTER if the task_prop pointer is NULL
  */
-int32 OS_TaskGetInfo           (osal_id_t task_id, OS_task_prop_t *task_prop);
+int32 OS_TaskGetInfo           (uint32 task_id, OS_task_prop_t *task_prop);          
 
 
 /*-------------------------------------------------------------------------------------*/
@@ -775,7 +558,7 @@ int32 OS_TaskGetInfo           (osal_id_t task_id, OS_task_prop_t *task_prop);
  * @return Execution status, see @ref OSReturnCodes
  * @retval #OS_SUCCESS @copybrief OS_SUCCESS
  */
-int32 OS_TaskFindIdBySystemData(osal_id_t *task_id, const void *sysdata, size_t sysdata_size);
+int32 OS_TaskFindIdBySystemData(uint32 *task_id, const void *sysdata, size_t sysdata_size);
 
 
 /**@}*/
@@ -809,7 +592,7 @@ int32 OS_TaskFindIdBySystemData(osal_id_t *task_id, const void *sysdata, size_t 
  * @retval #OS_QUEUE_INVALID_SIZE if the queue depth exceeds the limit
  * @retval #OS_ERROR if the OS create call fails
  */
-int32 OS_QueueCreate           (osal_id_t *queue_id, const char *queue_name,
+int32 OS_QueueCreate           (uint32 *queue_id, const char *queue_name,
                                 uint32 queue_depth, uint32 data_size, uint32 flags);
 
 /*-------------------------------------------------------------------------------------*/
@@ -829,7 +612,7 @@ int32 OS_QueueCreate           (osal_id_t *queue_id, const char *queue_name,
  * @retval #OS_ERR_INVALID_ID if the id passed in does not exist
  * @retval #OS_ERROR if the OS call to delete the queue fails
  */
-int32 OS_QueueDelete           (osal_id_t queue_id);
+int32 OS_QueueDelete           (uint32 queue_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -852,7 +635,7 @@ int32 OS_QueueDelete           (osal_id_t queue_id);
  * @retval #OS_QUEUE_TIMEOUT if the timeout was OS_PEND and the time expired
  * @retval #OS_QUEUE_INVALID_SIZE if the size copied from the queue was not correct
  */
-int32 OS_QueueGet              (osal_id_t queue_id, void *data, uint32 size,
+int32 OS_QueueGet              (uint32 queue_id, void *data, uint32 size, 
                                 uint32 *size_copied, int32 timeout);
 
 /*-------------------------------------------------------------------------------------*/
@@ -871,7 +654,7 @@ int32 OS_QueueGet              (osal_id_t queue_id, void *data, uint32 size,
  * @retval #OS_QUEUE_FULL if the queue cannot accept another message
  * @retval #OS_ERROR if the OS call returns an error
  */
-int32 OS_QueuePut              (osal_id_t queue_id, const void *data, uint32 size,
+int32 OS_QueuePut              (uint32 queue_id, const void *data, uint32 size,
                                 uint32 flags);
 
 /*-------------------------------------------------------------------------------------*/
@@ -890,7 +673,7 @@ int32 OS_QueuePut              (osal_id_t queue_id, const void *data, uint32 siz
  * @retval #OS_ERR_NAME_TOO_LONG name length including null terminator greater than #OS_MAX_API_NAME
  * @retval #OS_ERR_NAME_NOT_FOUND the name was not found in the table
  */
-int32 OS_QueueGetIdByName      (osal_id_t *queue_id, const char *queue_name);
+int32 OS_QueueGetIdByName      (uint32 *queue_id, const char *queue_name);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -907,7 +690,7 @@ int32 OS_QueueGetIdByName      (osal_id_t *queue_id, const char *queue_name);
  * @retval #OS_INVALID_POINTER if queue_prop is NULL
  * @retval #OS_ERR_INVALID_ID if the ID given is not  a valid queue
  */
-int32 OS_QueueGetInfo          (osal_id_t queue_id, OS_queue_prop_t *queue_prop);
+int32 OS_QueueGetInfo          (uint32 queue_id, OS_queue_prop_t *queue_prop);
 /**@}*/
 
 /** @defgroup OSAPISem OSAL Semaphore APIs
@@ -935,7 +718,7 @@ int32 OS_QueueGetInfo          (osal_id_t queue_id, OS_queue_prop_t *queue_prop)
  * @retval #OS_ERR_NAME_TAKEN if this is already the name of a binary semaphore
  * @retval #OS_SEM_FAILURE if the OS call failed
  */
-int32 OS_BinSemCreate          (osal_id_t *sem_id, const char *sem_name,
+int32 OS_BinSemCreate          (uint32 *sem_id, const char *sem_name, 
                                 uint32 sem_initial_value, uint32 options);
 
 /*-------------------------------------------------------------------------------------*/
@@ -952,7 +735,7 @@ int32 OS_BinSemCreate          (osal_id_t *sem_id, const char *sem_name,
  * @retval #OS_ERR_INVALID_ID if the id passed in is not a binary semaphore
  * @retval #OS_SEM_FAILURE if an unspecified failure occurs
  */
-int32 OS_BinSemFlush            (osal_id_t sem_id);
+int32 OS_BinSemFlush            (uint32 sem_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -972,7 +755,7 @@ int32 OS_BinSemFlush            (osal_id_t sem_id);
  * in the array of semaphores defined by the system
  * @retval #OS_ERR_INVALID_ID if the id passed in is not a binary semaphore
  */
-int32 OS_BinSemGive            (osal_id_t sem_id);
+int32 OS_BinSemGive            (uint32 sem_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -991,7 +774,7 @@ int32 OS_BinSemGive            (osal_id_t sem_id);
  * @retval #OS_ERR_INVALID_ID the Id passed in is not a valid binary semaphore
  * @retval #OS_SEM_FAILURE if the OS call failed
  */
-int32 OS_BinSemTake            (osal_id_t sem_id);
+int32 OS_BinSemTake            (uint32 sem_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1012,7 +795,7 @@ int32 OS_BinSemTake            (osal_id_t sem_id);
  * in the array of semaphores defined by the system
  * @retval #OS_ERR_INVALID_ID if the ID passed in is not a valid semaphore ID
  */
-int32 OS_BinSemTimedWait       (osal_id_t sem_id, uint32 msecs);
+int32 OS_BinSemTimedWait       (uint32 sem_id, uint32 msecs);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1028,7 +811,7 @@ int32 OS_BinSemTimedWait       (osal_id_t sem_id, uint32 msecs);
  * @retval #OS_ERR_INVALID_ID if the id passed in is not a valid binary semaphore
  * @retval #OS_SEM_FAILURE the OS call failed
  */
-int32 OS_BinSemDelete          (osal_id_t sem_id);
+int32 OS_BinSemDelete          (uint32 sem_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1046,7 +829,7 @@ int32 OS_BinSemDelete          (osal_id_t sem_id);
  * @retval #OS_ERR_NAME_TOO_LONG name length including null terminator greater than #OS_MAX_API_NAME
  * @retval #OS_ERR_NAME_NOT_FOUND if the name was not found in the table
  */
-int32 OS_BinSemGetIdByName     (osal_id_t *sem_id, const char *sem_name);
+int32 OS_BinSemGetIdByName     (uint32 *sem_id, const char *sem_name);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1064,7 +847,7 @@ int32 OS_BinSemGetIdByName     (osal_id_t *sem_id, const char *sem_name);
  * @retval #OS_ERR_INVALID_ID if the id passed in is not a valid semaphore
  * @retval #OS_INVALID_POINTER if the bin_prop pointer is null
  */
-int32 OS_BinSemGetInfo         (osal_id_t sem_id, OS_bin_sem_prop_t *bin_prop);
+int32 OS_BinSemGetInfo         (uint32 sem_id, OS_bin_sem_prop_t *bin_prop);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1088,7 +871,7 @@ int32 OS_BinSemGetInfo         (osal_id_t sem_id, OS_bin_sem_prop_t *bin_prop);
  * @retval #OS_SEM_FAILURE if the OS call failed
  * @retval #OS_INVALID_SEM_VALUE if the semaphore value is too high
  */
-int32 OS_CountSemCreate          (osal_id_t *sem_id, const char *sem_name,
+int32 OS_CountSemCreate          (uint32 *sem_id, const char *sem_name, 
                                 uint32 sem_initial_value, uint32 options);
 
 /*-------------------------------------------------------------------------------------*/
@@ -1109,7 +892,7 @@ int32 OS_CountSemCreate          (osal_id_t *sem_id, const char *sem_name,
  * in the array of semaphores defined by the system
  * @retval #OS_ERR_INVALID_ID if the id passed in is not a counting semaphore
  */
-int32 OS_CountSemGive            (osal_id_t sem_id);
+int32 OS_CountSemGive            (uint32 sem_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1128,7 +911,7 @@ int32 OS_CountSemGive            (osal_id_t sem_id);
  * @retval #OS_ERR_INVALID_ID the Id passed in is not a valid counting semaphore
  * @retval #OS_SEM_FAILURE if the OS call failed
  */
-int32 OS_CountSemTake            (osal_id_t sem_id);
+int32 OS_CountSemTake            (uint32 sem_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1149,7 +932,7 @@ int32 OS_CountSemTake            (osal_id_t sem_id);
  * in the array of semaphores defined by the system
  * @retval #OS_ERR_INVALID_ID if the ID passed in is not a valid semaphore ID
  */
-int32 OS_CountSemTimedWait       (osal_id_t sem_id, uint32 msecs);
+int32 OS_CountSemTimedWait       (uint32 sem_id, uint32 msecs);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1162,7 +945,7 @@ int32 OS_CountSemTimedWait       (osal_id_t sem_id, uint32 msecs);
  * @retval #OS_ERR_INVALID_ID if the id passed in is not a valid counting semaphore
  * @retval #OS_SEM_FAILURE the OS call failed
  */
-int32 OS_CountSemDelete          (osal_id_t sem_id);
+int32 OS_CountSemDelete          (uint32 sem_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1180,7 +963,7 @@ int32 OS_CountSemDelete          (osal_id_t sem_id);
  * @retval #OS_ERR_NAME_TOO_LONG name length including null terminator greater than #OS_MAX_API_NAME
  * @retval #OS_ERR_NAME_NOT_FOUND if the name was not found in the table
  */
-int32 OS_CountSemGetIdByName     (osal_id_t *sem_id, const char *sem_name);
+int32 OS_CountSemGetIdByName     (uint32 *sem_id, const char *sem_name);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1198,7 +981,7 @@ int32 OS_CountSemGetIdByName     (osal_id_t *sem_id, const char *sem_name);
  * @retval #OS_ERR_INVALID_ID if the id passed in is not a valid semaphore
  * @retval #OS_INVALID_POINTER if the count_prop pointer is null
  */
-int32 OS_CountSemGetInfo         (osal_id_t sem_id, OS_count_sem_prop_t *count_prop);
+int32 OS_CountSemGetInfo         (uint32 sem_id, OS_count_sem_prop_t *count_prop);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1218,7 +1001,7 @@ int32 OS_CountSemGetInfo         (osal_id_t sem_id, OS_count_sem_prop_t *count_p
  * @retval #OS_ERR_NAME_TAKEN if there is already a mutex with the same name
  * @retval #OS_SEM_FAILURE if the OS call failed
  */
-int32 OS_MutSemCreate           (osal_id_t *sem_id, const char *sem_name, uint32 options);
+int32 OS_MutSemCreate           (uint32 *sem_id, const char *sem_name, uint32 options);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1236,7 +1019,7 @@ int32 OS_MutSemCreate           (osal_id_t *sem_id, const char *sem_name, uint32
  * @retval #OS_ERR_INVALID_ID if the id passed in is not a valid mutex
  * @retval #OS_SEM_FAILURE if an unspecified error occurs
  */
-int32 OS_MutSemGive             (osal_id_t sem_id);
+int32 OS_MutSemGive             (uint32 sem_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1255,7 +1038,7 @@ int32 OS_MutSemGive             (osal_id_t sem_id);
  * not in the array of semaphores defined by the system
  * @retval #OS_ERR_INVALID_ID the id passed in is not a valid mutex
  */
-int32 OS_MutSemTake             (osal_id_t sem_id);
+int32 OS_MutSemTake             (uint32 sem_id);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1271,7 +1054,7 @@ int32 OS_MutSemTake             (osal_id_t sem_id);
  * @retval #OS_ERR_INVALID_ID if the id passed in is not a valid mutex
  * @retval #OS_SEM_FAILURE if the OS call failed
  */
-int32 OS_MutSemDelete           (osal_id_t sem_id);
+int32 OS_MutSemDelete           (uint32 sem_id);  
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1289,7 +1072,7 @@ int32 OS_MutSemDelete           (osal_id_t sem_id);
  * @retval #OS_ERR_NAME_TOO_LONG name length including null terminator greater than #OS_MAX_API_NAME
  * @retval #OS_ERR_NAME_NOT_FOUND if the name was not found in the table
  */
-int32 OS_MutSemGetIdByName      (osal_id_t *sem_id, const char *sem_name);
+int32 OS_MutSemGetIdByName      (uint32 *sem_id, const char *sem_name); 
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1307,12 +1090,40 @@ int32 OS_MutSemGetIdByName      (osal_id_t *sem_id, const char *sem_name);
  * @retval #OS_ERR_INVALID_ID if the id passed in is not a valid semaphore
  * @retval #OS_INVALID_POINTER if the mut_prop pointer is null
  */
-int32 OS_MutSemGetInfo          (osal_id_t sem_id, OS_mut_sem_prop_t *mut_prop);
+int32 OS_MutSemGetInfo          (uint32 sem_id, OS_mut_sem_prop_t *mut_prop);
 /**@}*/
 
-/** @defgroup OSAPITime OSAL Time APIs
+/** @defgroup OSAPITime OSAL Time/Tick APIs
  * @{
  */
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Convert time units from milliseconds to system ticks
+ *
+ * This function accepts a time interval in milliseconds and
+ * returns the tick equivalent.  If the result is not an exact
+ * number of system ticks, the result will be rounded up to
+ * the nearest tick.
+ *
+ * @param[in]   milli_seconds the number of milliseconds
+ *
+ * @return The number of ticks
+ */
+int32 OS_Milli2Ticks           (uint32 milli_seconds);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Get the system tick size, in microseconds
+ *
+ * This function returns the duration of a system tick in micro seconds
+ *
+ * @note care is taken to ensure this does not return "0" since it is often used
+ *  as the divisor in mathematical operations
+ *
+ * @return Duration of a system tick in microseconds
+ */
+int32 OS_Tick2Micros           (void);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1344,6 +1155,307 @@ int32  OS_GetLocalTime         (OS_time_t *time_struct);
 int32  OS_SetLocalTime         (OS_time_t *time_struct);  
 /**@}*/
 
+#ifndef OSAL_OMIT_DEPRECATED
+
+/**
+ * @defgroup OSAPIExc OSAL Exception APIs
+ *
+ * @note Not implemented in current OSAL version
+ *
+ * @deprecated Planning move to PSP due to platform dependencies
+ *
+ * @{
+ */
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief placeholder; not currently implemented
+ * @deprecated Planning move to PSP due to platform dependencies
+ */
+int32 OS_ExcAttachHandler      (uint32 ExceptionNumber, 
+                                void (*ExceptionHandler)(uint32, const void *,uint32),
+                                int32 parameter);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief placeholder; not currently implemented
+ * @deprecated Planning move to PSP due to platform dependencies
+ */
+int32 OS_ExcEnable             (int32 ExceptionNumber);
+
+/*-------------------------------------------------------------------------------------*/
+/** @brief placeholder; not currently implemented
+ * @deprecated Planning move to PSP due to platform dependencies
+ */
+int32 OS_ExcDisable            (int32 ExceptionNumber);
+/**@}*/
+
+/** @defgroup OSAPIFPUExc OSAL Floating Point Unit Exception APIs
+ * @deprecated Planning move to PSP due to platform dependencies
+ * @{
+ */
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Set an FPU exception handler function
+ *
+ * The call associates a specified C routine to a specified FPU exception number.
+ * When the specified FPU Exception occurs , the ExceptionHandler routine will be
+ * called and passed the parameter.
+ *
+ * @deprecated Planning move to PSP due to platform dependencies
+ *
+ * @param[in] ExceptionNumber The exception number to attach to
+ * @param[in] ExceptionHandler Pointer to handler function
+ * @param[in] parameter Argument to pass to handler
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_FPUExcAttachHandler   (uint32 ExceptionNumber, osal_task_entry ExceptionHandler,
+                                 int32 parameter);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Enable FPU exceptions
+ *
+ * @deprecated Planning move to PSP due to platform dependencies
+ *
+ * @param[in] ExceptionNumber The exception number to enable
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_FPUExcEnable          (int32 ExceptionNumber);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Disable FPU exceptions
+ *
+ * @deprecated Planning move to PSP due to platform dependencies
+ *
+ * @param[in] ExceptionNumber The exception number to disable
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_FPUExcDisable         (int32 ExceptionNumber);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Sets the FPU exception mask
+ *
+ * @deprecated Planning move to PSP due to platform dependencies
+ *
+ * This function sets the FPU exception mask
+ *
+ * @note The exception environment is local to each task Therefore this must be
+ *          called for each task that that wants to do floating point and catch exceptions.
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_FPUExcSetMask         (uint32 mask);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Gets the FPU exception mask
+ *
+ * @deprecated Planning move to PSP due to platform dependencies
+ *
+ * This function gets the FPU exception mask
+ *
+ * @note The exception environment is local to each task Therefore this must be
+ *          called for each task that that wants to do floating point and catch exceptions.
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_FPUExcGetMask         (uint32 *mask);
+/**@}*/
+
+/** @defgroup OSAPIInterrupt OSAL Interrupt APIs
+ * @{
+ * @deprecated Platform dependencies
+ */
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief DEPRECATED; Associate an interrupt number to a specified handler routine
+ *
+ * @deprecated platform dependencies, removing from OSAL
+ *
+ * The call associates a specified C routine to a specified interrupt
+ * number. Upon occurring of the InterruptNumber, the InerruptHandler
+ * routine will be called and passed the parameter.
+ *
+ * @param[in] InterruptNumber The Interrupt Number that will cause the start of the ISR
+ * @param[in] InterruptHandler The ISR associated with this interrupt
+ * @param[in] parameter Argument that is passed to the ISR
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_INVALID_POINTER     The Interrupt handler pointer is NULL
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_IntAttachHandler  (uint32 InterruptNumber, osal_task_entry InterruptHandler, int32 parameter);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief DEPRECATED; Enable interrupts
+ *
+ * @deprecated platform dependencies, removing from OSAL
+ *
+ * @param[in] IntLevel value from previous call to OS_IntLock()
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_IntUnlock         (int32 IntLevel);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief DEPRECATED; Disable interrupts
+ *
+ * @deprecated platform dependencies, removing from OSAL
+ *
+ * @return An key value to be passed to OS_IntUnlock() to restore interrupts or error
+ *         status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_IntLock           (void);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief DEPRECATED; Enables interrupts through Level
+ *
+ * @deprecated platform dependencies, removing from OSAL
+ *
+ * @param[in] Level  the interrupts to enable
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_IntEnable         (int32 Level);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief DEPRECATED; Disable interrupts through Level
+ *
+ * @deprecated platform dependencies, removing from OSAL
+ *
+ * @param[in] Level  the interrupts to disable
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_IntDisable        (int32 Level);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief DEPRECATED; Set the CPU interrupt mask register
+ *
+ * @deprecated platform dependencies, removing from OSAL
+ *
+ * @note The interrupt bits are architecture-specific.
+ *
+ * @param[in] mask The value to set in the register
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_IntSetMask        (uint32 mask);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief DEPRECATED; Get the CPU interrupt mask register
+ *
+ * @deprecated platform dependencies, removing from OSAL
+ *
+ * @note The interrupt bits are architecture-specific.
+ *
+ * @param[out] mask The register value will be stored to this location
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_IntGetMask        (uint32 *mask);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief DEPRECATED; Acknowledge the corresponding interrupt number.
+ *
+ * @deprecated platform dependencies, removing from OSAL
+ *
+ * @note: placeholder; not currently implemented in sample implementations
+ *
+ * @param[in] InterruptNumber The interrupt number to be acknowledged.
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS             @copybrief OS_SUCCESS
+ * @retval #OS_INVALID_INT_NUM     @copybrief OS_INVALID_INT_NUM
+ * @retval #OS_ERR_NOT_IMPLEMENTED @copybrief OS_ERR_NOT_IMPLEMENTED
+ */
+int32 OS_IntAck             (int32 InterruptNumber);
+/**@}*/
+
+
+/**
+ * @defgroup OSAPIShMem OSAL Shared memory APIs
+ * @deprecated Not in current implementations
+ *
+ * @{
+ */
+
+/*-------------------------------------------------------------------------------------*/
+/** @brief DEPRECATED - platform dependent, never implemented in framework OSALs
+ * @deprecated Never implemented
+ */
+int32 OS_ShMemInit          (void);
+
+/*-------------------------------------------------------------------------------------*/
+/** @brief DEPRECATED - platform dependent, never implemented in framework OSALs
+ * @deprecated Never implemented
+ */
+int32 OS_ShMemCreate        (uint32 *Id, uint32 NBytes, const char* SegName);
+
+/*-------------------------------------------------------------------------------------*/
+/** @brief DEPRECATED - platform dependent, never implemented in framework OSALs
+ * @deprecated Never implemented
+ */
+int32 OS_ShMemSemTake       (uint32 Id);
+
+/*-------------------------------------------------------------------------------------*/
+/** @brief DEPRECATED - platform dependent, never implemented in framework OSALs
+ * @deprecated Never implemented
+ */
+int32 OS_ShMemSemGive       (uint32 Id);
+
+/*-------------------------------------------------------------------------------------*/
+/** @brief DEPRECATED - platform dependent, never implemented in framework OSALs
+ * @deprecated Never implemented
+ */
+int32 OS_ShMemAttach        (cpuaddr * Address, uint32 Id);
+
+/*-------------------------------------------------------------------------------------*/
+/** @brief DEPRECATED - platform dependent, never implemented in framework OSALs
+ * @deprecated Never implemented
+ */
+int32 OS_ShMemGetIdByName   (uint32 *ShMemId, const char *SegName );
+/**@}*/
+
+#endif /* OSAL_OMIT_DEPRECATED */
 
 /** @defgroup OSAPIHeap OSAL Heap APIs
  * @{
@@ -1431,7 +1543,7 @@ int32 OS_SelectMultiple(OS_FdSet *ReadSet, OS_FdSet *WriteSet, int32 msecs);
  *
  * @return Execution status, see @ref OSReturnCodes
  */
-int32 OS_SelectSingle(osal_id_t objid, uint32 *StateFlags, int32 msecs);
+int32 OS_SelectSingle(uint32 objid, uint32 *StateFlags, int32 msecs);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1451,7 +1563,7 @@ int32 OS_SelectFdZero(OS_FdSet *Set);
  *
  * @return Execution status, see @ref OSReturnCodes
  */
-int32 OS_SelectFdAdd(OS_FdSet *Set, osal_id_t objid);
+int32 OS_SelectFdAdd(OS_FdSet *Set, uint32 objid);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1461,7 +1573,7 @@ int32 OS_SelectFdAdd(OS_FdSet *Set, osal_id_t objid);
  *
  * @return Execution status, see @ref OSReturnCodes
  */
-int32 OS_SelectFdClear(OS_FdSet *Set, osal_id_t objid);
+int32 OS_SelectFdClear(OS_FdSet *Set, uint32 objid);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -1471,7 +1583,7 @@ int32 OS_SelectFdClear(OS_FdSet *Set, osal_id_t objid);
  * @retval true  FdSet structure contains ID
  * @retval false FDSet structure does not contain ID
  */
-bool OS_SelectFdIsSet(OS_FdSet *Set, osal_id_t objid);
+bool OS_SelectFdIsSet(OS_FdSet *Set, uint32 objid);
 /**@}*/
 
 /** @defgroup OSAPIPrintf OSAL Printf APIs

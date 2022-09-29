@@ -33,16 +33,14 @@
 
 #define OS_OBJECT_EXCL_REQ_FLAG     0x0001
 
-#define OS_OBJECT_ID_RESERVED       ((osal_id_t){0xFFFFFFFF})
-
 /*
  * This supplies a non-abstract definition of "OS_common_record_t"
  */
 struct OS_common_record
 {
    const char *name_entry;
-   osal_id_t     active_id;
-   osal_id_t     creator;
+   uint32     active_id;
+   uint32     creator;
    uint16     refcount;
    uint16     flags;
 };
@@ -162,9 +160,9 @@ int32 OS_Unlock_Global_Impl(uint32 idtype);
 
     Purpose: Obtain the serial number component of a generic OSAL Object ID
  ------------------------------------------------------------------*/
-static inline uint32 OS_ObjectIdToSerialNumber_Impl(osal_id_t id)
+static inline uint32 OS_ObjectIdToSerialNumber_Impl(uint32 id)
 {
-    return (OS_ObjectIdToInteger(id) & OS_OBJECT_INDEX_MASK);
+    return (id & OS_OBJECT_INDEX_MASK);
 }
 
 /*----------------------------------------------------------------
@@ -172,9 +170,9 @@ static inline uint32 OS_ObjectIdToSerialNumber_Impl(osal_id_t id)
 
     Purpose: Obtain the object type component of a generic OSAL Object ID
  ------------------------------------------------------------------*/
-static inline uint32 OS_ObjectIdToType_Impl(osal_id_t id)
+static inline uint32 OS_ObjectIdToType_Impl(uint32 id)
 {
-    return (OS_ObjectIdToInteger(id) >> OS_OBJECT_TYPE_SHIFT);
+    return (id >> OS_OBJECT_TYPE_SHIFT);
 }
 
 
@@ -183,9 +181,9 @@ static inline uint32 OS_ObjectIdToType_Impl(osal_id_t id)
 
     Purpose: Convert an object serial number and resource type into an external 32-bit OSAL ID
  ------------------------------------------------------------------*/
-static inline void OS_ObjectIdCompose_Impl(uint32 idtype, uint32 idserial, osal_id_t *result)
+static inline void OS_ObjectIdCompose_Impl(uint32 idtype, uint32 idserial, uint32 *result)
 {
-    *result = OS_ObjectIdFromInteger((idtype << OS_OBJECT_TYPE_SHIFT) | idserial);
+    *result = (idtype << OS_OBJECT_TYPE_SHIFT) | idserial;
 }
 
 
@@ -208,13 +206,40 @@ uint32 OS_GetMaxForObjectType(uint32 idtype);
 uint32 OS_GetBaseForObjectType(uint32 idtype);
 
 /*----------------------------------------------------------------
+   Function: OS_ObjectIdMap
+
+    Purpose: Convert an object serial number into a 32-bit OSAL ID of the given type
+
+    Returns: OS_SUCCESS on success, or relevant error code
+ ------------------------------------------------------------------*/
+int32 OS_ObjectIdMap(uint32 idtype, uint32 idvalue, uint32 *result);
+
+/*----------------------------------------------------------------
+   Function: OS_ObjectIdUnMap
+
+    Purpose: Convert a 32-bit OSAL ID of the expected type into an object serial number
+
+    Returns: OS_SUCCESS on success, or relevant error code
+ ------------------------------------------------------------------*/
+int32 OS_ObjectIdUnMap(uint32 id, uint32 idtype, uint32 *idvalue);
+
+/*----------------------------------------------------------------
    Function: OS_ObjectIdFindByName
 
     Purpose: Finds an entry in the global resource table matching the given name
 
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
-int32 OS_ObjectIdFindByName (uint32 idtype, const char *name, osal_id_t *object_id);
+int32 OS_ObjectIdFindByName (uint32 idtype, const char *name, uint32 *object_id);
+
+/*----------------------------------------------------------------
+   Function: OS_ObjectIdToArrayIndex
+
+    Purpose: Convert a 32-bit OSAL ID into a zero-based array index
+
+    Returns: OS_SUCCESS on success, or relevant error code
+ ------------------------------------------------------------------*/
+int32 OS_ObjectIdToArrayIndex(uint32 idtype, uint32 id, uint32 *ArrayIndex);
 
 /*----------------------------------------------------------------
    Function: OS_ObjectIdGetBySearch
@@ -245,7 +270,7 @@ int32 OS_ObjectIdGetByName (OS_lock_mode_t lock_mode, uint32 idtype, const char 
 
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
-int32 OS_ObjectIdGetById(OS_lock_mode_t lock_mode, uint32 idtype, osal_id_t id, uint32 *array_index, OS_common_record_t **record);
+int32 OS_ObjectIdGetById(OS_lock_mode_t lock_mode, uint32 idtype, uint32 id, uint32 *array_index, OS_common_record_t **record);
 
 /*----------------------------------------------------------------
    Function: OS_ObjectIdAllocateNew
@@ -269,20 +294,7 @@ int32 OS_ObjectIdAllocateNew(uint32 idtype, const char *name, uint32 *array_inde
 
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
-int32 OS_ObjectIdFinalizeNew(int32 operation_status, OS_common_record_t *record, osal_id_t *outid);
-
-/*----------------------------------------------------------------
-   Function: OS_ObjectIdFinalizeDelete
-
-    Purpose: Completes a delete operation
-             If the operation was successful, the OSAL ID is deleted and returned to the pool
-             If the operation was unsuccessful, no operation is performed.
-             The global table is unlocked for future operations
-
-    Returns: OS_SUCCESS on success, or relevant error code
- ------------------------------------------------------------------*/
-int32 OS_ObjectIdFinalizeDelete(int32 operation_status, OS_common_record_t *record);
-
+int32 OS_ObjectIdFinalizeNew(int32 operation_status, OS_common_record_t *record, uint32 *outid);
 
 /*----------------------------------------------------------------
    Function: OS_ObjectIdRefcountDecr
@@ -301,7 +313,7 @@ int32 OS_ObjectIdRefcountDecr(OS_common_record_t *record);
  */
 bool OS_ObjectNameMatch(void *ref, uint32 local_id, const OS_common_record_t *obj);
 void OS_ObjectIdInitiateLock(OS_lock_mode_t lock_mode, uint32 idtype);
-int32 OS_ObjectIdConvertLock(OS_lock_mode_t lock_mode, uint32 idtype, osal_id_t reference_id, OS_common_record_t *obj);
+int32 OS_ObjectIdConvertLock(OS_lock_mode_t lock_mode, uint32 idtype, uint32 reference_id, OS_common_record_t *obj);
 int32 OS_ObjectIdSearch(uint32 idtype, OS_ObjectMatchFunc_t MatchFunc, void *arg, OS_common_record_t **record);
 int32 OS_ObjectIdFindNext(uint32 idtype, uint32 *array_index, OS_common_record_t **record);
 

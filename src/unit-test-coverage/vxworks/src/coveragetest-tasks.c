@@ -29,7 +29,6 @@
 
 #include "os-shared-task.h"
 #include "os-shared-idmap.h"
-#include "os-shared-timebase.h"
 
 #include <OCS_stdlib.h>
 
@@ -148,9 +147,6 @@ void Test_OS_TaskDelay_Impl(void)
 
     UT_SetForceFail(UT_KEY(OCS_taskDelay), OCS_ERROR);
     OSAPI_TEST_FUNCTION_RC(OS_TaskDelay_Impl(100), OS_ERROR);
-
-    UT_SetForceFail(UT_KEY(OS_Milli2Ticks), OS_ERROR);
-    OSAPI_TEST_FUNCTION_RC(OS_TaskDelay_Impl(100), OS_ERROR);
 }
 
 void Test_OS_TaskSetPriority_Impl(void)
@@ -171,7 +167,7 @@ void Test_OS_TaskRegister_Impl(void)
      * Test Case For:
      * int32 OS_TaskRegister_Impl(uint32 global_task_id)
      */
-    OSAPI_TEST_FUNCTION_RC(OS_TaskRegister_Impl(OS_OBJECT_ID_UNDEFINED), OS_SUCCESS);
+    OSAPI_TEST_FUNCTION_RC(OS_TaskRegister_Impl(0), OS_SUCCESS);
 }
 
 void Test_OS_TaskGetId_Impl(void)
@@ -181,15 +177,11 @@ void Test_OS_TaskGetId_Impl(void)
      * uint32 OS_TaskGetId_Impl (void)
      */
     OCS_WIND_TCB *TaskTcb;
-    osal_id_t id1;
-    osal_id_t id2;
 
-    memset(&id1, 0x11, sizeof(osal_id_t));
-    OS_global_task_table[1].active_id = id1;
+    OS_global_task_table[1].active_id = 0x12345;
     TaskTcb = UT_TaskTest_GetTaskTcb(1);
     UT_SetDataBuffer(UT_KEY(OCS_taskTcb), &TaskTcb, sizeof(TaskTcb), false);
-    id2 = OS_TaskGetId_Impl();
-    UtAssert_MemCmp(&id1, &id2, sizeof(osal_id_t), "OS_TaskGetId_Impl()");
+    OSAPI_TEST_FUNCTION_RC(OS_TaskGetId_Impl(), 0x12345);
 }
 
 void Test_OS_TaskGetInfo_Impl(void)

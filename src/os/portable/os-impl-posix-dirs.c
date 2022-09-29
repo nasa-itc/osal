@@ -25,6 +25,9 @@
  * This file Contains all of the api calls for manipulating files
  * in a file system / C library that implements the UNIX-style file API
  *
+ * NOTE: This is a "template" file and not a directly usable source file.
+ *       It must be adapted/instantiated from within the OS-specific
+ *       implementation on platforms that wish to use this template.
  */
 
 /****************************************************************************************

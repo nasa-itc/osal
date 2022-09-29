@@ -66,7 +66,7 @@ char  g_dirItems[UT_OS_FILE_MAX_DIRS][UT_OS_FILE_BUFF_SIZE];
 ** Local function prototypes
 **--------------------------------------------------------------------------------*/
 
-void UT_os_read_n_sort_dirs(osal_id_t);
+void UT_os_read_n_sort_dirs(uint32);
 
 /*--------------------------------------------------------------------------------*
 ** Local function definitions
@@ -120,8 +120,7 @@ void UT_os_read_n_sort_dirs(osal_id_t);
 **--------------------------------------------------------------------------------*/
 void UT_os_makedir_test()
 {
-    int32 status;
-    osal_id_t fileDesc;
+    int32 fileDesc=0;
     const char* testDesc;
 
     /*-----------------------------------------------------*/
@@ -176,8 +175,8 @@ void UT_os_makedir_test()
 
     memset(g_fileName, '\0', sizeof(g_fileName));
     UT_os_sprintf(g_fileName, "%s/mkdir_File.txt", g_dirName);
-    status = OS_OpenCreate(&fileDesc, g_fileName, OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (status >= 0)
+    fileDesc = OS_creat(g_fileName, OS_READ_WRITE);
+    if (fileDesc >= 0)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -239,7 +238,7 @@ UT_os_makedir_test_exit_tag:
 **--------------------------------------------------------------------------------*/
 void UT_os_opendir_test()
 {
-    osal_id_t dirh;
+    uint32 dirh;
     const char* testDesc;
 
     /*-----------------------------------------------------*/
@@ -341,14 +340,14 @@ UT_os_opendir_test_exit_tag:
 **--------------------------------------------------------------------------------*/
 void UT_os_closedir_test()
 {
-    osal_id_t dirh;
+    uint32 dirh;
     os_dirent_t* dirEntry=NULL;
     const char* testDesc;
 
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    if (OS_DirectoryClose(OS_OBJECT_ID_UNDEFINED) == OS_ERR_NOT_IMPLEMENTED)
+    if (OS_DirectoryClose(0) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_closedir_test_exit_tag;
@@ -442,7 +441,7 @@ UT_os_closedir_test_exit_tag:
 **--------------------------------------------------------------------------------*/
 void UT_os_readdir_test()
 {
-    osal_id_t dirh;
+    uint32 dirh;
     const char* testDesc;
 
     strcpy(g_subdirNames[0], " ");
@@ -451,7 +450,7 @@ void UT_os_readdir_test()
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    if (OS_DirectoryRead(OS_OBJECT_ID_UNDEFINED, NULL) == OS_ERR_NOT_IMPLEMENTED)
+    if (OS_DirectoryRead(0, NULL) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_readdir_test_exit_tag;
@@ -460,7 +459,7 @@ void UT_os_readdir_test()
     /*-----------------------------------------------------*/
     testDesc = "#1 Null-pointer-arg";
 
-    if (OS_DirectoryRead(OS_OBJECT_ID_UNDEFINED, NULL) == OS_INVALID_POINTER)
+    if (OS_DirectoryRead(0, NULL) == OS_INVALID_POINTER)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -571,7 +570,7 @@ UT_os_readdir_test_exit_tag:
 **--------------------------------------------------------------------------------*/
 void UT_os_rewinddir_test()
 {
-    osal_id_t dirh;
+    uint32 dirh;
     const char* testDesc;
 
     strcpy(g_subdirNames[0], " ");
@@ -580,7 +579,7 @@ void UT_os_rewinddir_test()
     /*-----------------------------------------------------*/
     testDesc = "API Not implemented";
 
-    if (OS_DirectoryRewind(OS_OBJECT_ID_UNDEFINED) == OS_ERR_NOT_IMPLEMENTED)
+    if (OS_DirectoryRewind(0) == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
         goto UT_os_rewinddir_test_exit_tag;
@@ -719,8 +718,7 @@ UT_os_rewinddir_test_exit_tag:
 **--------------------------------------------------------------------------------*/
 void UT_os_removedir_test()
 {
-    int32 status;
-    osal_id_t fileDesc;
+    int32 fileDesc=0;
     const char* testDesc;
 
     /*-----------------------------------------------------*/
@@ -775,8 +773,8 @@ void UT_os_removedir_test()
 
     memset(g_fileName, '\0', sizeof(g_fileName));
     UT_os_sprintf(g_fileName, "%s/rmdir_File1.txt", g_dirName);
-    status = OS_OpenCreate(&fileDesc, g_fileName, OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (status < 0)
+    fileDesc = OS_creat(g_fileName, OS_READ_WRITE);
+    if (fileDesc < 0)
     {
         testDesc = "#5 Nominal - File-create failed";
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_TSF);
@@ -794,8 +792,8 @@ void UT_os_removedir_test()
 
     memset(g_fileName, '\0', sizeof(g_fileName));
     UT_os_sprintf(g_fileName, "%s/rmdir_File2.txt", g_dirName);
-    status = OS_OpenCreate(&fileDesc, g_fileName, OS_FILE_FLAG_CREATE|OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    if (status < 0)
+    fileDesc = OS_creat(g_fileName, OS_READ_WRITE);
+    if (fileDesc < 0)
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -808,7 +806,7 @@ UT_os_removedir_test_exit_tag:
 /*--------------------------------------------------------------------------------*
  * Internal helper function
 **--------------------------------------------------------------------------------*/
-void UT_os_read_n_sort_dirs(osal_id_t dirh)
+void UT_os_read_n_sort_dirs(uint32 dirh)
 {
     int i=0;
     os_dirent_t dirEntry;

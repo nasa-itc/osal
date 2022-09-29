@@ -77,7 +77,7 @@ int32  OS_rmdir (const char *path)
  * Stub for OS_DirectoryOpen() function
  *
  *****************************************************************************/
-int32 OS_DirectoryOpen(osal_id_t *dir_id, const char *path)
+int32 OS_DirectoryOpen(uint32 *dir_id, const char *path)
 {
     UT_Stub_RegisterContext(UT_KEY(OS_DirectoryOpen), dir_id);
     UT_Stub_RegisterContext(UT_KEY(OS_DirectoryOpen), path);
@@ -92,7 +92,7 @@ int32 OS_DirectoryOpen(osal_id_t *dir_id, const char *path)
     }
     else
     {
-        *dir_id = UT_STUB_FAKE_OBJECT_ID;
+        *dir_id = 0xDEADBEEFU;
     }
 
 
@@ -104,7 +104,7 @@ int32 OS_DirectoryOpen(osal_id_t *dir_id, const char *path)
  * Stub for OS_DirectoryClose() function
  *
  *****************************************************************************/
-int32 OS_DirectoryClose(osal_id_t dir_id)
+int32 OS_DirectoryClose(uint32 dir_id)
 {
     UT_Stub_RegisterContextGenericArg(UT_KEY(OS_DirectoryClose), dir_id);
 
@@ -125,7 +125,7 @@ int32 OS_DirectoryClose(osal_id_t dir_id)
  * Stub for OS_DirectoryRewind() function
  *
  *****************************************************************************/
-int32 OS_DirectoryRewind(osal_id_t dir_id)
+int32 OS_DirectoryRewind(uint32 dir_id)
 {
     UT_Stub_RegisterContextGenericArg(UT_KEY(OS_DirectoryRewind), dir_id);
 
@@ -141,7 +141,7 @@ int32 OS_DirectoryRewind(osal_id_t dir_id)
  * Stub for OS_DirectoryRead() function
  *
  *****************************************************************************/
-int32 OS_DirectoryRead(osal_id_t dir_id, os_dirent_t *dirent)
+int32 OS_DirectoryRead(uint32 dir_id, os_dirent_t *dirent)
 {
     UT_Stub_RegisterContextGenericArg(UT_KEY(OS_DirectoryRead), dir_id);
     UT_Stub_RegisterContext(UT_KEY(OS_DirectoryRead), dirent);
@@ -163,4 +163,109 @@ int32 OS_DirectoryRead(osal_id_t dir_id, os_dirent_t *dirent)
     return Status;
 }
 
+
+#ifndef OSAL_OMIT_DEPRECATED
+
+/*****************************************************************************
+ *
+ * Stub for OS_opendir() function
+ * Should be removed in the next version of OSAL
+ *
+ *****************************************************************************/
+os_dirp_t OS_opendir (const char *path)
+{
+    UT_Stub_RegisterContext(UT_KEY(OS_opendir), path);
+
+    int32 Status;
+    os_dirp_t Dirp;
+
+    Status = UT_DEFAULT_IMPL(OS_opendir);
+
+    if (Status == OS_SUCCESS)
+    {
+        /* Create a non-null value.  Note that if the test code actually dereferences
+         * this, it'll crash, but it should ONLY call other stubs which do not dereference it.
+         *
+         * This API will be replaced by an alternate API that can return status codes
+         * just like the rest of OSAL.
+         */
+        Dirp = (os_dirp_t)(0xDEADBEEFU);
+    }
+    else
+    {
+        /* The OS_opendir API does not have a method to return error codes, just NULL */
+        Dirp = NULL;
+    }
+
+    return Dirp;
+}
+
+/*****************************************************************************
+ *
+ * Stub for OS_closedir() function
+ * Should be removed in the next version of OSAL
+ *
+ *****************************************************************************/
+int32 OS_closedir (os_dirp_t directory)
+{
+    UT_Stub_RegisterContextGenericArg(UT_KEY(OS_closedir), directory);
+
+    int32 Status;
+
+    Status = UT_DEFAULT_IMPL(OS_closedir);
+
+    return Status;
+}
+
+/*****************************************************************************
+ *
+ * Stub for OS_readdir() function
+ * Should be removed in the next version of OSAL
+ *
+ *****************************************************************************/
+os_dirent_t *  OS_readdir (os_dirp_t directory)
+{
+    UT_Stub_RegisterContextGenericArg(UT_KEY(OS_readdir), directory);
+
+    static os_dirent_t DefaultEntry;
+    os_dirent_t *DirentPtr;
+    int32 Status;
+    uint32 CopySize;
+
+    Status = UT_DEFAULT_IMPL(OS_readdir);
+
+    if (Status == OS_SUCCESS)
+    {
+        /* The test code may register pointers to return as os_dirent_t* values */
+        CopySize = UT_Stub_CopyToLocal(UT_KEY(OS_readdir), &DirentPtr, sizeof(DirentPtr));
+        if (CopySize < sizeof(DirentPtr))
+        {
+            memset(&DefaultEntry, 0, sizeof(DefaultEntry));
+            DirentPtr = &DefaultEntry;
+        }
+    }
+    else
+    {
+        /* The OS_readdir API does not have a method to return error codes, just NULL */
+        DirentPtr = NULL;
+    }
+
+
+    return DirentPtr;
+}
+
+/*****************************************************************************
+ *
+ * Stub for OS_rewinddir() function
+ * Should be removed in the next version of OSAL
+ *
+ *****************************************************************************/
+void OS_rewinddir(os_dirp_t directory)
+{
+    UT_Stub_RegisterContextGenericArg(UT_KEY(OS_rewinddir), directory);
+
+    /* Call the default impl so hooks will work */
+    UT_DEFAULT_IMPL(OS_rewinddir);
+}
+#endif
 

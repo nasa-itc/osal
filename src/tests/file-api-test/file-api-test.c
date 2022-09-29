@@ -47,7 +47,7 @@ os_err_name_t errname;
 
 void UtTest_Setup(void)
 {
-    osal_id_t fs_id;
+    uint32 fs_id;
 
     errname[0] = 0;
 
@@ -86,7 +86,7 @@ void UtTest_Setup(void)
 
 void TestMkfsMount(void)
 {
-    int32 status;
+    int status;
 
     /* Make the file system */
     status = OS_mkfs(0,"/ramdev0","RAM",512,200);
@@ -98,7 +98,7 @@ void TestMkfsMount(void)
 
 void TestUnmountRemount(void)
 {
-    int32 status;
+    int status;
 
     /*
     ** try unmounting the drive, and then remounting it with a different name 
@@ -125,8 +125,8 @@ void TestCreatRemove(void)
     char filename [OS_MAX_PATH_LEN];
     char maxfilename[OS_MAX_PATH_LEN];
     char longfilename [OS_MAX_PATH_LEN + 10];
-    int32  status;
-    osal_id_t  fd;
+    int  status;
+    int  fd;
     int  i;
  
     /* Short file name */
@@ -147,16 +147,16 @@ void TestCreatRemove(void)
     }
     
     /* create a file with short name */
-    status = OS_OpenCreate(&fd, filename, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    UtAssert_True(status == OS_SUCCESS, "fd after creat short name length file = %d",(int)status);
+    fd = OS_creat(filename,OS_READ_WRITE);
+    UtAssert_True(fd >= 0, "fd after creat short name length file = %d",(int)fd);
 
     /* close the first file */
     status = OS_close(fd);
     UtAssert_True(status == OS_SUCCESS, "status after close short name length file = %d",(int)status);
 
     /* create a file with max name size */
-    status = OS_OpenCreate(&fd, maxfilename, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
-    UtAssert_True(status == OS_SUCCESS, "fd after creat max name length file = %d",(int)status);
+    fd = OS_creat(maxfilename,OS_READ_WRITE);
+    UtAssert_True(fd >= 0, "fd after creat max name length file = %d",(int)fd);
 
     /* close the second file */
     status = OS_close(fd);
@@ -171,7 +171,7 @@ void TestCreatRemove(void)
     UtAssert_True(status == OS_SUCCESS, "status after remove max name length file = %d",(int)status);
 
     /* try creating with file name too big, should fail */
-    status = OS_OpenCreate(&fd, longfilename, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    status = OS_creat(longfilename,OS_READ_WRITE);
     UtAssert_True(status < OS_SUCCESS, "status after create file name too long = %d",(int)status);
 
     /* try removing with file name too big. Should Fail */
@@ -194,16 +194,18 @@ void TestCreatRemove(void)
 void TestOpenClose(void)
 {
     char filename [OS_MAX_PATH_LEN];
-    int32 status;
-    osal_id_t fd;
+    int status;
+    int fd;
 
     strncpy(filename,"/drive0/Filename1", sizeof(filename) - 1);
     filename[sizeof(filename) - 1] = 0;
 
     /* create a file of reasonable length (but over 8 chars) */
-    status = OS_OpenCreate(&fd, filename, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    status = OS_creat(filename,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat = %d",(int)status);
         
+    fd = status;
+   
     /*
     ** try to close the file
     */
@@ -211,9 +213,11 @@ void TestOpenClose(void)
     UtAssert_True(status == OS_SUCCESS, "status after close = %d",(int)status);
 
     /*  reopen the file */
-    status = OS_OpenCreate(&fd, filename, OS_FILE_FLAG_NONE, OS_READ_WRITE);
+    status = OS_open(filename,OS_READ_WRITE,0644);
     UtAssert_True(status >= OS_SUCCESS, "status after reopen = %d",(int)status);
 
+    fd = status;
+   
     /*
     ** try to close the file again
     */
@@ -227,11 +231,11 @@ void TestOpenClose(void)
     UtAssert_True(status != OS_SUCCESS, "status after close = %d",(int)status);
     
     /*try to close a file not on the system. Should Fail */
-    status = OS_close(OS_OBJECT_ID_UNDEFINED);
+    status = OS_close(43);
     UtAssert_True(status != OS_SUCCESS, "status after close = %d",(int)status);
 
     /*  open a file that was never in the system */
-    status = OS_OpenCreate(&fd, "/drive0/FileNotHere", OS_FILE_FLAG_NONE, OS_READ_ONLY);
+    status = OS_open("/drive0/FileNotHere",OS_READ_ONLY,0644);
     UtAssert_True(status < OS_SUCCESS, "status after open = %d",(int)status);
 
     /* try removing the file from the drive  to end the function */
@@ -251,8 +255,8 @@ void TestReadWriteLseek(void)
     char newbuffer[30];
     int offset;
     int size;
-    int32 status;
-    osal_id_t fd;
+    int status;
+    int fd;
 
     strncpy(filename,"/drive0/Filename1", sizeof(filename) - 1);
     filename[sizeof(filename) - 1] = 0;
@@ -267,9 +271,10 @@ void TestReadWriteLseek(void)
     /* create a file of reasonable length (but over 8 chars) */
     
     /* Open In R/W mode */
-    status = OS_OpenCreate(&fd, filename, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    status = OS_creat(filename,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat = %d",(int)status);
     
+    fd = status;
     size = strlen(buffer);
     
     /* test write portion of R/W mode */
@@ -296,9 +301,10 @@ void TestReadWriteLseek(void)
     UtAssert_True(status == OS_SUCCESS, "status after close = %d",(int)status);
 
     /*  open a file again, but only in READ mode */
-    status = OS_OpenCreate(&fd, filename, OS_FILE_FLAG_NONE, OS_READ_ONLY);
+    status = OS_open(filename,OS_READ_ONLY,0644);
     UtAssert_True(status >= OS_SUCCESS, "status after reopen = %d",(int)status);
 
+    fd = status;
     /* test write in READ ONLY mode */
     status = OS_write(fd, (void*)buffer, size);
     UtAssert_True(status < OS_SUCCESS, "status after write = %d",(int)status);
@@ -332,8 +338,10 @@ void TestReadWriteLseek(void)
     UtAssert_True(status == OS_SUCCESS, "status after close = %d",(int)status);
 
     /*  open a file again, but only in WRITE mode */
-    status = OS_OpenCreate(&fd, filename, OS_FILE_FLAG_NONE, OS_WRITE_ONLY);
+    status = OS_open(filename,OS_WRITE_ONLY,0644);
     UtAssert_True(status >= OS_SUCCESS, "status after reopen = %d",(int)status);
+
+    fd = status;
 
     /* test write in WRITE ONLY mode */
     status = OS_write(fd, (void*)buffer, size);
@@ -365,7 +373,7 @@ void TestReadWriteLseek(void)
 ---------------------------------------------------------------------------------------*/
 void TestMkRmDirFreeBytes(void)
 {
-    int32 status;
+    int status;
     char filename1[OS_MAX_PATH_LEN];
     char filename2[OS_MAX_PATH_LEN];
     char dir1 [OS_MAX_PATH_LEN];
@@ -374,8 +382,8 @@ void TestMkRmDirFreeBytes(void)
     char buffer2 [OS_MAX_PATH_LEN];
     char copybuffer1 [OS_MAX_PATH_LEN];
     char copybuffer2 [OS_MAX_PATH_LEN];
-    osal_id_t fd1;
-    osal_id_t fd2;
+    int fd1;
+    int fd2;
     int size;
 
     /* make the directory names for testing, as well as the filenames and the buffers
@@ -403,12 +411,16 @@ void TestMkRmDirFreeBytes(void)
     
     /* now create two files in the two directories (1 file per directory) */
 
-    status = OS_OpenCreate(&fd1, filename1, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    status = OS_creat(filename1,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat 1 = %d",(int)status);
     
-    status = OS_OpenCreate(&fd2, filename2, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    fd1 = status;
+
+    status = OS_creat(filename2,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat 2 = %d",(int)status);
     
+    fd2 = status;
+
     /* write the propper buffers into each of the files */
     size = strlen(buffer1);
     status = OS_write(fd1, buffer1, size);
@@ -477,7 +489,7 @@ void TestMkRmDirFreeBytes(void)
 ---------------------------------------------------------------------------------------*/
 void TestOpenReadCloseDir(void)
 {
-    int32 status;
+    int status;
     char filename1[OS_MAX_PATH_LEN];
     char filename2[OS_MAX_PATH_LEN];
     char dir0 [OS_MAX_PATH_LEN];
@@ -486,9 +498,13 @@ void TestOpenReadCloseDir(void)
     char buffer1 [OS_MAX_PATH_LEN];
     char buffer2 [OS_MAX_PATH_LEN];
     int size;
-    osal_id_t fd1;
-    osal_id_t fd2;
-    osal_id_t dirh;
+    int fd1;
+    int fd2;
+#if !defined(OSAL_OMIT_DEPRECATED)
+    os_dirp_t     dirp0;
+    os_dirent_t   *dirent_ptr0;
+#endif
+    uint32 dirh;
     os_dirent_t dirent;
     
     /* make the directory names for testing, as well as the filenames and the buffers
@@ -511,13 +527,18 @@ void TestOpenReadCloseDir(void)
     
     /* now create two files in the two directories (1 file per directory) */
 
-    status = OS_OpenCreate(&fd1, filename1, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    status = OS_creat(filename1,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat 1 = %d",(int)status);
     
-    status = OS_OpenCreate(&fd2, filename2, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    fd1 = status;
+
+    status = OS_creat(filename2,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat 2 = %d",(int)status);
     
-    /* write the proper buffers into each of the files */
+    fd2 = status;
+
+    /* write the propper buffers into each of the files */
+    
     size = strlen(buffer1);
     status = OS_write(fd1, buffer1, size);
     UtAssert_True(status == size, "status after write 1 = %d size = %d",(int)status, (int)size);
@@ -542,8 +563,7 @@ void TestOpenReadCloseDir(void)
     /* New version of test 1 - uses full abstraction API */
 
     status = OS_DirectoryOpen(&dirh, dir0);
-    UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryOpen Id=%lx Rc=%d",
-            OS_ObjectIdToInteger(dirh),(int)status);
+    UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryOpen Id=%u Rc=%d",(unsigned int)dirh,(int)status);
     
     /* try to read the two folders that are in the "/" */
     /* Have to make it a loop to see if we can find the directories in question */
@@ -576,8 +596,7 @@ void TestOpenReadCloseDir(void)
     /* New version of test 2 - uses full abstraction API */
 
     status = OS_DirectoryOpen(&dirh, dir0);
-    UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryOpen Id=%lx Rc=%d",
-            OS_ObjectIdToInteger(dirh),(int)status);
+    UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryOpen Id=%u Rc=%d",(unsigned int)dirh,(int)status);
 
     while (true)
     {
@@ -600,12 +619,32 @@ void TestOpenReadCloseDir(void)
     UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryClose Rc=%d",(int)status);
 
         
+    /* use the deprecated API to read again (replaces test 3) */
+    /*
+     * Note the only test really does is to call readdir() until it returns NULL,
+     * this is already done in test 1 when using the abstraction API
+     */
+#if !defined(OSAL_OMIT_DEPRECATED)
+    dirp0 = OS_opendir(dir0);
+    UtAssert_True(dirp0 != NULL, "OS_opendir not null");
+
+    dirent_ptr0 = OS_readdir (dirp0);
+    UtAssert_True(dirent_ptr0 != NULL, "OS_readdir not null");
+    while (dirent_ptr0 != NULL)
+    {
+        dirent_ptr0 = OS_readdir(dirp0);
+    }
+
+    status = OS_closedir(dirp0);
+    UtAssert_True(status >= OS_SUCCESS, "OS_closedir Rc=%d",(int)status);
+
+#endif /* !defined(OSAL_OMIT_DEPRECATED) */
+
     /* Now test the open/ read close for one of the sub directories */
     
     /* New version of test 4 - uses full abstraction API */
     status = OS_DirectoryOpen(&dirh, dir1);
-    UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryOpen Id=%lx Rc=%d",
-            OS_ObjectIdToInteger(dirh),(int)status);
+    UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryOpen Id=%u Rc=%d",(unsigned int)dirh,(int)status);
     
    
     /* try to read the next file within the first directory "MyFile1" */
@@ -633,8 +672,7 @@ void TestOpenReadCloseDir(void)
 
     /* New version of test 5 - uses full abstraction API */
     status = OS_DirectoryOpen(&dirh, dir2);
-    UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryOpen Id=%lx Rc=%d",
-            OS_ObjectIdToInteger(dirh),(int)status);
+    UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryOpen Id=%u Rc=%d",(unsigned int)dirh,(int)status);
  
     /* try to read the next file within the first directory "MyFile2" */
     while (true)
@@ -662,8 +700,7 @@ void TestOpenReadCloseDir(void)
      * is able to be opened.  This should not require a trailing
      * slash (i.e. /test rather than /test/) */
     status = OS_DirectoryOpen(&dirh, "/test");
-    UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryOpen /test Id=%lx Rc=%d",
-            OS_ObjectIdToInteger(dirh),(int)status);
+    UtAssert_True(status >= OS_SUCCESS, "OS_DirectoryOpen /test Id=%u Rc=%d",(unsigned int)dirh,(int)status);
 
     /*Close the file */
     status = OS_DirectoryClose(dirh);
@@ -689,7 +726,7 @@ void TestOpenReadCloseDir(void)
 ---------------------------------------------------------------------------------------*/
 void TestRename(void)
 {
-    int32 status;
+    int status;
     char filename1[OS_MAX_PATH_LEN];
     char dir0 [OS_MAX_PATH_LEN];
     char dir1 [OS_MAX_PATH_LEN];
@@ -701,7 +738,7 @@ void TestRename(void)
     char midname1 [OS_MAX_PATH_LEN];
     char newfilename1 [OS_MAX_PATH_LEN];
     
-    osal_id_t fd1;
+    int fd1;
     int size;
     
     /* make the directory names for testing, as well as the filenames and the buffers
@@ -724,9 +761,11 @@ void TestRename(void)
                
     /* now create a file in the directory */
 
-    status = OS_OpenCreate(&fd1, filename1, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    status = OS_creat(filename1,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat 1 = %d",(int)status);
     
+    fd1 = status;
+
     /* write the propper buffes into  the file */
     
     size = strlen(buffer1);
@@ -752,7 +791,7 @@ void TestRename(void)
 
     /* try to read the new file out */
 
-    status = OS_OpenCreate(&fd1, newfilename1, OS_FILE_FLAG_NONE, OS_READ_ONLY);
+    fd1 = OS_open(newfilename1,OS_READ_ONLY,0644);
     UtAssert_True(status >= OS_SUCCESS, "status after open 1 = %d",(int)status);
     
     size  = strlen(copybuffer1);
@@ -786,7 +825,7 @@ void TestStat(void)
     char        dir1slash[OS_MAX_PATH_LEN];
     char        buffer1 [OS_MAX_PATH_LEN];
     os_fstat_t  StatBuff;
-    osal_id_t   fd1;
+    int32       fd1;
     int         size;
 
     strcpy(dir1,"/drive0/DirectoryName");
@@ -800,9 +839,11 @@ void TestStat(void)
     UtAssert_True(status == OS_SUCCESS, "status after mkdir 1 = %d",(int)status);
     
     /* now create a file  */
-    status = OS_OpenCreate(&fd1, filename1, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    status = OS_creat(filename1,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat 1 = %d",(int)status);
     
+    fd1 = status;
+
     /* Write some data into the file */
     
     size = strlen(buffer1);
@@ -846,22 +887,21 @@ void TestOpenFileAPI(void)
     char filename2 [OS_MAX_PATH_LEN];
     char filename3 [OS_MAX_PATH_LEN];
     int status;
-    osal_id_t fd;
     
     strcpy(filename1,"/drive0/Filename1");
     strcpy(filename2,"/drive0/Filename2");
     strcpy(filename3,"/drive0/Filename3");
 
     /* Create/open a file */
-    status = OS_OpenCreate(&fd, filename1, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    status = OS_creat(filename1,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat 1 = %d",(int)status);
 
     /* Create/open a file */
-    status = OS_OpenCreate(&fd, filename2, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    status = OS_creat(filename2,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat 2 = %d",(int)status);
    
     /* Create/open a file */
-    status = OS_OpenCreate(&fd, filename3, OS_FILE_FLAG_CREATE | OS_FILE_FLAG_TRUNCATE, OS_READ_WRITE);
+    status = OS_creat(filename3,OS_READ_WRITE);
     UtAssert_True(status >= OS_SUCCESS, "status after creat 3 = %d",(int)status);
 
     /* 

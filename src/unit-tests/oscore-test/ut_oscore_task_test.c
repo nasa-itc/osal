@@ -56,8 +56,8 @@ extern char  g_long_task_name[UT_OS_NAME_BUFF_SIZE];
 **--------------------------------------------------------------------------------*/
 
 uint32 g_task_result = 0;
-osal_id_t g_task_sync_sem;
-osal_id_t g_task_ids[UT_OS_TASK_LIST_LEN];
+uint32 g_task_sync_sem = 0;
+uint32 g_task_ids[UT_OS_TASK_LIST_LEN];
 uint32 g_task_stacks[UT_OS_TASK_LIST_LEN][UT_TASK_STACK_SIZE];
 
 /*--------------------------------------------------------------------------------*
@@ -76,7 +76,7 @@ uint32 g_task_stacks[UT_OS_TASK_LIST_LEN][UT_TASK_STACK_SIZE];
 
 void generic_test_task(void)
 {
-    osal_id_t task_id;
+    int32 task_id=0;
     OS_task_prop_t task_prop;
 
     OS_TaskRegister();
@@ -84,8 +84,7 @@ void generic_test_task(void)
     task_id = OS_TaskGetId();
     OS_TaskGetInfo(task_id, &task_prop);
    
-    UT_OS_LOG("Starting GenericTask: %s, id: %lx\n",
-            task_prop.name, OS_ObjectIdToInteger(task_id));
+    UT_OS_LOG("Starting GenericTask: %s, id: %d\n", task_prop.name, (int)task_id);
 
     while (1)
     {
@@ -277,7 +276,7 @@ void UT_os_task_delete_test()
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    res = OS_TaskDelete(UT_OBJID_INCORRECT);
+    res = OS_TaskDelete(99999);
     if (res == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
@@ -287,7 +286,7 @@ void UT_os_task_delete_test()
     /*-----------------------------------------------------*/
     testDesc = "#1 Invalid-ID-arg";
 
-    res = OS_TaskDelete(UT_OBJID_INCORRECT);
+    res = OS_TaskDelete(99999);
     if ( res == OS_ERR_INVALID_ID )
        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
@@ -342,7 +341,7 @@ void delete_handler_callback(void)
 
 void delete_handler_test_task(void)
 {
-    osal_id_t task_id;
+    int32 task_id=0;
     OS_task_prop_t task_prop;
 
     OS_TaskRegister();
@@ -350,8 +349,7 @@ void delete_handler_test_task(void)
     task_id = OS_TaskGetId();
     OS_TaskGetInfo(task_id, &task_prop);
 
-    UT_OS_LOG("Starting DeleteTest Task: %s, id: %lx\n",
-            task_prop.name, OS_ObjectIdToInteger(task_id));
+    UT_OS_LOG("Starting DeleteTest Task: %s, id: %d\n", task_prop.name, (int)task_id);
 
     g_task_result = OS_TaskInstallDeleteHandler(&delete_handler_callback);
 
@@ -449,7 +447,7 @@ UT_os_task_install_delete_handler_test_exit_tag:
 **--------------------------------------------------------------------------------*/
 void exit_test_task(void)
 {
-    osal_id_t task_id;
+    int32 task_id=0;
     OS_task_prop_t task_prop;
 
     OS_TaskRegister();
@@ -457,8 +455,7 @@ void exit_test_task(void)
     task_id = OS_TaskGetId();
     OS_TaskGetInfo(task_id, &task_prop);
 
-    UT_OS_LOG("Starting ExitTest Task: %s, id: %lx\n",
-            task_prop.name, OS_ObjectIdToInteger(task_id));
+    UT_OS_LOG("Starting ExitTest Task: %s, id: %d\n", task_prop.name, (int)task_id);;
 
     /*
     ** The parent task will check to see if this task is valid.
@@ -614,7 +611,7 @@ void UT_os_task_set_priority_test()
     /*-----------------------------------------------------*/
     testDesc = "#1 Invalid-ID-arg";
 
-    res = OS_TaskSetPriority(UT_OBJID_INCORRECT, 100);
+    res = OS_TaskSetPriority(99999, 100);
     if (res == OS_ERR_INVALID_ID)
        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else
@@ -691,7 +688,7 @@ UT_os_task_set_priority_test_exit_tag:
 **--------------------------------------------------------------------------------*/
 void register_test_task(void)
 {
-    osal_id_t task_id;
+    int32 task_id=0;
     OS_task_prop_t task_prop;
 
     g_task_result = OS_TaskRegister();
@@ -791,7 +788,7 @@ UT_os_task_register_test_exit_tag:
 
 void getid_test_task(void)
 {
-    osal_id_t task_id;
+    int32 task_id=0;
     OS_task_prop_t task_prop;
 
     OS_TaskRegister();
@@ -799,8 +796,8 @@ void getid_test_task(void)
     task_id = OS_TaskGetId();
     OS_TaskGetInfo(task_id, &task_prop);
 
-    UT_OS_LOG("OS_TaskGetId() - #1 Nominal [This is the returned task Id=%lx]\n",
-    		            OS_ObjectIdToInteger(task_id));
+    UT_OS_LOG("OS_TaskGetId() - #1 Nominal [This is the returned task Id=%d]\n",
+    		            (int)task_id);
 
     while (1)
     {
@@ -819,10 +816,15 @@ void UT_os_task_get_id_test()
     int32 res=0;
     const char* testDesc;
 
-    /*
-     * Note this function does not return a normal status code,
-     * there is no provision to return/check for OS_ERR_NOT_IMPLEMENTED.
-     */
+    /*-----------------------------------------------------*/
+    testDesc = "API not implemented";
+
+    res = OS_TaskGetId();
+    if (res == OS_ERR_NOT_IMPLEMENTED)
+    {
+        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
+        goto UT_os_task_get_id_test_exit_tag;
+    }
 
     /*-----------------------------------------------------*/
     testDesc = "#1 Nominal";
@@ -839,14 +841,17 @@ void UT_os_task_get_id_test()
     {
     	OS_TaskDelay(500);
 
-    	UT_OS_LOG("OS_TaskGetId() - #1 Nominal [This is the expected task Id=%lx]\n",
-    			            OS_ObjectIdToInteger(g_task_ids[1]));
+    	UT_OS_LOG("OS_TaskGetId() - #1 Nominal [This is the expected task Id=%d]\n",
+    			            (int)g_task_ids[1]);
 
     	res = OS_TaskDelete(g_task_ids[1]);  /* Won't hurt if its already deleted */
 
     	UT_OS_TEST_RESULT( "#1 Nominal - Manual inspection required", UTASSERT_CASETYPE_MIR);
     }
 
+UT_os_task_get_id_test_exit_tag:
+    return;
+    
 }
 
 /*--------------------------------------------------------------------------------*
@@ -923,7 +928,7 @@ void UT_os_task_get_id_by_name_test()
     else
     {
         res = OS_TaskGetIdByName(&g_task_ids[6], g_task_names[5]);
-        if ((res == OS_SUCCESS) && OS_ObjectIdEqual(g_task_ids[5], g_task_ids[6]))
+        if ((res == OS_SUCCESS) && (g_task_ids[5] == g_task_ids[6]))
             UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
         else
             UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_FAILURE);
@@ -954,7 +959,7 @@ void UT_os_task_get_info_test()
     /*-----------------------------------------------------*/
     testDesc = "API not implemented";
 
-    res = OS_TaskGetInfo(UT_OBJID_INCORRECT, &task_prop);
+    res = OS_TaskGetInfo(99999, &task_prop);
     if (res == OS_ERR_NOT_IMPLEMENTED)
     {
         UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_NA);
@@ -964,7 +969,7 @@ void UT_os_task_get_info_test()
     /*-----------------------------------------------------*/
     testDesc = "#1 Invalid-ID-arg";
 
-    res = OS_TaskGetInfo(UT_OBJID_INCORRECT, &task_prop);
+    res = OS_TaskGetInfo(99999, &task_prop);
     if (res == OS_ERR_INVALID_ID)
        UT_OS_TEST_RESULT( testDesc, UTASSERT_CASETYPE_PASS);
     else

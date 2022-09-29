@@ -32,7 +32,6 @@
 
 #include "os-impl-binsem.h"
 #include "os-shared-binsem.h"
-#include "os-shared-timebase.h"
 
 /****************************************************************************************
                                      DEFINES
@@ -176,17 +175,7 @@ int32 OS_BinSemTake_Impl (uint32 sem_id)
  *-----------------------------------------------------------------*/
 int32 OS_BinSemTimedWait_Impl (uint32 sem_id, uint32 msecs)
 {
-    int   ticks;
-    int32 status;
-
-    status = OS_Milli2Ticks(msecs, &ticks);
-
-    if (status == OS_SUCCESS)
-    {
-        status = OS_VxWorks_GenericSemTake(OS_impl_bin_sem_table[sem_id].vxid, ticks);
-    }
-
-    return status;
+    return OS_VxWorks_GenericSemTake(OS_impl_bin_sem_table[sem_id].vxid, OS_Milli2Ticks(msecs));
 } /* end OS_BinSemTimedWait_Impl */
 
 

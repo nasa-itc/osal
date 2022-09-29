@@ -39,7 +39,6 @@
 #include "os-impl-binsem.h"
 #include "os-shared-binsem.h"
 #include "os-shared-idmap.h"
-#include "os-shared-timebase.h"
 
 
 /****************************************************************************************
@@ -104,7 +103,7 @@ int32 OS_BinSemCreate_Impl (uint32 sem_id, uint32 sem_initial_value, uint32 opti
     ** It is convenient to use the OSAL ID in here, as we know it is already unique
     ** and trying to use the real name would be less than useful (only 4 chars)
     */
-    r_name = OS_ObjectIdToInteger(OS_global_bin_sem_table[sem_id].active_id);
+    r_name = OS_global_bin_sem_table[sem_id].active_id;
 
     /* Check to make sure the sem value is going to be either 0 or 1 */
     if (sem_initial_value > 1)
@@ -245,12 +244,9 @@ int32 OS_BinSemTake_Impl (uint32 sem_id)
 int32 OS_BinSemTimedWait_Impl (uint32 sem_id, uint32 msecs)
 {
     rtems_status_code status;
-    int               TimeInTicks;
+    uint32            TimeInTicks;
 
-    if (OS_Milli2Ticks(msecs, &TimeInTicks) != OS_SUCCESS)
-    {
-        return OS_ERROR;
-    }
+    TimeInTicks = OS_Milli2Ticks(msecs);
 
     status  = 	rtems_semaphore_obtain(OS_impl_bin_sem_table[sem_id].id, RTEMS_WAIT, TimeInTicks) ;
 

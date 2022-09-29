@@ -53,7 +53,7 @@ void Test_OS_FileSysAddFixedMap(void)
      * Test Case For:
      * int32 OS_FileSysAddFixedMap(uint32 *filesys_id, const char *phys_path, const char *virt_path)
      */
-    osal_id_t id;
+    uint32 id;
 
     OSAPI_TEST_FUNCTION_RC(OS_FileSysAddFixedMap(&id, "/phys", "/virt"), OS_SUCCESS);
     OSAPI_TEST_FUNCTION_RC(OS_FileSysAddFixedMap(&id, NULL, NULL), OS_INVALID_POINTER);

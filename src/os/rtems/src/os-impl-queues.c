@@ -40,8 +40,6 @@
 
 #include "os-shared-queue.h"
 #include "os-shared-idmap.h"
-#include "os-shared-timebase.h"
-
 
 /****************************************************************************************
                                      DEFINES
@@ -94,7 +92,7 @@ int32 OS_QueueCreate_Impl (uint32 queue_id, uint32 flags)
     ** It is convenient to use the OSAL queue ID in here, as we know it is already unique
     ** and trying to use the real queue name would be less than useful (only 4 chars)
     */
-    r_name = OS_ObjectIdToInteger(OS_global_queue_table[queue_id].active_id);
+    r_name = OS_global_queue_table[queue_id].active_id;
 
     /*
     ** Create the message queue.
@@ -164,7 +162,6 @@ int32 OS_QueueGet_Impl (uint32 queue_id, void *data, uint32 size, uint32 *size_c
     int32              return_code;
     rtems_status_code  status;
     rtems_interval     ticks;
-    int                tick_count;
     rtems_option       option_set;
     size_t             rtems_size;
     rtems_id           rtems_queue_id;
@@ -185,14 +182,8 @@ int32 OS_QueueGet_Impl (uint32 queue_id, void *data, uint32 size, uint32 *size_c
     else
     {
         option_set = RTEMS_WAIT;
-
         /* msecs rounded to the closest system tick count */
-        if (OS_Milli2Ticks(timeout, &tick_count) != OS_SUCCESS)
-        {
-            return OS_ERROR;
-        }
-
-        ticks = (rtems_interval)tick_count;
+        ticks = OS_Milli2Ticks(timeout);
     }
 
     /*

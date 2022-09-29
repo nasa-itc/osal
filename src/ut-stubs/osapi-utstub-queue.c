@@ -62,7 +62,7 @@ UT_DEFAULT_STUB(OS_QueueAPI_Init,(void))
 **        or OS_SUCCESS.
 **
 ******************************************************************************/
-int32 OS_QueueCreate(osal_id_t *queue_id,
+int32 OS_QueueCreate(uint32 *queue_id,
                      const char *queue_name,
                      uint32 queue_depth,
                      uint32 data_size,
@@ -84,7 +84,7 @@ int32 OS_QueueCreate(osal_id_t *queue_id,
     }
     else
     {
-        *queue_id = UT_STUB_FAKE_OBJECT_ID;
+        *queue_id = 0xDEADBEEFU;
     }
 
     return status;
@@ -113,7 +113,7 @@ int32 OS_QueueCreate(osal_id_t *queue_id,
 **        OS_ERROR, or OS_SUCCESS.
 **
 ******************************************************************************/
-int32 OS_QueueDelete(osal_id_t queue_id)
+int32 OS_QueueDelete(uint32 queue_id)
 {
     UT_Stub_RegisterContextGenericArg(UT_KEY(OS_QueueDelete), queue_id);
 
@@ -154,7 +154,7 @@ int32 OS_QueueDelete(osal_id_t queue_id)
 **        or OS_SUCCESS.
 **
 ******************************************************************************/
-int32 OS_QueueGet(osal_id_t queue_id,
+int32 OS_QueueGet(uint32 queue_id,
                   void *data,
                   uint32 size,
                   uint32 *size_copied,
@@ -172,7 +172,7 @@ int32 OS_QueueGet(osal_id_t queue_id,
 
     if (status == OS_SUCCESS)
     {
-        *size_copied = UT_Stub_CopyToLocal((UT_EntryKey_t)OS_ObjectIdToInteger(queue_id), data, size);
+        *size_copied = UT_Stub_CopyToLocal((UT_EntryKey_t)&OS_QueueGet + queue_id, data, size);
         if (*size_copied == 0)
         {
             status = OS_QUEUE_EMPTY;
@@ -205,7 +205,7 @@ int32 OS_QueueGet(osal_id_t queue_id,
 **        OS_INVALID_POINTER, OS_QUEUE_FULL, or OS_SUCCESS.
 **
 ******************************************************************************/
-int32 OS_QueuePut(osal_id_t queue_id, const void *data, uint32 size, uint32 flags)
+int32 OS_QueuePut(uint32 queue_id, const void *data, uint32 size, uint32 flags)
 {
     UT_Stub_RegisterContextGenericArg(UT_KEY(OS_QueuePut), queue_id);
     UT_Stub_RegisterContext(UT_KEY(OS_QueuePut), data);
@@ -218,7 +218,7 @@ int32 OS_QueuePut(osal_id_t queue_id, const void *data, uint32 size, uint32 flag
 
     if (status == OS_SUCCESS)
     {
-        UT_SetDataBuffer((UT_EntryKey_t)OS_ObjectIdToInteger(queue_id), (void *)data, size, true);
+        UT_SetDataBuffer((UT_EntryKey_t)&OS_QueueGet + queue_id, (void *)data, size, true);
     }
 
     return status;
@@ -229,7 +229,7 @@ int32 OS_QueuePut(osal_id_t queue_id, const void *data, uint32 size, uint32 flag
  * Stub function for OS_QueueGetIdByName()
  *
  *****************************************************************************/
-int32 OS_QueueGetIdByName (osal_id_t *queue_id, const char *queue_name)
+int32 OS_QueueGetIdByName (uint32 *queue_id, const char *queue_name)
 {
     UT_Stub_RegisterContext(UT_KEY(OS_QueueGetIdByName), queue_id);
     UT_Stub_RegisterContext(UT_KEY(OS_QueueGetIdByName), queue_name);
@@ -241,7 +241,8 @@ int32 OS_QueueGetIdByName (osal_id_t *queue_id, const char *queue_name)
     if (status == OS_SUCCESS &&
             UT_Stub_CopyToLocal(UT_KEY(OS_QueueGetIdByName), queue_id, sizeof(*queue_id)) < sizeof(*queue_id))
     {
-        UT_ObjIdCompose(1, UT_OBJTYPE_QUEUE,queue_id);
+        *queue_id =  1;
+        UT_FIXUP_ID(*queue_id, UT_OBJTYPE_QUEUE);
     }
 
     return status;
@@ -263,7 +264,7 @@ int32 OS_QueueGetIdByName (osal_id_t *queue_id, const char *queue_name)
 **        Returns OS_SUCCESS.
 **
 ******************************************************************************/
-int32 OS_QueueGetInfo(osal_id_t queue_id, OS_queue_prop_t *queue_prop)
+int32 OS_QueueGetInfo(uint32 queue_id, OS_queue_prop_t *queue_prop)
 {
     UT_Stub_RegisterContextGenericArg(UT_KEY(OS_QueueGetInfo), queue_id);
     UT_Stub_RegisterContext(UT_KEY(OS_QueueGetInfo), queue_prop);
@@ -275,7 +276,8 @@ int32 OS_QueueGetInfo(osal_id_t queue_id, OS_queue_prop_t *queue_prop)
     if (status == OS_SUCCESS &&
             UT_Stub_CopyToLocal(UT_KEY(OS_QueueGetInfo), queue_prop, sizeof(*queue_prop)) < sizeof(*queue_prop))
     {
-        UT_ObjIdCompose(1, UT_OBJTYPE_TASK, &queue_prop->creator);
+        queue_prop->creator = 1;
+        UT_FIXUP_ID(queue_prop->creator, UT_OBJTYPE_TASK);
         strncpy(queue_prop->name, "Name", OS_MAX_API_NAME - 1);
         queue_prop->name[OS_MAX_API_NAME - 1] = '\0';
     }

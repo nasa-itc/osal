@@ -28,6 +28,9 @@
  * The OS-specific code must \#include the correct headers that define the
  * prototypes for these functions before including this implementation file.
  *
+ * NOTE: This is a "template" file and not a directly usable source file.
+ *       It must be adapted/instantiated from within the OS-specific
+ *       implementation on platforms that wish to use this template.
  */
 
 /****************************************************************************************

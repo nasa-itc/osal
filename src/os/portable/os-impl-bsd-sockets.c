@@ -24,6 +24,10 @@
  *
  * Purpose: This file contains the network functionality for for
  *      systems which implement the BSD-style socket API.
+ *
+ * NOTE: This is a "template" file and not a directly usable source file.
+ *       It must be adapted/instantiated from within the OS-specific
+ *       implementation on platforms that wish to use this template.
  */
 
 /****************************************************************************************
