@@ -24,6 +24,7 @@ set(NOS_BASE_SRCLIST
     ../posix/src/os-impl-queues.c
     ../posix/src/os-impl-tasks.c
     ../posix/src/os-impl-timebase.c
+    src/NOS-time.c
 )
 
 # The FPU and interrupt modules are deprecated.
