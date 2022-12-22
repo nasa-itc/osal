@@ -25,6 +25,7 @@ set(NOS_BASE_SRCLIST
     ../posix/src/os-impl-tasks.c
     ../posix/src/os-impl-timebase.c
     src/NOS-time.c
+    src/os-impl-nos-gettime.c
 )
 
 # The FPU and interrupt modules are deprecated.
@@ -40,7 +41,6 @@ endif (NOT OMIT_DEPRECATED)
 
 # Use portable blocks for basic I/O
 set(NOS_IMPL_SRCLIST
-    ../portable/os-impl-posix-gettime.c
     ../portable/os-impl-console-bsp.c
     ../portable/os-impl-posix-io.c
     ../portable/os-impl-posix-files.c
