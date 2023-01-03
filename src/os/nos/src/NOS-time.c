@@ -46,7 +46,8 @@ int NOS_clock_nanosleep (clockid_t clock_id, int flags, const struct timespec * 
         return -1;
     }
     NE_SimTime sim_time = NE_bus_get_time(CFE_PSP_Bus);
-    NE_SimTime end_time = sim_time + req->tv_sec * CFE_PSP_ticks_per_second + req->tv_nsec * CFE_PSP_ticks_per_second / NOS_NANO;
+    NE_SimTime end_time = req->tv_sec * CFE_PSP_ticks_per_second + req->tv_nsec * CFE_PSP_ticks_per_second / NOS_NANO;
+    if (flags == 0) end_time += sim_time; // relative time
     struct timespec delay, real_rem;
     delay.tv_sec = 0;
     delay.tv_nsec = NOS_NANO / CFE_PSP_ticks_per_second;
