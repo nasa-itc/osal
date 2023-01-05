@@ -16,12 +16,15 @@
 */
 
 #include <errno.h>
-#include <NOS-time.h>
+#include <pthread.h>
+#include "NOS-time.h"
 
 #include "Client/CInterface.h"
 
-extern NE_Bus      *CFE_PSP_Bus;
-extern int64_t      CFE_PSP_ticks_per_second;
+extern NE_Bus          *CFE_PSP_Bus;
+extern int64_t          CFE_PSP_ticks_per_second;
+extern pthread_mutex_t  CFE_PSP_sim_time_mutex;
+extern NE_SimTime       CFE_PSP_sim_time;
 #define NOS_NANO 1000000000
 
 int NOS_clock_getres (clockid_t clock_id, struct timespec * res)
@@ -33,7 +36,9 @@ int NOS_clock_getres (clockid_t clock_id, struct timespec * res)
 
 int NOS_clock_gettime (clockid_t clock_id, struct timespec * tp)
 {
-    NE_SimTime sim_time = NE_bus_get_time(CFE_PSP_Bus);
+    pthread_mutex_lock(&CFE_PSP_sim_time_mutex);
+    NE_SimTime sim_time = CFE_PSP_sim_time;
+    pthread_mutex_unlock(&CFE_PSP_sim_time_mutex);
     tp->tv_sec = sim_time / CFE_PSP_ticks_per_second;
     tp->tv_nsec = (sim_time % CFE_PSP_ticks_per_second) * NOS_NANO / CFE_PSP_ticks_per_second;
     return 0;
@@ -45,7 +50,9 @@ int NOS_clock_nanosleep (clockid_t clock_id, int flags, const struct timespec * 
         errno = EINVAL;
         return -1;
     }
-    NE_SimTime sim_time = NE_bus_get_time(CFE_PSP_Bus);
+    pthread_mutex_lock(&CFE_PSP_sim_time_mutex);
+    NE_SimTime sim_time = CFE_PSP_sim_time;
+    pthread_mutex_unlock(&CFE_PSP_sim_time_mutex);
     NE_SimTime end_time = req->tv_sec * CFE_PSP_ticks_per_second + req->tv_nsec * CFE_PSP_ticks_per_second / NOS_NANO;
     if (flags == 0) end_time += sim_time; // relative time
     struct timespec delay, real_rem;
@@ -54,7 +61,9 @@ int NOS_clock_nanosleep (clockid_t clock_id, int flags, const struct timespec * 
     int interrupt = 0;
     while ((sim_time < end_time) && !interrupt) {
         interrupt = clock_nanosleep (clock_id, flags, &delay, &real_rem);
-        sim_time = NE_bus_get_time(CFE_PSP_Bus);
+        pthread_mutex_lock(&CFE_PSP_sim_time_mutex);
+        sim_time = CFE_PSP_sim_time;
+        pthread_mutex_unlock(&CFE_PSP_sim_time_mutex);
     }
     if (rem != NULL) {
         NE_SimTime delta = end_time - sim_time;
