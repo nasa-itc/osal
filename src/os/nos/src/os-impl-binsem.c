@@ -419,10 +419,14 @@ static int32 OS_GenericBinSemTake_Impl (OS_impl_binsem_internal_record_t *sem, c
          /* wait forever */
          pthread_cond_wait(&(sem->cv),&(sem->id));
       }
-      else if (pthread_cond_timedwait(&(sem->cv),&(sem->id),timeout) == ETIMEDOUT)
-      {
-         return_code = OS_SEM_TIMEOUT;
-         break;
+      else {
+        struct timespec real;
+        NOS_to_real_timespec(timeout, &real);
+        if (pthread_cond_timedwait(&(sem->cv),&(sem->id),&real) == ETIMEDOUT)
+        {
+            return_code = OS_SEM_TIMEOUT;
+            break;
+        }
       }
    }
 

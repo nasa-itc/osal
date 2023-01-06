@@ -104,3 +104,34 @@ int NOS_timer_settime (timer_t timerid, int flags, const struct itimerspec * val
 {
     return timer_settime(timerid, flags, value, ovalue);
 }
+
+void NOS_canonicalize_timespec(struct timespec *ts)
+{
+    while (ts->tv_nsec < 0) {
+        ts->tv_nsec += 1000000000L;
+        ts->tv_sec--;
+    }
+    while (ts->tv_nsec >= 1000000000L) {
+        ts->tv_nsec -= 1000000000L;
+        ts->tv_sec++;
+    }
+}
+
+void NOS_minus_real_timeoffset(struct timespec *offset)
+{
+    struct timespec nos, real;
+    clock_gettime(CLOCK_REALTIME, &real);
+    NOS_clock_gettime (CLOCK_REALTIME, &nos);
+    offset->tv_sec = nos.tv_sec - real.tv_sec;
+    offset->tv_nsec = nos.tv_nsec - real.tv_nsec;
+    NOS_canonicalize_timespec(offset);
+}
+
+void NOS_to_real_timespec(const struct timespec *nos, struct timespec *real)
+{
+    struct timespec offset;
+    NOS_minus_real_timeoffset(&offset);
+    real->tv_sec = nos->tv_sec - offset.tv_sec;
+    real->tv_nsec = nos->tv_nsec - offset.tv_nsec;
+    NOS_canonicalize_timespec(real);
+}

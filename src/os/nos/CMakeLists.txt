@@ -19,12 +19,12 @@ set(NOS_BASE_SRCLIST
     ../posix/src/os-impl-heap.c
     ../posix/src/os-impl-idmap.c
     ../posix/src/os-impl-mutex.c
-    ../posix/src/os-impl-queues.c
     src/NOS-time.c
     src/os-impl-binsem.c
     src/os-impl-bsd-select.c
     src/os-impl-common.c
     src/os-impl-nos-gettime.c
+    src/os-impl-queues.c
     src/os-impl-tasks.c
     src/os-impl-timebase.c
 )
