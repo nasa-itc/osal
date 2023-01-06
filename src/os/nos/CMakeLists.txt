@@ -11,7 +11,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../posix/inc)
 # The basic set of files which are always built
 set(NOS_BASE_SRCLIST
     ../posix/src/os-impl-console.c
-    ../posix/src/os-impl-countsem.c
     ../posix/src/os-impl-dirs.c
     ../posix/src/os-impl-errors.c
     ../posix/src/os-impl-files.c
@@ -23,6 +22,7 @@ set(NOS_BASE_SRCLIST
     src/os-impl-binsem.c
     src/os-impl-bsd-select.c
     src/os-impl-common.c
+    src/os-impl-countsem.c
     src/os-impl-nos-gettime.c
     src/os-impl-queues.c
     src/os-impl-tasks.c

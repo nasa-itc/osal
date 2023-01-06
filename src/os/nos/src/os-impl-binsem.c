@@ -65,7 +65,7 @@ int32 OS_Posix_BinSemAcquireMutex(pthread_mutex_t *mut)
 {
     struct timespec timeout;
 
-    if (NOS_clock_gettime(CLOCK_REALTIME, &timeout) != 0)
+    if (clock_gettime(CLOCK_REALTIME, &timeout) != 0)
     {
         return OS_SEM_FAILURE;
     }
