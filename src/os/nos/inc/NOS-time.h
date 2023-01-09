@@ -26,16 +26,14 @@
 /* prototypes normally declared in time.h */
 /* ----------------------------------------- */
 
-extern int NOS_clock_getres (clockid_t clock_id, struct timespec * res);
-extern int NOS_clock_gettime (clockid_t clock_id, struct timespec * tp);
-extern int NOS_clock_nanosleep (clockid_t clock_id, int flags, const struct timespec * req, struct timespec * rem);
-extern int NOS_clock_settime (clockid_t clock_id, const struct timespec * tp);
-extern int NOS_timer_create (clockid_t clock_id, struct sigevent * evp, timer_t * timerid);
-extern int NOS_timer_delete (timer_t timerid) ;
-extern int NOS_timer_gettime (timer_t timerid, struct itimerspec * value);
-extern int NOS_timer_settime (timer_t timerid, int flags, const struct itimerspec * value, struct itimerspec * ovalue);
-void NOS_canonicalize_timespec(struct timespec *ts);
-void NOS_minus_real_timeoffset(struct timespec *offset);
+int NOS_clock_getres (clockid_t clock_id, struct timespec * res);
+int NOS_clock_gettime (clockid_t clock_id, struct timespec * tp);
+int NOS_clock_nanosleep (clockid_t clock_id, int flags, const struct timespec * req, struct timespec * rem);
+int NOS_clock_settime (clockid_t clock_id, const struct timespec * tp);
+int NOS_timer_create (clockid_t clock_id, struct sigevent * evp, timer_t * timerid);
+int NOS_timer_delete (timer_t timerid) ;
+// int NOS_timer_gettime (timer_t timerid, struct itimerspec * value); // unused
+int NOS_timer_settime (timer_t timerid, int flags, const struct itimerspec * value, struct itimerspec * ovalue);
 void NOS_to_real_timespec(const struct timespec *nos, struct timespec *real);
 
 #endif /* _NOS_STUB_TIME_H_ */

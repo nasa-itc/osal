@@ -456,7 +456,7 @@ int32 OS_TimeBaseCreate_Impl(uint32 timer_id)
             ** Note using the "MONOTONIC" clock here as this will still produce consistent intervals
             ** even if the system clock is stepped (e.g. clock_settime).
             */
-            status = timer_create(OS_PREFERRED_CLOCK, &evp, &local->host_timerid);
+            status = NOS_timer_create(OS_PREFERRED_CLOCK, &evp, &local->host_timerid);
             if (status < 0)
             {
                 return_code = OS_TIMER_ERR_UNAVAILABLE;
@@ -515,7 +515,7 @@ int32 OS_TimeBaseSet_Impl(uint32 timer_id, int32 start_time, int32 interval_time
         /*
         ** Program the real timer
         */
-        status = timer_settime(local->host_timerid,
+        status = NOS_timer_settime(local->host_timerid,
                 0,              /* Flags field can be zero */
                 &timeout,       /* struct itimerspec */
                 NULL);         /* Oldvalue */
@@ -563,7 +563,7 @@ int32 OS_TimeBaseDelete_Impl(uint32 timer_id)
     */
     if (local->assigned_signal != 0)
     {
-        status = timer_delete(OS_impl_timebase_table[timer_id].host_timerid);
+        status = NOS_timer_delete(OS_impl_timebase_table[timer_id].host_timerid);
         if (status < 0)
         {
             OS_DEBUG("Error deleting timer: %s\n",strerror(errno));
