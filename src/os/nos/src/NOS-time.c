@@ -19,6 +19,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <osconfig.h>
+#include "os-impl-timebase.h"
 #include "NOS-time.h"
 
 #include "Client/CInterface.h"
@@ -191,7 +192,7 @@ void NOS_timer_fire(NE_SimTime time)
                 // Use evp to do the timer action
                 struct sigevent evp = NOS_timer_table[i].evp;
                 if (evp.sigev_notify == SIGEV_SIGNAL) {
-                    raise(evp.sigev_signo);
+                    pthread_kill(OS_impl_timebase_table[evp.sigev_value.sival_int].handler_thread, evp.sigev_signo);
                 } else {
                     OS_printf("NOS_timer_fire:  timer %d, evp.sigev_notify %d not implemented\n", i, evp.sigev_notify);
                 }
