@@ -1,15 +1,8 @@
 ##########################################################################
 #
-# Build options for "generic-linux" BSP
+# Build options for "nos-linux" BSP
 #
 ##########################################################################
-
-
-
-# Linux system libraries required for the final link of applications using OSAL
-target_link_libraries(osal_bsp
-    pthread dl rt
-)
 
 # C flags that should be used when (re-) compiling code for unit testing.
 # Note: --coverage is just a shortcut for "-ftest-coverage" and "-fprofile-arcs"
@@ -17,7 +10,9 @@ target_link_libraries(osal_bsp
 # are baked into the executables, so they will not be there when copied to the target
 # Note - although GCC understands the same flags for compile and link here, this may
 # not be true on all platforms so the compile and link flags are specified separately.
-if (NOT CMAKE_CROSSCOMPILING)
+if (NOT CMAKE_CROSSCOMPILING AND NOT OSAL_OMIT_DEPRECATED)
+  # The variables here (UT_COVERAGE_COMPILE_FLAGS/LINK_FLAGS) should be phased out, prefer
+  # to use the interface libraries (ut_coverage_compile/link) instead, which are more flexible.
   set(UT_COVERAGE_COMPILE_FLAGS -pg --coverage)
   set(UT_COVERAGE_LINK_FLAGS    -pg --coverage)
 endif()
