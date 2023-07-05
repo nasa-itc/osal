@@ -46,7 +46,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include <osapi.h>
+#include "osapi-clock.h"
 #include "os-impl-gettime.h"
 #include "os-shared-clock.h"
 
@@ -70,14 +70,13 @@ int32 OS_GetLocalTime_Impl(OS_time_t *time_struct)
 {
     int             Status;
     int32           ReturnCode;
-    struct timespec time;
+    struct timespec TimeSp;
 
-    Status = NOS_clock_gettime(OSAL_GETTIME_SOURCE_CLOCK, &time);
+    Status = NOS_clock_gettime(OSAL_GETTIME_SOURCE_CLOCK, &TimeSp);
 
     if (Status == 0)
     {
-        time_struct -> seconds = time.tv_sec;
-        time_struct -> microsecs = time.tv_nsec / 1000;
+        *time_struct = OS_TimeAssembleFromNanoseconds(TimeSp.tv_sec, TimeSp.tv_nsec);
         ReturnCode = OS_SUCCESS;
     }
     else
@@ -87,7 +86,7 @@ int32 OS_GetLocalTime_Impl(OS_time_t *time_struct)
     }
 
     return ReturnCode;
-} /* end OS_GetLocalTime_Impl */
+}
 
 
 /*----------------------------------------------------------------
@@ -102,12 +101,12 @@ int32 OS_SetLocalTime_Impl(const OS_time_t *time_struct)
 {
     int             Status;
     int32           ReturnCode;
-    struct timespec time;
+    struct timespec TimeSp;
 
-    time.tv_sec = time_struct -> seconds;
-    time.tv_nsec = (time_struct -> microsecs * 1000);
+    TimeSp.tv_sec  = OS_TimeGetTotalSeconds(*time_struct);
+    TimeSp.tv_nsec = OS_TimeGetNanosecondsPart(*time_struct);
 
-    Status = NOS_clock_settime(OSAL_GETTIME_SOURCE_CLOCK, &time);
+    Status = NOS_clock_settime(OSAL_GETTIME_SOURCE_CLOCK, &TimeSp);
 
     if (Status == 0)
     {
@@ -120,4 +119,4 @@ int32 OS_SetLocalTime_Impl(const OS_time_t *time_struct)
 
     return ReturnCode;
 
-} /* end OS_SetLocalTime_Impl */
+}

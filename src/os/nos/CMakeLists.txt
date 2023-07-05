@@ -5,8 +5,6 @@
 ######################################################################
 
 # This CMake script generates targets specific to the NOS implementation
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../posix/inc)
 
 # The basic set of files which are always built
 set(NOS_BASE_SRCLIST
@@ -28,17 +26,6 @@ set(NOS_BASE_SRCLIST
     src/os-impl-tasks.c
     src/os-impl-timebase.c
 )
-
-# The FPU and interrupt modules are deprecated.
-# If the "OMIT_DEPRECATED" switch is set, then these are not built.
-if (NOT OMIT_DEPRECATED)
-    list(APPEND NOS_BASE_SRCLIST
-        ../posix/src/os-impl-fpu.c
-        ../posix/src/os-impl-interrupts.c
-    )
-endif (NOT OMIT_DEPRECATED)
-
-
 
 # Use portable blocks for basic I/O
 set(NOS_IMPL_SRCLIST
@@ -90,4 +77,12 @@ endif ()
 add_library(osal_nos_impl OBJECT
     ${NOS_BASE_SRCLIST}
     ${NOS_IMPL_SRCLIST}
+)
+
+target_include_directories(osal_nos_impl PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/../posix/inc
+)
+target_compile_definitions(osal_public_api INTERFACE
+    _NOS_OS_
 )

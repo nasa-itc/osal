@@ -193,9 +193,10 @@ void NOS_timer_fire(NE_SimTime time)
                 struct sigevent evp = NOS_timer_table[i].evp;
                 if (evp.sigev_notify == SIGEV_SIGNAL) {
                     pthread_kill(OS_impl_timebase_table[evp.sigev_value.sival_int].handler_thread, evp.sigev_signo);
-                } else {
-                    OS_printf("NOS_timer_fire:  timer %d, evp.sigev_notify %d not implemented\n", i, evp.sigev_notify);
-                }
+                } 
+                //else {
+                //    OS_printf("NOS_timer_fire:  timer %d, evp.sigev_notify %d not implemented\n", i, evp.sigev_notify);
+                //}
             }
         }
     }
