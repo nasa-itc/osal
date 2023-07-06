@@ -8,6 +8,7 @@
 
 # The basic set of files which are always built
 set(NOS_BASE_SRCLIST
+    ../posix/src/os-impl-condvar.c
     ../posix/src/os-impl-console.c
     ../posix/src/os-impl-dirs.c
     ../posix/src/os-impl-errors.c
