@@ -30,6 +30,7 @@
 #include "os-posix.h"
 #include "bsp-impl.h"
 #include <sched.h>
+#include <pthread.h>
 
 #include "os-impl-tasks.h"
 
@@ -47,6 +48,8 @@
 
 /* Tables where the OS object information is stored */
 OS_impl_task_internal_record_t OS_impl_task_table[OS_MAX_TASKS];
+
+//extern int pthread_setname_np(pthread_t thread, const char *name);
 
 /*
  * Local Function Prototypes
@@ -433,7 +436,7 @@ int32 OS_Posix_TaskAPI_Impl_Init(void)
  *  Purpose: Local helper routine, not part of OSAL API.
  *
  *-----------------------------------------------------------------*/
-int32 OS_Posix_InternalTaskCreate_Impl(pthread_t *pthr, osal_priority_t priority, size_t stacksz,
+int32 OS_Posix_InternalTaskCreate_Impl(pthread_t *pthr, const char *taskname, osal_priority_t priority, size_t stacksz,
                                        PthreadFuncPtr_t entry, void *entry_arg)
 {
     int                return_code = 0;
@@ -549,6 +552,16 @@ int32 OS_Posix_InternalTaskCreate_Impl(pthread_t *pthr, osal_priority_t priority
         return OS_ERROR;
     }
 
+    /* Set threadname for debugging */
+    OS_printf("pthread_setname_np to %s in  OS_TaskCreate\n", taskname);
+    return_code = pthread_setname_np(*pthr, taskname);
+
+    if (return_code != 0)
+    {
+        OS_printf("pthread_setname_np error in OS_TaskCreate: %s\n",strerror(return_code));
+    }
+
+
     /*
      ** Free the resources that are no longer needed
      ** Since the task is now running - pthread_create() was successful -
@@ -585,7 +598,7 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
     task = OS_OBJECT_TABLE_GET(OS_task_table, *token);
     impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
 
-    return_code = OS_Posix_InternalTaskCreate_Impl(&impl->id, task->priority, task->stack_size, OS_PthreadTaskEntry,
+    return_code = OS_Posix_InternalTaskCreate_Impl(&impl->id, task->task_name, task->priority, task->stack_size, OS_PthreadTaskEntry,
                                                    arg.opaque_arg);
 
     return return_code;

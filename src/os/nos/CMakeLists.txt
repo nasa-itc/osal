@@ -9,7 +9,6 @@
 # The basic set of files which are always built
 set(NOS_BASE_SRCLIST
     ../posix/src/os-impl-condvar.c
-    ../posix/src/os-impl-console.c
     ../posix/src/os-impl-dirs.c
     ../posix/src/os-impl-errors.c
     ../posix/src/os-impl-files.c
@@ -21,6 +20,7 @@ set(NOS_BASE_SRCLIST
     src/os-impl-binsem.c
     src/os-impl-bsd-select.c
     src/os-impl-common.c
+    src/os-impl-console.c
     src/os-impl-countsem.c
     src/os-impl-nos-gettime.c
     src/os-impl-queues.c
@@ -86,4 +86,5 @@ target_include_directories(osal_nos_impl PRIVATE
 )
 target_compile_definitions(osal_public_api INTERFACE
     _NOS_OS_
+    _GNU_SOURCE
 )

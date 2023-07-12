@@ -331,9 +331,12 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
     OS_impl_timebase_internal_record_t *local;
     OS_timebase_internal_record_t *     timebase;
     OS_VoidPtrValueWrapper_t            arg;
+    char timer_name[OS_MAX_API_NAME];
 
     local    = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
     timebase = OS_OBJECT_TABLE_GET(OS_timebase_table, *token);
+
+    snprintf(timer_name, sizeof(timer_name), "timer.%d", (int)local->host_timerid);
 
     /*
      * Spawn a dedicated time base handler thread
@@ -349,7 +352,7 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
 
     /* cppcheck-suppress unreadVariable // intentional use of other union member */
     arg.id      = OS_ObjectIdFromToken(token);
-    return_code = OS_Posix_InternalTaskCreate_Impl(&local->handler_thread, OSAL_PRIORITY_C(0), 0,
+    return_code = OS_Posix_InternalTaskCreate_Impl(&local->handler_thread, timer_name, OSAL_PRIORITY_C(0), 0,
                                                    OS_TimeBasePthreadEntry, arg.opaque_arg);
     if (return_code != OS_SUCCESS)
     {
