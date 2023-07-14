@@ -63,7 +63,7 @@ int32 OS_Posix_BinSemAcquireMutex(pthread_mutex_t *mut)
 {
     struct timespec timeout;
 
-    if (clock_gettime(CLOCK_REALTIME, &timeout) != 0)
+    if (NOS_clock_gettime(CLOCK_REALTIME, &timeout) != 0)
     {
         return OS_SEM_FAILURE;
     }
@@ -416,15 +416,10 @@ static int32 OS_GenericBinSemTake_Impl(const OS_object_token_t *token, const str
             /* wait forever */
             pthread_cond_wait(&(sem->cv), &(sem->id));
         }
-        else 
+        else if (pthread_cond_timedwait(&(sem->cv), &(sem->id), timeout) == ETIMEDOUT)
         {
-            struct timespec real;
-            NOS_to_real_timespec(timeout, &real);
-            if (pthread_cond_timedwait(&(sem->cv),&(sem->id),&real) == ETIMEDOUT)
-            {
-                return_code = OS_SEM_TIMEOUT;
-                break;
-            }
+            return_code = OS_SEM_TIMEOUT;
+            break;
         }
     }
 

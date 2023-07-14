@@ -159,7 +159,7 @@ void OS_ApplicationShutdown_Impl(void)
  *-----------------------------------------------------------------*/
 void  OS_Posix_CompAbsDelayTime( uint32 msecs, struct timespec * tm)
 {
-    NOS_clock_gettime( CLOCK_REALTIME,  tm );
+    clock_gettime(CLOCK_REALTIME, tm);
 
     /* add the delay to the current time */
     tm->tv_sec  += (time_t) (msecs / 1000) ;

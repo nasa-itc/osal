@@ -42,6 +42,8 @@
 
 #include "NOS-time.h"
 
+extern int64_t          CFE_PSP_ticks_per_second;
+
 /****************************************************************************************
                                 EXTERNAL FUNCTION PROTOTYPES
  ***************************************************************************************/
@@ -278,7 +280,7 @@ int32 OS_Posix_TimeBaseAPI_Impl_Init(void)
         /*
          * Pre-calculate the clock tick to microsecond conversion factor.
          */
-        OS_SharedGlobalVars.TicksPerSecond = sysconf(_SC_CLK_TCK);
+        OS_SharedGlobalVars.TicksPerSecond = CFE_PSP_ticks_per_second;
         if (OS_SharedGlobalVars.TicksPerSecond <= 0)
         {
             OS_DEBUG("Error: Unable to determine OS ticks per second: %s\n", strerror(errno));

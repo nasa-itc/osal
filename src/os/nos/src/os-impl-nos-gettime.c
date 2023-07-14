@@ -52,6 +52,7 @@
 
 #include "NOS-time.h"
 
+extern int64_t          CFE_PSP_ticks_per_second;
 
 /****************************************************************************************
                                 FUNCTIONS
@@ -76,7 +77,9 @@ int32 OS_GetLocalTime_Impl(OS_time_t *time_struct)
 
     if (Status == 0)
     {
-        *time_struct = OS_TimeAssembleFromNanoseconds(TimeSp.tv_sec, TimeSp.tv_nsec);
+        //*time_struct = OS_TimeAssembleFromNanoseconds(TimeSp.tv_sec, TimeSp.tv_nsec);
+        time_struct->ticks = (TimeSp.tv_sec * CFE_PSP_ticks_per_second) + 
+                             (TimeSp.tv_nsec * (NOS_NANO / CFE_PSP_ticks_per_second));
         ReturnCode = OS_SUCCESS;
     }
     else

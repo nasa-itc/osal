@@ -32,6 +32,8 @@
 #include "os-shared-countsem.h"
 #include "os-shared-idmap.h"
 
+#include "NOS-time.h"
+
 /*
  * Added SEM_VALUE_MAX Define
  */
@@ -168,7 +170,7 @@ int32 OS_CountSemTimedWait_Impl(const OS_object_token_t *token, uint32 msecs)
      ** Compute an absolute time for the delay
      */
     //OS_Posix_CompAbsDelayTime(msecs, &ts);
-    clock_gettime(CLOCK_REALTIME, &ts);
+    NOS_clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_sec += (time_t) (msecs / 1000);
     ts.tv_nsec += (msecs % 1000) * 1000000L ;
     if (ts.tv_nsec > 1000000000L ) 

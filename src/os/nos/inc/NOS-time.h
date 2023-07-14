@@ -22,6 +22,8 @@
 
 #include <time.h>
 
+#define NOS_NANO 1000000000
+
 /* ----------------------------------------- */
 /* prototypes normally declared in time.h */
 /* ----------------------------------------- */

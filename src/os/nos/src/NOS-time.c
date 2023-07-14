@@ -28,7 +28,6 @@ extern NE_Bus          *CFE_PSP_Bus;
 extern int64_t          CFE_PSP_ticks_per_second;
 extern pthread_mutex_t  CFE_PSP_sim_time_mutex;
 extern NE_SimTime       CFE_PSP_sim_time;
-#define NOS_NANO 1000000000
 
 int NOS_clock_getres (clockid_t clock_id, struct timespec * res)
 {
@@ -43,7 +42,7 @@ int NOS_clock_gettime (clockid_t clock_id, struct timespec * tp)
     NE_SimTime sim_time = CFE_PSP_sim_time;
     pthread_mutex_unlock(&CFE_PSP_sim_time_mutex);
     tp->tv_sec = sim_time / CFE_PSP_ticks_per_second;
-    tp->tv_nsec = (sim_time % CFE_PSP_ticks_per_second) * NOS_NANO / CFE_PSP_ticks_per_second;
+    tp->tv_nsec = (sim_time % CFE_PSP_ticks_per_second) * (NOS_NANO / CFE_PSP_ticks_per_second);
     return 0;
 }
 
