@@ -553,13 +553,12 @@ int32 OS_Posix_InternalTaskCreate_Impl(pthread_t *pthr, const char *taskname, os
     }
 
     /* Set threadname for debugging */
-    OS_printf("pthread_setname_np to %s in  OS_TaskCreate\n", taskname);
+    //OS_printf("pthread_setname_np to %s in  OS_TaskCreate\n", taskname);
     return_code = pthread_setname_np(*pthr, taskname);
-
-    if (return_code != 0)
-    {
-        OS_printf("pthread_setname_np error in OS_TaskCreate: %s\n",strerror(return_code));
-    }
+    //if (return_code != 0)
+    //{
+    //    OS_printf("pthread_setname_np error in OS_TaskCreate: %s\n",strerror(return_code));
+    //}
 
 
     /*
