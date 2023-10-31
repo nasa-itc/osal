@@ -721,10 +721,11 @@ int32 OS_TaskDelay_Impl(uint32 millisecond)
 {
     struct timespec sleep_end;
     int             status;
+    const int       MAX_SPEEDUP = 256;
 
-    NOS_clock_gettime(CLOCK_MONOTONIC, &sleep_end);
-    sleep_end.tv_sec += millisecond / 1000;
-    sleep_end.tv_nsec += 1000000 * (millisecond % 1000);
+    clock_gettime(CLOCK_MONOTONIC, &sleep_end);
+    sleep_end.tv_sec += (millisecond / 1000) / MAX_SPEEDUP;
+    sleep_end.tv_nsec += (1000000 * (millisecond % 1000)) / MAX_SPEEDUP;
 
     if (sleep_end.tv_nsec >= 1000000000)
     {
@@ -734,7 +735,7 @@ int32 OS_TaskDelay_Impl(uint32 millisecond)
 
     do
     {
-        status = NOS_clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &sleep_end, NULL);
+        status = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &sleep_end, NULL);
     } while (status == EINTR);
 
     if (status != 0)
