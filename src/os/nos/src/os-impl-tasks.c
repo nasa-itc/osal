@@ -723,6 +723,11 @@ int32 OS_TaskDelay_Impl(uint32 millisecond)
     int             status;
     const int       MAX_SPEEDUP = 256;
 
+    //   Previous implementation using NOS instead of MAX_SPEEDUP
+    //NOS_clock_gettime(CLOCK_MONOTONIC, &sleep_end);
+    //sleep_end.tv_sec += millisecond / 1000;
+    //sleep_end.tv_nsec += 1000000 * (millisecond % 1000);
+
     clock_gettime(CLOCK_MONOTONIC, &sleep_end);
     sleep_end.tv_sec += (millisecond / 1000) / MAX_SPEEDUP;
     sleep_end.tv_nsec += (1000000 * (millisecond % 1000)) / MAX_SPEEDUP;
@@ -735,6 +740,9 @@ int32 OS_TaskDelay_Impl(uint32 millisecond)
 
     do
     {
+        //   Previous implementation using NOS instead of MAX_SPEEDUP
+        //status = NOS_clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &sleep_end, NULL);
+
         status = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &sleep_end, NULL);
     } while (status == EINTR);
 
