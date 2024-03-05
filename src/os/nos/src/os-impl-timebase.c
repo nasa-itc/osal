@@ -338,7 +338,7 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
     local    = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
     timebase = OS_OBJECT_TABLE_GET(OS_timebase_table, *token);
 
-    snprintf(timer_name, sizeof(timer_name), "timer.%d", (int)local->host_timerid);
+    snprintf(timer_name, sizeof(timer_name), "timer.%ld", (long)local->host_timerid);
 
     /*
      * Spawn a dedicated time base handler thread
