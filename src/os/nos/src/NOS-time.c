@@ -111,7 +111,7 @@ int NOS_timer_create (clockid_t clock_id, struct sigevent * evp, timer_t * timer
         errno = ENOMEM;
         retval = -1;
     } else {
-        *timerid = (void *)i;
+        *timerid = (void*) (long) i;
         NOS_timer_table[i].in_use = 1;
         NOS_timer_table[i].evp = *evp;
         retval = 0;
@@ -123,7 +123,7 @@ int NOS_timer_create (clockid_t clock_id, struct sigevent * evp, timer_t * timer
 int NOS_timer_delete (timer_t timerid)
 {
     int retval = 0;
-    int i = (int)timerid;
+    int i = (long) timerid;
     pthread_mutex_lock(&NOS_timer_table_mutex);
     if ((i < 0) || (i >= OS_MAX_TIMEBASES)) {
         errno = EINVAL;
@@ -147,7 +147,7 @@ int NOS_timer_settime (timer_t timerid, int flags, const struct itimerspec * val
 {
     // Only call passes ovalue = NULL, so don't need to do anything with it
     int retval = 0;
-    int i = (int)timerid;
+    int i = (long) timerid;
     pthread_mutex_lock(&NOS_timer_table_mutex);
     if ((i < 0) || (i >= OS_MAX_TIMEBASES)) {
         errno = EINVAL;
