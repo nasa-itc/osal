@@ -99,7 +99,7 @@ typedef struct NOS_timer_t {
 static pthread_mutex_t NOS_timer_table_mutex;
 static NOS_timer_t NOS_timer_table[OS_MAX_TIMEBASES];
 
-int NOS_timer_create (clockid_t clock_id, struct sigevent * evp, timer_t * timerid)
+int NOS_timer_create (clockid_t clock_id, const struct sigevent * evp, timer_t * timerid)
 {
     int retval = 0;
     int i;
