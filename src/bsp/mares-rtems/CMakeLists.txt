@@ -1,10 +1,10 @@
 ######################################################################
 #
-# CMAKE build recipe for generic-rtems Board Support Package (BSP)
+# CMAKE build recipe for mares-rtems Board Support Package (BSP)
 #
 ######################################################################
 
-add_library(osal_generic-rtems_impl OBJECT
+add_library(osal_mares-rtems_impl OBJECT
 	src/bsp_start.c
 	src/bsp_console.c
 )
@@ -23,4 +23,4 @@ target_link_libraries(osal_public_api INTERFACE
 
 # This BSP only works with "rtems" OS layer.
 # Confirming this reduces risk of accidental misconfiguration
-set_property(TARGET osal_generic-rtems_impl PROPERTY OSAL_EXPECTED_OSTYPE "rtems")
+set_property(TARGET osal_mares-rtems_impl PROPERTY OSAL_EXPECTED_OSTYPE "rtems")
