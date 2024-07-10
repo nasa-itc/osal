@@ -9,6 +9,18 @@ add_library(osal_generic-rtems_impl OBJECT
 	src/bsp_console.c
 )
 
+# This definition is needed for the gethostname call
+# By defining this, it avoids the need to use the -std=gnu99
+#  instead of the preferred -std=c99 GCC switch
+target_compile_definitions(osal_public_api INTERFACE
+   _BSD_SOURCE
+)
+
+# Link the RTEMS BSP with the "rtemscpu" system library
+target_link_libraries(osal_public_api INTERFACE
+      rtemscpu
+)
+
 # This BSP only works with "rtems" OS layer.
 # Confirming this reduces risk of accidental misconfiguration
-set(OSAL_EXPECTED_OSTYPE    "rtems" PARENT_SCOPE)
+set_property(TARGET osal_generic-rtems_impl PROPERTY OSAL_EXPECTED_OSTYPE "rtems")
