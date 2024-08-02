@@ -34,6 +34,7 @@
 #include "osapi.h"
 #include "bsp-impl.h"
 
+#include <rtems.h>
 
 /*
  * By default put the shell at the same priority
