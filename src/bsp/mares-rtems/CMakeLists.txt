@@ -16,11 +16,6 @@ target_compile_definitions(osal_public_api INTERFACE
    _BSD_SOURCE
 )
 
-# Link the RTEMS BSP with the "rtemscpu" system library
-target_link_libraries(osal_public_api INTERFACE
-      rtemscpu
-)
-
 # This BSP only works with "rtems" OS layer.
 # Confirming this reduces risk of accidental misconfiguration
 set_property(TARGET osal_mares-rtems_impl PROPERTY OSAL_EXPECTED_OSTYPE "rtems")
