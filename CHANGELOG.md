@@ -1,5 +1,44 @@
 # Changelog
 
+## Development Build: v6.0.0-rc4+dev223
+- 'Fix #1396, do not use intmax_t/uintmax_t types'
+- 'Fix #1398, separate bind and listen calls for streams'
+- See: <https://github.com/nasa/cFE/pull/1397> <https://github.com/nasa/cFE/pull/1399>
+
+
+## Development Build: v6.0.0-rc4+dev217
+- Add additional counters to test summary
+- See <https://github.com/nasa/osal/pull/1393>
+
+## Development Build: v6.0.0-rc4+dev213
+- Create Workflow for IC Bundle Generation
+- See <https://github.com/nasa/osal/pull/1383>
+
+## Development Build: v6.0.0-rc4+dev209
+- add assert macros for other data types
+- See <https://github.com/nasa/osal/pull/1375>
+
+## Development Build: v6.0.0-rc4+dev205
+- fixup API headers for C++
+- workflow to validate OSAL API
+- See <https://github.com/nasa/osal/pull/1371> and <https://github.com/nasa/osal/pull/1372>
+
+## Development Build: v6.0.0-rc4+dev199
+- Modify unreachable branch in OS_ObjectIdAllocateNew
+- See <https://github.com/nasa/osal/pull/1327>
+
+## Development Build: v6.0.0-rc4+dev195
+- removed cast that hid bug at compile time
+- See <https://github.com/nasa/osal/pull/1367>
+
+## Development Build: v6.0.0-rc4+dev191
+- add doxygen for UT_ConfigureGenericStubReturnValue
+- See <https://github.com/nasa/osal/pull/1362>
+
+## Development Build: v6.0.0-rc4+dev187
+- UT assert stub return values
+- See <https://github.com/nasa/osal/pull/1352>
+
 ## Development Build: v6.0.0-rc4+dev184
 - separate append on volume_name to system_mountpt
 - See <https://github.com/nasa/osal/pull/1355>
