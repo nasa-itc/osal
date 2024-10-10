@@ -58,6 +58,7 @@ typedef enum
     OS_STREAM_STATE_CONNECTED = 0x02, /**< @brief whether the stream is connected */
     OS_STREAM_STATE_READABLE  = 0x04, /**< @brief whether the stream is readable  */
     OS_STREAM_STATE_WRITABLE  = 0x08, /**< @brief whether the stream is writable  */
+    OS_STREAM_STATE_LISTENING = 0x10  /**< @brief whether the stream is listening */
 } OS_StreamState_t;
 
 /** @defgroup OSAPISelect OSAL Select APIs
