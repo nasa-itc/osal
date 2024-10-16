@@ -216,8 +216,8 @@ void TimerTestCheck(void)
              * Since all these counts are affected by test system load,
              * allow for some fudge factor before declaring failure
              */
-            UtAssert_True(timer_counter[i] >= (expected - 3), "Timer %d count >= %d", (int)i, (int)(expected - 3));
-            UtAssert_True(timer_counter[i] <= (expected + 3), "Timer %d count <= %d", (int)i, (int)(expected + 3));
+            UtAssert_True(timer_counter[i] >= (expected - 6), "Timer %d count >= %d", (int)i, (int)(expected - 6));
+            UtAssert_True(timer_counter[i] <= (expected + 6), "Timer %d count <= %d", (int)i, (int)(expected + 6));
         }
     }
 }

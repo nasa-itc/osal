@@ -554,12 +554,12 @@ int32 OS_Posix_InternalTaskCreate_Impl(pthread_t *pthr, const char *taskname, os
 
     /* Set threadname for debugging */
     //OS_printf("pthread_setname_np to %s in  OS_TaskCreate\n", taskname);
-    return_code = pthread_setname_np(*pthr, taskname);
+    pthread_setname_np(*pthr, taskname);
+    //return_code = pthread_setname_np(*pthr, taskname);
     //if (return_code != 0)
     //{
     //    OS_printf("pthread_setname_np error in OS_TaskCreate: %s\n",strerror(return_code));
     //}
-
 
     /*
      ** Free the resources that are no longer needed
@@ -726,11 +726,11 @@ int32 OS_TaskDelay_Impl(uint32 millisecond)
     sleep_end.tv_sec = millisecond / 1000;
     sleep_end.tv_nsec = 1000000 * (millisecond % 1000);
 
-    if (sleep_end.tv_nsec >= 1000000000)
-    {
-        sleep_end.tv_nsec -= 1000000000;
-        ++sleep_end.tv_sec;
-    }
+    //if (sleep_end.tv_nsec >= 1000000000)
+    //{
+    //    sleep_end.tv_nsec -= 1000000000;
+    //    ++sleep_end.tv_sec;
+    //}
 
     do
     {
