@@ -20,6 +20,7 @@
  */
 #cmakedefine OSAL_CONFIG_INCLUDE_DYNAMIC_LOADER
 #cmakedefine OSAL_CONFIG_INCLUDE_NETWORK
+#cmakedefine OSAL_CONFIG_INCLUDE_DNS
 #cmakedefine OSAL_CONFIG_INCLUDE_STATIC_LOADER
 #cmakedefine OSAL_CONFIG_INCLUDE_SHELL
 #cmakedefine OSAL_CONFIG_DEBUG_PRINTF
@@ -70,6 +71,13 @@
   * Based on the OSAL_CONFIG_MAX_MUTEXES configuration option
   */
 #define OS_MAX_MUTEXES                  @OSAL_CONFIG_MAX_MUTEXES@
+
+ /**
+  * \brief The maximum number of rwlocks to support
+  *
+  * Based on the OSAL_CONFIG_MAX_RWLOCKS configuration option
+  */
+#define OS_MAX_RWLOCKS                  @OSAL_CONFIG_MAX_RWLOCKS@
 
 /**
   * \brief The maximum number of condition variables to support
@@ -223,6 +231,13 @@
   * Based on the OSAL_CONFIG_QUEUE_MAX_DEPTH configuration option
   */
 #define OS_QUEUE_MAX_DEPTH              @OSAL_CONFIG_QUEUE_MAX_DEPTH@
+
+ /**
+  * \brief The maximum number of CPUs to support
+  *
+  * Based on the OSAL_CONFIG_MAX_CPUS configuration option
+  */
+#define OS_MAX_CPUS                     @OSAL_CONFIG_MAX_CPUS@
 
  /**
   * \brief The name of the temporary file used to store shell commands

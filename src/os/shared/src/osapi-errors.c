@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -47,49 +47,49 @@
  * additional codes if necessary (but they may not be consistent).
  */
 static const OS_ErrorTable_Entry_t OS_GLOBAL_ERROR_NAME_TABLE[] = {
-    {OS_SUCCESS, "OS_SUCCESS"},
-    {OS_ERROR, "OS_ERROR"},
-    {OS_INVALID_POINTER, "OS_INVALID_POINTER"},
-    {OS_ERROR_ADDRESS_MISALIGNED, "OS_ERROR_ADDRESS_MISALIGNED"},
-    {OS_ERROR_TIMEOUT, "OS_ERROR_TIMEOUT"},
-    {OS_INVALID_INT_NUM, "OS_INVALID_INT_NUM"},
-    {OS_SEM_FAILURE, "OS_SEM_FAILURE"},
-    {OS_SEM_TIMEOUT, "OS_SEM_TIMEOUT"},
-    {OS_QUEUE_EMPTY, "OS_QUEUE_EMPTY"},
-    {OS_QUEUE_FULL, "OS_QUEUE_FULL"},
-    {OS_QUEUE_TIMEOUT, "OS_QUEUE_TIMEOUT"},
-    {OS_QUEUE_INVALID_SIZE, "OS_QUEUE_INVALID_SIZE"},
-    {OS_QUEUE_ID_ERROR, "OS_QUEUE_ID_ERROR"},
-    {OS_ERR_NAME_TOO_LONG, "OS_ERR_NAME_TOO_LONG"},
-    {OS_ERR_NO_FREE_IDS, "OS_ERR_NO_FREE_IDS"},
-    {OS_ERR_NAME_TAKEN, "OS_ERR_NAME_TAKEN"},
-    {OS_ERR_INVALID_ID, "OS_ERR_INVALID_ID"},
-    {OS_ERR_NAME_NOT_FOUND, "OS_ERR_NAME_NOT_FOUND"},
-    {OS_ERR_SEM_NOT_FULL, "OS_ERR_SEM_NOT_FULL"},
-    {OS_ERR_INVALID_PRIORITY, "OS_ERR_INVALID_PRIORITY"},
-    {OS_INVALID_SEM_VALUE, "OS_INVALID_SEM_VALUE"},
-    {OS_ERR_FILE, "OS_ERR_FILE"},
-    {OS_ERR_NOT_IMPLEMENTED, "OS_ERR_NOT_IMPLEMENTED"},
-    {OS_TIMER_ERR_INVALID_ARGS, "OS_TIMER_ERR_INVALID_ARGS"},
-    {OS_TIMER_ERR_TIMER_ID, "OS_TIMER_ERR_TIMER_ID"},
-    {OS_TIMER_ERR_UNAVAILABLE, "OS_TIMER_ERR_UNAVAILABLE"},
-    {OS_TIMER_ERR_INTERNAL, "OS_TIMER_ERR_INTERNAL"},
-    {OS_ERR_OBJECT_IN_USE, "OS_ERR_OBJECT_IN_USE"},
-    {OS_ERR_BAD_ADDRESS, "OS_ERR_BAD_ADDRESS"},
-    {OS_ERR_INCORRECT_OBJ_STATE, "OS_ERR_INCORRECT_OBJ_STATE"},
-    {OS_ERR_INCORRECT_OBJ_TYPE, "OS_ERR_INCORRECT_OBJ_TYPE"},
-    {OS_ERR_STREAM_DISCONNECTED, "OS_ERR_STREAM_DISCONNECTED"},
-    {OS_ERR_OPERATION_NOT_SUPPORTED, "OS_ERR_OPERATION_NOT_SUPPORTED"},
-    {OS_ERR_INVALID_SIZE, "OS_ERR_INVALID_SIZE"},
-    {OS_ERR_OUTPUT_TOO_LARGE, "OS_ERR_OUTPUT_TOO_LARGE"},
-    {OS_ERR_INVALID_ARGUMENT, "OS_ERR_INVALID_ARGUMENT"},
-    {OS_FS_ERR_PATH_TOO_LONG, "OS_FS_ERR_PATH_TOO_LONG"},
-    {OS_FS_ERR_NAME_TOO_LONG, "OS_FS_ERR_NAME_TOO_LONG"},
-    {OS_FS_ERR_DRIVE_NOT_CREATED, "OS_FS_ERR_DRIVE_NOT_CREATED"},
-    {OS_FS_ERR_DEVICE_NOT_FREE, "OS_FS_ERR_DEVICE_NOT_FREE"},
-    {OS_FS_ERR_PATH_INVALID, "OS_FS_ERR_PATH_INVALID"},
+    { OS_SUCCESS,                     "OS_SUCCESS"                     },
+    { OS_ERROR,                       "OS_ERROR"                       },
+    { OS_INVALID_POINTER,             "OS_INVALID_POINTER"             },
+    { OS_ERROR_ADDRESS_MISALIGNED,    "OS_ERROR_ADDRESS_MISALIGNED"    },
+    { OS_ERROR_TIMEOUT,               "OS_ERROR_TIMEOUT"               },
+    { OS_INVALID_INT_NUM,             "OS_INVALID_INT_NUM"             },
+    { OS_SEM_FAILURE,                 "OS_SEM_FAILURE"                 },
+    { OS_SEM_TIMEOUT,                 "OS_SEM_TIMEOUT"                 },
+    { OS_QUEUE_EMPTY,                 "OS_QUEUE_EMPTY"                 },
+    { OS_QUEUE_FULL,                  "OS_QUEUE_FULL"                  },
+    { OS_QUEUE_TIMEOUT,               "OS_QUEUE_TIMEOUT"               },
+    { OS_QUEUE_INVALID_SIZE,          "OS_QUEUE_INVALID_SIZE"          },
+    { OS_QUEUE_ID_ERROR,              "OS_QUEUE_ID_ERROR"              },
+    { OS_ERR_NAME_TOO_LONG,           "OS_ERR_NAME_TOO_LONG"           },
+    { OS_ERR_NO_FREE_IDS,             "OS_ERR_NO_FREE_IDS"             },
+    { OS_ERR_NAME_TAKEN,              "OS_ERR_NAME_TAKEN"              },
+    { OS_ERR_INVALID_ID,              "OS_ERR_INVALID_ID"              },
+    { OS_ERR_NAME_NOT_FOUND,          "OS_ERR_NAME_NOT_FOUND"          },
+    { OS_ERR_SEM_NOT_FULL,            "OS_ERR_SEM_NOT_FULL"            },
+    { OS_ERR_INVALID_PRIORITY,        "OS_ERR_INVALID_PRIORITY"        },
+    { OS_INVALID_SEM_VALUE,           "OS_INVALID_SEM_VALUE"           },
+    { OS_ERR_FILE,                    "OS_ERR_FILE"                    },
+    { OS_ERR_NOT_IMPLEMENTED,         "OS_ERR_NOT_IMPLEMENTED"         },
+    { OS_TIMER_ERR_INVALID_ARGS,      "OS_TIMER_ERR_INVALID_ARGS"      },
+    { OS_TIMER_ERR_TIMER_ID,          "OS_TIMER_ERR_TIMER_ID"          },
+    { OS_TIMER_ERR_UNAVAILABLE,       "OS_TIMER_ERR_UNAVAILABLE"       },
+    { OS_TIMER_ERR_INTERNAL,          "OS_TIMER_ERR_INTERNAL"          },
+    { OS_ERR_OBJECT_IN_USE,           "OS_ERR_OBJECT_IN_USE"           },
+    { OS_ERR_BAD_ADDRESS,             "OS_ERR_BAD_ADDRESS"             },
+    { OS_ERR_INCORRECT_OBJ_STATE,     "OS_ERR_INCORRECT_OBJ_STATE"     },
+    { OS_ERR_INCORRECT_OBJ_TYPE,      "OS_ERR_INCORRECT_OBJ_TYPE"      },
+    { OS_ERR_STREAM_DISCONNECTED,     "OS_ERR_STREAM_DISCONNECTED"     },
+    { OS_ERR_OPERATION_NOT_SUPPORTED, "OS_ERR_OPERATION_NOT_SUPPORTED" },
+    { OS_ERR_INVALID_SIZE,            "OS_ERR_INVALID_SIZE"            },
+    { OS_ERR_OUTPUT_TOO_LARGE,        "OS_ERR_OUTPUT_TOO_LARGE"        },
+    { OS_ERR_INVALID_ARGUMENT,        "OS_ERR_INVALID_ARGUMENT"        },
+    { OS_FS_ERR_PATH_TOO_LONG,        "OS_FS_ERR_PATH_TOO_LONG"        },
+    { OS_FS_ERR_NAME_TOO_LONG,        "OS_FS_ERR_NAME_TOO_LONG"        },
+    { OS_FS_ERR_DRIVE_NOT_CREATED,    "OS_FS_ERR_DRIVE_NOT_CREATED"    },
+    { OS_FS_ERR_DEVICE_NOT_FREE,      "OS_FS_ERR_DEVICE_NOT_FREE"      },
+    { OS_FS_ERR_PATH_INVALID,         "OS_FS_ERR_PATH_INVALID"         },
 
-    {0, NULL} /* End of table marker */
+    { 0,                              NULL                             }  /* End of table marker */
 };
 
 /*
@@ -110,6 +110,7 @@ char *OS_StatusToString(osal_status_t status, os_status_string_t *status_string)
 
     if (status_string != NULL)
     {
+        // SAD: No need to check snprintf return; OS_STATUS_STRING_LENGTH (12) is ample for all status values
         snprintf(*status_string, sizeof(*status_string), "%ld", OS_StatusToInteger(status));
         string = *status_string;
     }
@@ -148,8 +149,8 @@ int32 OS_GetErrorName(int32 error_num, os_err_name_t *err_name)
     if (Error->Number == error_num && Error->Name != NULL)
     {
         strncpy(*err_name, Error->Name, sizeof(*err_name) - 1);
-        *err_name[sizeof(*err_name) - 1] = 0;
-        return_code                      = OS_SUCCESS;
+        (*err_name)[sizeof(*err_name) - 1] = 0;
+        return_code                        = OS_SUCCESS;
     }
     else
     {

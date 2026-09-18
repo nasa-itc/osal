@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -63,7 +63,7 @@ int32 OS_ModuleLoad_Impl(const OS_object_token_t *token, const char *translated_
     int32                             status = OS_ERROR;
     int                               dl_mode;
     OS_impl_module_internal_record_t *impl;
-    OS_module_internal_record_t *     module;
+    OS_module_internal_record_t      *module;
 
     impl   = OS_OBJECT_TABLE_GET(OS_impl_module_table, *token);
     module = OS_OBJECT_TABLE_GET(OS_module_table, *token);
@@ -104,7 +104,7 @@ int32 OS_ModuleLoad_Impl(const OS_object_token_t *token, const char *translated_
     }
     else
     {
-        OS_DEBUG("Error loading shared library: %s\n", dlerror());
+        OS_DEBUG("loading shared library: %s\n", dlerror());
     }
 
     return status;

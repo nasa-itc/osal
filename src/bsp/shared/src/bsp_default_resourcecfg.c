@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -37,7 +37,7 @@ void OS_BSP_SetResourceTypeConfig(uint32 ResourceType, uint32 ConfigOptionValue)
 {
     if (ResourceType < OS_OBJECT_TYPE_USER)
     {
-        OS_BSP_Global.ResoureConfig[ResourceType] = ConfigOptionValue;
+        OS_BSP_Global.ResourceConfig[ResourceType] = ConfigOptionValue;
     }
 }
 
@@ -52,7 +52,7 @@ uint32 OS_BSP_GetResourceTypeConfig(uint32 ResourceType)
 
     if (ResourceType < OS_OBJECT_TYPE_USER)
     {
-        ConfigOptionValue = OS_BSP_Global.ResoureConfig[ResourceType];
+        ConfigOptionValue = OS_BSP_Global.ResourceConfig[ResourceType];
     }
     else
     {

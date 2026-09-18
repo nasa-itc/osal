@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -74,7 +74,7 @@ int32 OS_SocketListen_Impl(const OS_object_token_t *token)
  *
  * See prototype for argument/return detail
  *-----------------------------------------------------------------*/
-int32 OS_SocketConnect_Impl(const OS_object_token_t *token, const OS_SockAddr_t *Addr, int32 timeout)
+int32 OS_SocketConnect_Impl(const OS_object_token_t *token, const OS_SockAddr_t *Addr, OS_time_t abs_timeout)
 {
     return OS_ERR_NOT_IMPLEMENTED;
 }
@@ -94,8 +94,10 @@ int32 OS_SocketShutdown_Impl(const OS_object_token_t *token, OS_SocketShutdownMo
  *
  * See prototype for argument/return detail
  *-----------------------------------------------------------------*/
-int32 OS_SocketAccept_Impl(const OS_object_token_t *sock_token, const OS_object_token_t *conn_token,
-                           OS_SockAddr_t *Addr, int32 timeout)
+int32 OS_SocketAccept_Impl(const OS_object_token_t *sock_token,
+                           const OS_object_token_t *conn_token,
+                           OS_SockAddr_t           *Addr,
+                           OS_time_t                abs_timeout)
 {
     return OS_ERR_NOT_IMPLEMENTED;
 }
@@ -105,8 +107,11 @@ int32 OS_SocketAccept_Impl(const OS_object_token_t *sock_token, const OS_object_
  *
  * See prototype for argument/return detail
  *-----------------------------------------------------------------*/
-int32 OS_SocketRecvFrom_Impl(const OS_object_token_t *token, void *buffer, size_t buflen, OS_SockAddr_t *RemoteAddr,
-                             int32 timeout)
+int32 OS_SocketRecvFrom_Impl(const OS_object_token_t *token,
+                             void                    *buffer,
+                             size_t                   buflen,
+                             OS_SockAddr_t           *RemoteAddr,
+                             OS_time_t                abs_timeout)
 {
     return OS_ERR_NOT_IMPLEMENTED;
 }
@@ -116,8 +121,10 @@ int32 OS_SocketRecvFrom_Impl(const OS_object_token_t *token, void *buffer, size_
  *
  * See prototype for argument/return detail
  *-----------------------------------------------------------------*/
-int32 OS_SocketSendTo_Impl(const OS_object_token_t *token, const void *buffer, size_t buflen,
-                           const OS_SockAddr_t *RemoteAddr)
+int32 OS_SocketSendTo_Impl(const OS_object_token_t *token,
+                           const void              *buffer,
+                           size_t                   buflen,
+                           const OS_SockAddr_t     *RemoteAddr)
 {
     return OS_ERR_NOT_IMPLEMENTED;
 }
@@ -178,6 +185,28 @@ int32 OS_SocketAddrGetPort_Impl(uint16 *PortNum, const OS_SockAddr_t *Addr)
  * See prototype for argument/return detail
  *-----------------------------------------------------------------*/
 int32 OS_SocketAddrSetPort_Impl(OS_SockAddr_t *Addr, uint16 PortNum)
+{
+    return OS_ERR_NOT_IMPLEMENTED;
+}
+
+/*----------------------------------------------------------------
+ * Implementation for no network configuration
+ *
+ * See prototype for argument/return detail
+ *-----------------------------------------------------------------*/
+int32 OS_SocketGetOption_Impl(const OS_object_token_t *token, OS_socket_option_t opt_id, OS_socket_optval_t *optval)
+{
+    return OS_ERR_NOT_IMPLEMENTED;
+}
+
+/*----------------------------------------------------------------
+ * Implementation for no network configuration
+ *
+ * See prototype for argument/return detail
+ *-----------------------------------------------------------------*/
+int32 OS_SocketSetOption_Impl(const OS_object_token_t  *token,
+                              OS_socket_option_t        opt_id,
+                              const OS_socket_optval_t *optval)
 {
     return OS_ERR_NOT_IMPLEMENTED;
 }

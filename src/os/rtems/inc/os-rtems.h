@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -59,6 +59,9 @@
 #define OSAL_UNRESOLV_REC_TYPE  rtems_rtl_unresolv_rec_t
 #define OSAL_UNRESOLVED_SYMBOL  rtems_rtl_unresolved_name
 #define OSAL_UNRESOLVED_ITERATE rtems_rtl_unresolved_interate
+
+/* RTEMS 4.x does not implement thread names, so this becomes a no-op */
+#define pthread_setname_np(...)
 
 #else
 

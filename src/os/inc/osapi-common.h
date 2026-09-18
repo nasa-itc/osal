@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -232,6 +232,21 @@ void OS_ApplicationExit(int32 Status);
  * @retval #OS_INVALID_POINTER if handler is NULL
  */
 int32 OS_RegisterEventHandler(OS_EventHandler_t handler);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief get string length
+ *
+ * Provides an OSAL routine to get the functionality
+ * of the (non-C99) "strnlen()" function, via the
+ * C89/C99 standard "memchr()" function instead.
+ *
+ * @param[in]    s       The input string
+ * @param[in]    maxlen  Maximum length to check
+ * @retval Length of the string or maxlen, whichever is smaller.
+
+ */
+size_t OS_strnlen(const char *s, size_t maxlen);
 
 /**@}*/
 

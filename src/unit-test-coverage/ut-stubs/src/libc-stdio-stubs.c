@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -90,8 +90,8 @@ char *OCS_fgets(char *s, int n, OCS_FILE *stream)
 OCS_FILE *OCS_fopen(const char *filename, const char *modes)
 {
     int32           Status;
-    OCS_FILE *      retval;
-    static OCS_FILE FOPEN_FP = {0};
+    OCS_FILE       *retval;
+    static OCS_FILE FOPEN_FP = { 0 };
 
     Status = UT_DEFAULT_IMPL(OCS_fopen);
 
@@ -199,7 +199,7 @@ int OCS_fprintf(OCS_FILE *fp, const char *format, ...)
     return UT_DEFAULT_IMPL(OCS_fprintf);
 }
 
-static OCS_FILE LOCAL_FP[3] = {{10}, {11}, {12}};
+static OCS_FILE LOCAL_FP[3] = { { 10 }, { 11 }, { 12 } };
 
 OCS_FILE *OCS_stdin  = &LOCAL_FP[0];
 OCS_FILE *OCS_stdout = &LOCAL_FP[1];

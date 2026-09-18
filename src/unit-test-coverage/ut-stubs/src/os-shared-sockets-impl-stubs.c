@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -44,15 +44,17 @@ void OS_SetSocketDefaultFlags_Impl(const OS_object_token_t *token)
  * Generated stub function for OS_SocketAccept_Impl()
  * ----------------------------------------------------
  */
-int32 OS_SocketAccept_Impl(const OS_object_token_t *sock_token, const OS_object_token_t *conn_token,
-                           OS_SockAddr_t *Addr, int32 timeout)
+int32 OS_SocketAccept_Impl(const OS_object_token_t *sock_token,
+                           const OS_object_token_t *conn_token,
+                           OS_SockAddr_t           *Addr,
+                           OS_time_t                abs_timeout)
 {
     UT_GenStub_SetupReturnBuffer(OS_SocketAccept_Impl, int32);
 
     UT_GenStub_AddParam(OS_SocketAccept_Impl, const OS_object_token_t *, sock_token);
     UT_GenStub_AddParam(OS_SocketAccept_Impl, const OS_object_token_t *, conn_token);
     UT_GenStub_AddParam(OS_SocketAccept_Impl, OS_SockAddr_t *, Addr);
-    UT_GenStub_AddParam(OS_SocketAccept_Impl, int32, timeout);
+    UT_GenStub_AddParam(OS_SocketAccept_Impl, OS_time_t, abs_timeout);
 
     UT_GenStub_Execute(OS_SocketAccept_Impl, Basic, NULL);
 
@@ -167,13 +169,13 @@ int32 OS_SocketBindAddress_Impl(const OS_object_token_t *token, const OS_SockAdd
  * Generated stub function for OS_SocketConnect_Impl()
  * ----------------------------------------------------
  */
-int32 OS_SocketConnect_Impl(const OS_object_token_t *token, const OS_SockAddr_t *Addr, int32 timeout)
+int32 OS_SocketConnect_Impl(const OS_object_token_t *token, const OS_SockAddr_t *Addr, OS_time_t abs_timeout)
 {
     UT_GenStub_SetupReturnBuffer(OS_SocketConnect_Impl, int32);
 
     UT_GenStub_AddParam(OS_SocketConnect_Impl, const OS_object_token_t *, token);
     UT_GenStub_AddParam(OS_SocketConnect_Impl, const OS_SockAddr_t *, Addr);
-    UT_GenStub_AddParam(OS_SocketConnect_Impl, int32, timeout);
+    UT_GenStub_AddParam(OS_SocketConnect_Impl, OS_time_t, abs_timeout);
 
     UT_GenStub_Execute(OS_SocketConnect_Impl, Basic, NULL);
 
@@ -195,6 +197,24 @@ int32 OS_SocketGetInfo_Impl(const OS_object_token_t *token, OS_socket_prop_t *so
     UT_GenStub_Execute(OS_SocketGetInfo_Impl, Basic, NULL);
 
     return UT_GenStub_GetReturnValue(OS_SocketGetInfo_Impl, int32);
+}
+
+/*
+ * ----------------------------------------------------
+ * Generated stub function for OS_SocketGetOption_Impl()
+ * ----------------------------------------------------
+ */
+int32 OS_SocketGetOption_Impl(const OS_object_token_t *token, OS_socket_option_t opt_id, OS_socket_optval_t *optval)
+{
+    UT_GenStub_SetupReturnBuffer(OS_SocketGetOption_Impl, int32);
+
+    UT_GenStub_AddParam(OS_SocketGetOption_Impl, const OS_object_token_t *, token);
+    UT_GenStub_AddParam(OS_SocketGetOption_Impl, OS_socket_option_t, opt_id);
+    UT_GenStub_AddParam(OS_SocketGetOption_Impl, OS_socket_optval_t *, optval);
+
+    UT_GenStub_Execute(OS_SocketGetOption_Impl, Basic, NULL);
+
+    return UT_GenStub_GetReturnValue(OS_SocketGetOption_Impl, int32);
 }
 
 /*
@@ -234,8 +254,11 @@ int32 OS_SocketOpen_Impl(const OS_object_token_t *token)
  * Generated stub function for OS_SocketRecvFrom_Impl()
  * ----------------------------------------------------
  */
-int32 OS_SocketRecvFrom_Impl(const OS_object_token_t *token, void *buffer, size_t buflen, OS_SockAddr_t *RemoteAddr,
-                             int32 timeout)
+int32 OS_SocketRecvFrom_Impl(const OS_object_token_t *token,
+                             void                    *buffer,
+                             size_t                   buflen,
+                             OS_SockAddr_t           *RemoteAddr,
+                             OS_time_t                abs_timeout)
 {
     UT_GenStub_SetupReturnBuffer(OS_SocketRecvFrom_Impl, int32);
 
@@ -243,7 +266,7 @@ int32 OS_SocketRecvFrom_Impl(const OS_object_token_t *token, void *buffer, size_
     UT_GenStub_AddParam(OS_SocketRecvFrom_Impl, void *, buffer);
     UT_GenStub_AddParam(OS_SocketRecvFrom_Impl, size_t, buflen);
     UT_GenStub_AddParam(OS_SocketRecvFrom_Impl, OS_SockAddr_t *, RemoteAddr);
-    UT_GenStub_AddParam(OS_SocketRecvFrom_Impl, int32, timeout);
+    UT_GenStub_AddParam(OS_SocketRecvFrom_Impl, OS_time_t, abs_timeout);
 
     UT_GenStub_Execute(OS_SocketRecvFrom_Impl, Basic, NULL);
 
@@ -255,8 +278,10 @@ int32 OS_SocketRecvFrom_Impl(const OS_object_token_t *token, void *buffer, size_
  * Generated stub function for OS_SocketSendTo_Impl()
  * ----------------------------------------------------
  */
-int32 OS_SocketSendTo_Impl(const OS_object_token_t *token, const void *buffer, size_t buflen,
-                           const OS_SockAddr_t *RemoteAddr)
+int32 OS_SocketSendTo_Impl(const OS_object_token_t *token,
+                           const void              *buffer,
+                           size_t                   buflen,
+                           const OS_SockAddr_t     *RemoteAddr)
 {
     UT_GenStub_SetupReturnBuffer(OS_SocketSendTo_Impl, int32);
 
@@ -268,6 +293,26 @@ int32 OS_SocketSendTo_Impl(const OS_object_token_t *token, const void *buffer, s
     UT_GenStub_Execute(OS_SocketSendTo_Impl, Basic, NULL);
 
     return UT_GenStub_GetReturnValue(OS_SocketSendTo_Impl, int32);
+}
+
+/*
+ * ----------------------------------------------------
+ * Generated stub function for OS_SocketSetOption_Impl()
+ * ----------------------------------------------------
+ */
+int32 OS_SocketSetOption_Impl(const OS_object_token_t  *token,
+                              OS_socket_option_t        opt_id,
+                              const OS_socket_optval_t *optval)
+{
+    UT_GenStub_SetupReturnBuffer(OS_SocketSetOption_Impl, int32);
+
+    UT_GenStub_AddParam(OS_SocketSetOption_Impl, const OS_object_token_t *, token);
+    UT_GenStub_AddParam(OS_SocketSetOption_Impl, OS_socket_option_t, opt_id);
+    UT_GenStub_AddParam(OS_SocketSetOption_Impl, const OS_socket_optval_t *, optval);
+
+    UT_GenStub_Execute(OS_SocketSetOption_Impl, Basic, NULL);
+
+    return UT_GenStub_GetReturnValue(OS_SocketSetOption_Impl, int32);
 }
 
 /*

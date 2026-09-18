@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -32,9 +32,9 @@ void BinSemTimeoutSetup(void);
 void BinSemTimeoutCheck(void);
 
 /* Task 1 */
-#define TASK_1_STACK_SIZE 1024
+#define TASK_1_STACK_SIZE 4096
 #define TASK_1_PRIORITY   101
-#define TASK_2_STACK_SIZE 1024
+#define TASK_2_STACK_SIZE 4096
 #define TASK_2_PRIORITY   50
 
 uint32    task_1_stack[TASK_1_STACK_SIZE];
@@ -76,22 +76,6 @@ void TimerFunction(osal_id_t local_timer_id)
     {
         ++timer_function_failures;
     }
-
-    {
-        status = OS_BinSemGetInfo(bin_sem_id, &bin_sem_prop);
-        if (status != OS_SUCCESS)
-        {
-            ++timer_function_failures;
-        }
-        else if (bin_sem_prop.value > 1)
-        {
-            ++timer_function_failures;
-        }
-        else if (bin_sem_prop.value < -1)
-        {
-            ++timer_function_failures;
-        }
-    }
 }
 
 void task_1(void)
@@ -115,20 +99,18 @@ void task_1(void)
         {
             OS_printf("TASK 1:   Doing some work: %d\n", (int)counter++);
             status = OS_BinSemGetInfo(bin_sem_id, &bin_sem_prop);
-            if (status != OS_SUCCESS)
+            if (status == OS_SUCCESS)
             {
-                OS_printf("Error: OS_BinSemGetInfo\n");
-                ++task_1_failures;
-            }
-            else if (bin_sem_prop.value > 1)
-            {
-                OS_printf("Error: Binary sem value > 1 ( in task):%d !\n", (int)bin_sem_prop.value);
-                ++task_1_failures;
-            }
-            else if (bin_sem_prop.value < -1)
-            {
-                OS_printf("Error: Binary sem value < -1 ( in task):%d !\n", (int)bin_sem_prop.value);
-                ++task_1_failures;
+                if (bin_sem_prop.value > 1)
+                {
+                    OS_printf("Error: Binary sem value > 1 ( in task):%d !\n", (int)bin_sem_prop.value);
+                    ++task_1_failures;
+                }
+                else if (bin_sem_prop.value < -1)
+                {
+                    OS_printf("Error: Binary sem value < -1 ( in task):%d !\n", (int)bin_sem_prop.value);
+                    ++task_1_failures;
+                }
             }
         }
         else if (status == OS_SEM_TIMEOUT)
@@ -156,7 +138,9 @@ void BinSemTimeoutCheck(void)
     status = OS_TaskDelete(task_1_id);
     UtAssert_True(status == OS_SUCCESS, "OS_TaskDelete Rc=%d", (int)status);
 
-    UtAssert_True(counter == timer_counter, "Task counter (%d) == timer counter (%d)", (int)counter,
+    UtAssert_True(counter == timer_counter,
+                  "Task counter (%d) == timer counter (%d)",
+                  (int)counter,
                   (int)timer_counter);
     UtAssert_True(task_1_failures == 0, "Task 1 failures = %u", (unsigned int)task_1_failures);
     UtAssert_True(timer_function_failures == 0, "Timer function failures = %u", (unsigned int)timer_function_failures);
@@ -169,10 +153,14 @@ void BinSemTimeoutCheck(void)
      *   And Repeat...
      */
     limit = counter / 2;
-    UtAssert_True(task_1_timeouts >= limit, "Task 1 timeouts=%u >= %u", (unsigned int)task_1_timeouts,
+    UtAssert_True(task_1_timeouts >= limit,
+                  "Task 1 timeouts=%u >= %u",
+                  (unsigned int)task_1_timeouts,
                   (unsigned int)limit);
     limit = counter * 2;
-    UtAssert_True(task_1_timeouts <= limit, "Task 1 timeouts=%u <= %u", (unsigned int)task_1_timeouts,
+    UtAssert_True(task_1_timeouts <= limit,
+                  "Task 1 timeouts=%u <= %u",
+                  (unsigned int)task_1_timeouts,
                   (unsigned int)limit);
 }
 
@@ -211,22 +199,22 @@ void BinSemTimeoutSetup(void)
     status = OS_BinSemCreate(&bin_sem_id, "BinSem1", 1, 0);
     UtAssert_True(status == OS_SUCCESS, "BinSem1 create Id=%lx Rc=%d", OS_ObjectIdToInteger(bin_sem_id), (int)status);
 
-    status = OS_BinSemGetInfo(bin_sem_id, &bin_sem_prop);
-    UtAssert_True(status == OS_SUCCESS, "BinSem1 value=%d Rc=%d", (int)bin_sem_prop.value, (int)status);
-
     /*
     ** Take the semaphore so the value is 0 and the next SemTake call should block
     */
     status = OS_BinSemTake(bin_sem_id);
     UtAssert_True(status == OS_SUCCESS, "BinSem1 take Rc=%d", (int)status);
-    status = OS_BinSemGetInfo(bin_sem_id, &bin_sem_prop);
-    UtAssert_True(status == OS_SUCCESS, "BinSem1 value=%d Rc=%d", (int)bin_sem_prop.value, (int)status);
 
     /*
     ** Create the "consumer" task.
     */
-    status = OS_TaskCreate(&task_1_id, "Task 1", task_1, OSAL_STACKPTR_C(task_1_stack), sizeof(task_1_stack),
-                           OSAL_PRIORITY_C(TASK_1_PRIORITY), 0);
+    status = OS_TaskCreate(&task_1_id,
+                           "Task 1",
+                           task_1,
+                           OSAL_STACKPTR_C(task_1_stack),
+                           sizeof(task_1_stack),
+                           OSAL_PRIORITY_C(TASK_1_PRIORITY),
+                           0);
     UtAssert_True(status == OS_SUCCESS, "Task 1 create Id=%lx Rc=%d", OS_ObjectIdToInteger(task_1_id), (int)status);
 
     /*

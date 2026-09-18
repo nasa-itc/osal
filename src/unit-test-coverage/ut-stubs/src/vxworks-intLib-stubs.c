@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -48,15 +48,17 @@ int OCS_intUnlock(int lockKey)
     return UT_DEFAULT_IMPL(OCS_intUnlock);
 }
 
-static void OCS_intLib_dummyfunc(void) {}
+static void OCS_intLib_dummyfunc(void)
+{
+}
 
 OCS_VOIDFUNCPTR *OCS_INUM_TO_IVEC(unsigned int ui)
 {
     int32                  Status = UT_DEFAULT_IMPL(OCS_INUM_TO_IVEC);
-    OCS_VOIDFUNCPTR *      VecTbl;
+    OCS_VOIDFUNCPTR       *VecTbl;
     static OCS_VOIDFUNCPTR DummyVec;
     size_t                 VecTblSize;
-    void *                 GenericPtr;
+    void                  *GenericPtr;
 
     if (Status == 0)
     {

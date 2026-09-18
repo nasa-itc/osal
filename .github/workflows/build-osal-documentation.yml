@@ -2,7 +2,15 @@ name: "Build OSAL Documentation (API Guide)"
 
 on:
   push:
+    branches:
+      - dev
+      - main
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+  workflow_dispatch:
 
 jobs:
 
@@ -24,15 +32,13 @@ jobs:
     #Continue if check-for-duplicates found no duplicates. Always runs for pull-requests.
     needs: check-for-duplicates
     if: ${{ needs.check-for-duplicates.outputs.should_skip != 'true' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    container: ghcr.io/core-flight-system/cfsbuildenv-doxygen:latest
     timeout-minutes: 15
 
     steps:
-      - name: Install Dependencies
-        run: sudo apt-get install doxygen graphviz -y
-
       - name: Checkout submodule
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Set up for build
         run: |
@@ -45,7 +51,7 @@ jobs:
           mv build/docs/osal-apiguide-warnings.log osal-apiguide-warnings.log
 
       - name: Archive Osal Guide Build Logs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         with:
           name: OSAL Guide Artifacts
           path: |

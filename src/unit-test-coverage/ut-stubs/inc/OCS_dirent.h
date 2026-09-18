@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -48,7 +48,7 @@ struct OCS_dirent
 /* ----------------------------------------- */
 
 extern int                OCS_closedir(OCS_DIR *dirp);
-extern OCS_DIR *          OCS_opendir(const char *name);
+extern OCS_DIR           *OCS_opendir(const char *name);
 extern struct OCS_dirent *OCS_readdir(OCS_DIR *dirp);
 extern void               OCS_rewinddir(OCS_DIR *dirp);
 

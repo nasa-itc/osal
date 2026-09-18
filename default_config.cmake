@@ -85,6 +85,21 @@ set(OSAL_CONFIG_INCLUDE_NETWORK                 TRUE
     CACHE BOOL "Whether to include the Network API"
 )
 
+# OSAL_CONFIG_INCLUDE_DNS
+# ----------------------------------
+#
+# Whether to include the DNS support in Network API
+#
+# If set TRUE, the APIs which convert between strings and socket
+# addresses will include support for DNS
+#
+# This can be set FALSE for platforms which do not have DNS support
+# or where DNS lookups are not required
+#
+set(OSAL_CONFIG_INCLUDE_DNS                 FALSE
+    CACHE BOOL "Whether to include DNS support in Network API"
+)
+
 
 #
 # OSAL_CONFIG_INCLUDE_DYNAMIC_LOADER
@@ -206,6 +221,33 @@ set(OSAL_CONFIG_CONSOLE_ASYNC                   TRUE
     CACHE BOOL "Controls spawning of a separate utility task for OS_printf"
 )
 
+#
+# OS_CONFIG_RWLOCK
+# ----------------------------------
+#
+# Controls whether the readers-writer lock object is included in the compilation
+# process of the OSAL.
+#
+# If set FALSE, the relevant source and header files will be excluded in the compilation
+# of OSAL, such that the object is still registered with the Object ID system
+# but its associated functions won't be defined or declared.
+#
+# If set TRUE, the relevant source and header files will be included in the compilation
+# of OSAL, and all it's associated functions will be callable.
+#
+# When this is TRUE (default), it gives the ability to create a readers-writer lock as
+# an alternative to synchronization with mutexes for data structures that are read-heavy.
+# It allows for either an infinite number of readers to be accessing a data structure or 
+# a single writer.
+#
+# This option is available since some platforms may not support readers-writer locks, so
+# any use of a readers-writer lock should also create an implementation using solely 
+# mutexes.
+#
+set(OSAL_CONFIG_RWLOCK                          TRUE
+    CACHE BOOL "Controls the inclusion of readers-writer lock objects in the code"
+)
+
 #############################################
 # Resource Limits for the OS API
 #############################################
@@ -236,6 +278,11 @@ set(OSAL_CONFIG_MAX_BIN_SEMAPHORES      20
 # The maximum number of mutexes to support
 set(OSAL_CONFIG_MAX_MUTEXES             20
     CACHE STRING "Maximum Number of Mutexes to support"
+)
+
+# The maximum number of rwlocks to support
+set(OSAL_CONFIG_MAX_RWLOCKS             20
+    CACHE STRING "Maximum Number of RwLocks to support"
 )
 
 # The maximum number of condition variables to support
@@ -346,6 +393,11 @@ set(OSAL_CONFIG_MAX_CMD_LEN             1000
 # so it may be beneficial to set this limit accordingly.
 set(OSAL_CONFIG_QUEUE_MAX_DEPTH         50
     CACHE STRING "Maximum depth of message queue"
+)
+
+# The maximum number of CPUs supported.
+set(OSAL_CONFIG_MAX_CPUS                  1
+    CACHE STRING "Maximum number of CPUs supported"
 )
 
 # Flags added to all tasks on creation

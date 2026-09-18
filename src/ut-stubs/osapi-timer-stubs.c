@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -36,8 +36,11 @@ void UT_DefaultHandler_OS_TimerGetInfo(void *, UT_EntryKey_t, const UT_StubConte
  * Generated stub function for OS_TimerAdd()
  * ----------------------------------------------------
  */
-int32 OS_TimerAdd(osal_id_t *timer_id, const char *timer_name, osal_id_t timebase_id, OS_ArgCallback_t callback_ptr,
-                  void *callback_arg)
+int32 OS_TimerAdd(osal_id_t       *timer_id,
+                  const char      *timer_name,
+                  osal_id_t        timebase_id,
+                  OS_ArgCallback_t callback_ptr,
+                  void            *callback_arg)
 {
     UT_GenStub_SetupReturnBuffer(OS_TimerAdd, int32);
 
@@ -57,7 +60,9 @@ int32 OS_TimerAdd(osal_id_t *timer_id, const char *timer_name, osal_id_t timebas
  * Generated stub function for OS_TimerCreate()
  * ----------------------------------------------------
  */
-int32 OS_TimerCreate(osal_id_t *timer_id, const char *timer_name, uint32 *clock_accuracy,
+int32 OS_TimerCreate(osal_id_t         *timer_id,
+                     const char        *timer_name,
+                     uint32            *clock_accuracy,
                      OS_TimerCallback_t callback_ptr)
 {
     UT_GenStub_SetupReturnBuffer(OS_TimerCreate, int32);

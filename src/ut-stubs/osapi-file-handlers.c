@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -39,7 +39,7 @@
  *****************************************************************************/
 static void UT_GenericReadStub(UT_EntryKey_t FuncKey, const UT_StubContext_t *Context)
 {
-    void * buffer = UT_Hook_GetArgValueByName(Context, "buffer", void *);
+    void  *buffer = UT_Hook_GetArgValueByName(Context, "buffer", void *);
     size_t nbytes = UT_Hook_GetArgValueByName(Context, "nbytes", size_t);
     size_t CopySize;
     int32  status;
@@ -214,7 +214,7 @@ void UT_DefaultHandler_OS_stat(void *UserObj, UT_EntryKey_t FuncKey, const UT_St
  */
 void UT_DefaultHandler_OS_lseek(void *UserObj, UT_EntryKey_t FuncKey, const UT_StubContext_t *Context)
 {
-    int32 offset = UT_Hook_GetArgValueByName(Context, "offset", int32);
+    int32 offset = UT_Hook_GetArgValueByName(Context, "offset", osal_offset_t);
     int32 Status;
 
     if (UT_Stub_GetInt32StatusCode(Context, &Status))

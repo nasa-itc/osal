@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -33,12 +33,17 @@
                                     INCLUDE FILES
  ***************************************************************************************/
 
+#define _GNU_SOURCE
+#include <pthread.h>
+
 #include "os-rtems.h"
 #include "os-impl-tasks.h"
 
 #include "os-shared-task.h"
+#include "os-shared-task-affinity.h"
 #include "os-shared-idmap.h"
 #include "os-shared-timebase.h"
+#include "os-shared-common.h"
 
 #include "osapi-printf.h"
 
@@ -77,6 +82,12 @@ static rtems_task OS_RtemsEntry(rtems_task_argument arg)
 int32 OS_Rtems_TaskAPI_Impl_Init(void)
 {
     memset(OS_impl_task_table, 0, sizeof(OS_impl_task_table));
+
+    /*
+     * Get number of configured cores
+     */
+    OS_SharedGlobalVars.CoresConfigured = OS_TaskAffinityGetCoresConfigured_Impl();
+
     return OS_SUCCESS;
 }
 
@@ -93,7 +104,7 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
     rtems_mode                      r_mode;
     rtems_attribute                 r_attributes;
     OS_impl_task_internal_record_t *impl;
-    OS_task_internal_record_t *     task;
+    OS_task_internal_record_t      *task;
 
     impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
     task = OS_OBJECT_TABLE_GET(OS_task_table, *token);
@@ -125,6 +136,8 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
         OS_printf("rtems_task_create failed: %s\n", rtems_status_text(status));
         return OS_ERROR;
     }
+
+    pthread_setname_np(impl->id, task->task_name);
 
     /* will place the task in 'ready for scheduling' state */
     status = rtems_task_start(impl->id,                        /*rtems task id*/
@@ -182,7 +195,7 @@ int32 OS_TaskDetach_Impl(const OS_object_token_t *token)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-void OS_TaskExit_Impl()
+void OS_TaskExit_Impl(void)
 {
     rtems_task_delete(RTEMS_SELF);
 }
@@ -313,7 +326,7 @@ osal_id_t OS_TaskGetId_Impl(void)
      * API is invoked from a non-OSAL task (i.e. the "root" task) then it is
      * possible that rtems_object_get_classic_name() succeeds but the result
      * is not actually an OSAL task ID. */
-    status = rtems_object_get_classic_name(task_self, &self_name);
+    status    = rtems_object_get_classic_name(task_self, &self_name);
     if (status == RTEMS_SUCCESSFUL)
     {
         global_task_id = OS_ObjectIdFromInteger(self_name);
@@ -366,7 +379,7 @@ int32 OS_TaskValidateSystemData_Impl(const void *sysdata, size_t sysdata_size)
  *-----------------------------------------------------------------*/
 bool OS_TaskIdMatchSystemData_Impl(void *ref, const OS_object_token_t *token, const OS_common_record_t *obj)
 {
-    const rtems_id *                target = (const rtems_id *)ref;
+    const rtems_id                 *target = (const rtems_id *)ref;
     OS_impl_task_internal_record_t *impl;
 
     impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -45,7 +45,7 @@ typedef struct
 {
     char device_name[OS_MAX_API_NAME];
 
-    char *          BufBase;        /**< Start of the buffer memory */
+    char           *BufBase;        /**< Start of the buffer memory */
     size_t          BufSize;        /**< Total size of the buffer */
     volatile size_t ReadPos;        /**< Offset of next byte to read */
     volatile size_t WritePos;       /**< Offset of next byte to write */

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -42,8 +42,8 @@
 #define UT_BUFFER_SIZE 16
 
 /* OS_SelectSingle_Impl hook to set SelectFlags per input */
-static int32 UT_Hook_OS_SelectSingle_Impl(void *UserObj, int32 StubRetcode, uint32 CallCount,
-                                          const UT_StubContext_t *Context)
+static int32
+UT_Hook_OS_SelectSingle_Impl(void *UserObj, int32 StubRetcode, uint32 CallCount, const UT_StubContext_t *Context)
 {
     uint32 *SelectFlags;
 
@@ -74,7 +74,7 @@ static int32 UT_Hook_OCS_getsockopt(void *UserObj, int32 StubRetcode, uint32 Cal
 
 void Test_OS_SocketOpen_Impl(void)
 {
-    OS_object_token_t token = {0};
+    OS_object_token_t token = { 0 };
 
     /* Set up token for index 0 */
     token.obj_idx = UT_INDEX_0;
@@ -102,7 +102,7 @@ void Test_OS_SocketOpen_Impl(void)
 
 void Test_OS_SetSocketDefaultFlags_Impl(void)
 {
-    OS_object_token_t token = {0};
+    OS_object_token_t token = { 0 };
 
     /* Failure in fcntl() GETFL */
     UT_PortablePosixIOTest_ResetImpl(token.obj_idx);
@@ -130,8 +130,8 @@ void Test_OS_SetSocketDefaultFlags_Impl(void)
 
 void Test_OS_SocketBindAddress_Impl(void)
 {
-    OS_object_token_t    token = {0};
-    OS_SockAddr_t        addr  = {0};
+    OS_object_token_t    token = { 0 };
+    OS_SockAddr_t        addr  = { 0 };
     struct OCS_sockaddr *sa    = (struct OCS_sockaddr *)&addr.AddrData;
 
     /* Set up token for index 0 */
@@ -160,7 +160,7 @@ void Test_OS_SocketBindAddress_Impl(void)
 
 void Test_OS_SocketListen_Impl(void)
 {
-    OS_object_token_t token = {0};
+    OS_object_token_t token = { 0 };
 
     /* Set up token for index 0 */
     token.obj_idx = UT_INDEX_0;
@@ -176,8 +176,8 @@ void Test_OS_SocketListen_Impl(void)
 
 void Test_OS_SocketConnect_Impl(void)
 {
-    OS_object_token_t    token = {0};
-    OS_SockAddr_t        addr  = {0};
+    OS_object_token_t    token = { 0 };
+    OS_SockAddr_t        addr  = { 0 };
     struct OCS_sockaddr *sa    = (struct OCS_sockaddr *)&addr.AddrData;
     int32                selectflags;
     int                  sockopt;
@@ -188,16 +188,16 @@ void Test_OS_SocketConnect_Impl(void)
     /* Default family case */
     sa->sa_family     = -1;
     addr.ActualLength = sizeof(struct OCS_sockaddr_in);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, 0), OS_ERR_BAD_ADDRESS);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, OS_TIME_MIN), OS_ERR_BAD_ADDRESS);
 
     /* Successful connect */
     sa->sa_family = OCS_AF_INET;
-    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, 0), OS_SUCCESS);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, OS_TIME_MIN), OS_SUCCESS);
 
     /* Fail connect, errno ! EINPROGRESS */
     OCS_errno = ~OCS_EINPROGRESS;
     UT_SetDefaultReturnValue(UT_KEY(OCS_connect), -1);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, 0), OS_ERROR);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, OS_TIME_MIN), OS_ERROR);
 
     /* Fail OS_SelectSingle_Impl, errno == EINPROGRESS */
     OCS_errno                              = OCS_EINPROGRESS;
@@ -205,35 +205,35 @@ void Test_OS_SocketConnect_Impl(void)
     addr.ActualLength                      = sizeof(struct OCS_sockaddr_in6);
     OS_impl_filehandle_table[0].selectable = true;
     UT_SetDeferredRetcode(UT_KEY(OS_SelectSingle_Impl), 1, UT_ERR_UNIQUE);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, 0), UT_ERR_UNIQUE);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, OS_TIME_MIN), UT_ERR_UNIQUE);
 
     /* Timeout error by clearing select flags with hook */
     selectflags = 0;
     UT_SetHookFunction(UT_KEY(OS_SelectSingle_Impl), UT_Hook_OS_SelectSingle_Impl, &selectflags);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, 0), OS_ERROR_TIMEOUT);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, OS_TIME_MIN), OS_ERROR_TIMEOUT);
     UT_SetHookFunction(UT_KEY(OS_SelectSingle_Impl), NULL, NULL);
 
     /* Fail getsockopt status */
     UT_SetDeferredRetcode(UT_KEY(OCS_getsockopt), 1, -1);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, 0), OS_ERROR);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, OS_TIME_MIN), OS_ERROR);
 
     /* Nonzero getsockopt sockopt */
     sockopt = 1;
     UT_SetHookFunction(UT_KEY(OCS_getsockopt), UT_Hook_OCS_getsockopt, &sockopt);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, 0), OS_ERROR);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, OS_TIME_MIN), OS_ERROR);
     UT_SetHookFunction(UT_KEY(OCS_getsockopt), NULL, NULL);
 
     /* Success case with selectable */
-    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, 0), OS_SUCCESS);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, OS_TIME_MIN), OS_SUCCESS);
 
     /* Success case with not selectable */
     OS_impl_filehandle_table[0].selectable = false;
-    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, 0), OS_SUCCESS);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (&token, &addr, OS_TIME_MIN), OS_SUCCESS);
 }
 
 void Test_OS_SocketShutdown_Impl(void)
 {
-    OS_object_token_t token = {0};
+    OS_object_token_t token = { 0 };
 
     /* Set up token for index 0 */
     token.obj_idx = UT_INDEX_0;
@@ -250,9 +250,9 @@ void Test_OS_SocketShutdown_Impl(void)
 
 void Test_OS_SocketAccept_Impl(void)
 {
-    OS_object_token_t sock_token = {0};
-    OS_object_token_t conn_token = {0};
-    OS_SockAddr_t     addr       = {0};
+    OS_object_token_t sock_token = { 0 };
+    OS_object_token_t conn_token = { 0 };
+    OS_SockAddr_t     addr       = { 0 };
     int32             selectflags;
 
     /* Set up tokens */
@@ -262,28 +262,28 @@ void Test_OS_SocketAccept_Impl(void)
     /* Fail OS_SelectSingle_Impl with sock_token selectable */
     OS_impl_filehandle_table[0].selectable = true;
     UT_SetDeferredRetcode(UT_KEY(OS_SelectSingle_Impl), 1, UT_ERR_UNIQUE);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAccept_Impl, (&sock_token, &conn_token, &addr, 0), UT_ERR_UNIQUE);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketAccept_Impl, (&sock_token, &conn_token, &addr, OS_TIME_MIN), UT_ERR_UNIQUE);
 
     /* Timeout by clearing select flags with hook */
     selectflags = 0;
     UT_SetHookFunction(UT_KEY(OS_SelectSingle_Impl), UT_Hook_OS_SelectSingle_Impl, &selectflags);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAccept_Impl, (&sock_token, &conn_token, &addr, 0), OS_ERROR_TIMEOUT);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketAccept_Impl, (&sock_token, &conn_token, &addr, OS_TIME_MIN), OS_ERROR_TIMEOUT);
     UT_SetHookFunction(UT_KEY(OS_SelectSingle_Impl), NULL, NULL);
 
     /* Clear selectable and fail accept */
     OS_impl_filehandle_table[0].selectable = false;
     UT_SetDeferredRetcode(UT_KEY(OCS_accept), 1, -1);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAccept_Impl, (&sock_token, &conn_token, &addr, 0), OS_ERROR);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketAccept_Impl, (&sock_token, &conn_token, &addr, OS_TIME_MIN), OS_ERROR);
 
     /* Success case */
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAccept_Impl, (&sock_token, &conn_token, &addr, 0), OS_SUCCESS);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketAccept_Impl, (&sock_token, &conn_token, &addr, OS_TIME_MIN), OS_SUCCESS);
 }
 
 void Test_OS_SocketRecvFrom_Impl(void)
 {
-    OS_object_token_t token = {0};
+    OS_object_token_t token = { 0 };
     uint8             buffer[UT_BUFFER_SIZE];
-    OS_SockAddr_t     addr = {0};
+    OS_SockAddr_t     addr = { 0 };
     int32             selectflags;
 
     /* Set up token */
@@ -292,42 +292,49 @@ void Test_OS_SocketRecvFrom_Impl(void)
     /* NULL RemoteAddr, selectable, fail OS_SelectSingle_Impl */
     OS_impl_filehandle_table[0].selectable = true;
     UT_SetDeferredRetcode(UT_KEY(OS_SelectSingle_Impl), 1, UT_ERR_UNIQUE);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), NULL, 0), UT_ERR_UNIQUE);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), NULL, OS_TIME_MIN), UT_ERR_UNIQUE);
 
     /* Timeout by clearing select flags with hook */
     selectflags = 0;
     UT_SetHookFunction(UT_KEY(OS_SelectSingle_Impl), UT_Hook_OS_SelectSingle_Impl, &selectflags);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), &addr, 0), OS_ERROR_TIMEOUT);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl,
+                           (&token, buffer, sizeof(buffer), &addr, OS_TIME_MIN),
+                           OS_ERROR_TIMEOUT);
     UT_SetHookFunction(UT_KEY(OS_SelectSingle_Impl), NULL, NULL);
 
     /* Not selectable, 0 timeout, EAGAIN error from recvfrom error */
     OS_impl_filehandle_table[0].selectable = false;
     OCS_errno                              = OCS_EAGAIN;
     UT_SetDeferredRetcode(UT_KEY(OCS_recvfrom), 1, -1);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), &addr, 0), OS_QUEUE_EMPTY);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl,
+                           (&token, buffer, sizeof(buffer), &addr, OS_TIME_MIN),
+                           OS_QUEUE_EMPTY);
 
     /* With timeout, other error from recvfrom error */
     OCS_errno = 0;
     UT_SetDeferredRetcode(UT_KEY(OCS_recvfrom), 1, -1);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), &addr, 1), OS_ERROR);
+    UT_SetDeferredRetcode(UT_KEY(OS_TimeToRelativeMilliseconds), 1, OS_PEND);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), &addr, OS_TIME_MAX), OS_ERROR);
 
     /* With timeout, EWOULDBLOCK error from recvfrom error */
     OCS_errno = OCS_EWOULDBLOCK;
     UT_SetDeferredRetcode(UT_KEY(OCS_recvfrom), 1, -1);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), &addr, 1), OS_QUEUE_EMPTY);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl,
+                           (&token, buffer, sizeof(buffer), &addr, OS_TIME_MAX),
+                           OS_QUEUE_EMPTY);
 
     /* Success with NULL RemoteAddr */
-    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), NULL, 0), OS_SUCCESS);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), NULL, OS_TIME_MIN), OS_SUCCESS);
 
     /* Success with non-NULL RemoteAddr */
-    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), &addr, 0), OS_SUCCESS);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (&token, buffer, sizeof(buffer), &addr, OS_TIME_MIN), OS_SUCCESS);
 }
 
 void Test_OS_SocketSendTo_Impl(void)
 {
-    OS_object_token_t    token                  = {0};
-    const uint8          buffer[UT_BUFFER_SIZE] = {0};
-    OS_SockAddr_t        addr                   = {0};
+    OS_object_token_t    token                  = { 0 };
+    const uint8          buffer[UT_BUFFER_SIZE] = { 0 };
+    OS_SockAddr_t        addr                   = { 0 };
     struct OCS_sockaddr *sa                     = (struct OCS_sockaddr *)&addr.AddrData;
 
     /* Set up token */
@@ -354,9 +361,82 @@ void Test_OS_SocketGetInfo_Impl(void)
     OSAPI_TEST_FUNCTION_RC(OS_SocketGetInfo_Impl, (NULL, NULL), OS_SUCCESS);
 }
 
+/*****************************************************************************
+ *
+ * Test case for OS_SocketGetOption_Impl()
+ *
+ *****************************************************************************/
+void Test_OS_SocketGetOption_Impl(void)
+{
+    /*
+     * Test Case For:
+     * int32 OS_SocketGetOption_Impl(const OS_object_token_t *token, OS_socket_option_t opt_id, OS_socket_optval_t
+     * *optval)
+     */
+    OS_object_token_t  token = { 0 };
+    OS_socket_optval_t optval;
+
+    /* Set up token */
+    token.obj_idx = UT_INDEX_0;
+
+    memset(&optval, 0, sizeof(optval));
+
+    /* nominal */
+    OSAPI_TEST_FUNCTION_RC(OS_SocketGetOption_Impl, (&token, OS_socket_option_UNDEFINED, &optval), OS_SUCCESS);
+    UtAssert_STUB_COUNT(OCS_getsockopt, 0);
+
+    OSAPI_TEST_FUNCTION_RC(OS_SocketGetOption_Impl, (&token, OS_socket_option_IP_DSCP, &optval), OS_SUCCESS);
+    UtAssert_STUB_COUNT(OCS_getsockopt, 1);
+
+    /* error cases */
+    OSAPI_TEST_FUNCTION_RC(OS_SocketGetOption_Impl,
+                           (&token, OS_socket_option_MAX, &optval),
+                           OS_ERR_OPERATION_NOT_SUPPORTED);
+
+    UT_SetDeferredRetcode(UT_KEY(OCS_getsockopt), 1, -1);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketGetOption_Impl, (&token, OS_socket_option_IP_DSCP, &optval), OS_ERROR);
+}
+
+/*****************************************************************************
+ *
+ * Test case for OS_SocketSetOption_Impl()
+ *
+ *****************************************************************************/
+void Test_OS_SocketSetOption_Impl(void)
+{
+    /*
+     * Test Case For:
+     * int32 OS_SocketSetOption_Impl(const OS_object_token_t *token, OS_socket_option_t opt_id, const OS_socket_optval_t
+     * *optval)
+     */
+    OS_object_token_t  token = { 0 };
+    OS_socket_optval_t optval;
+
+    /* Set up token */
+    token.obj_idx = UT_INDEX_0;
+
+    memset(&optval, 0, sizeof(optval));
+
+    /* nominal */
+    OSAPI_TEST_FUNCTION_RC(OS_SocketSetOption_Impl, (&token, OS_socket_option_UNDEFINED, &optval), OS_SUCCESS);
+    UtAssert_STUB_COUNT(OCS_setsockopt, 0);
+
+    OSAPI_TEST_FUNCTION_RC(OS_SocketSetOption_Impl, (&token, OS_socket_option_IP_DSCP, &optval), OS_SUCCESS);
+
+    /* error cases */
+    OSAPI_TEST_FUNCTION_RC(OS_SocketSetOption_Impl,
+                           (&token, OS_socket_option_MAX, &optval),
+                           OS_ERR_OPERATION_NOT_SUPPORTED);
+
+    UT_SetDeferredRetcode(UT_KEY(OCS_setsockopt), 1, -1);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketSetOption_Impl, (&token, OS_socket_option_IP_DSCP, &optval), OS_ERROR);
+    UT_SetDeferredRetcode(UT_KEY(OCS_getsockopt), 1, -1);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketSetOption_Impl, (&token, OS_socket_option_IP_DSCP, &optval), OS_ERROR);
+}
+
 void Test_OS_SocketAddrInit_Impl(void)
 {
-    OS_SockAddr_t        addr = {0};
+    OS_SockAddr_t        addr = { 0 };
     struct OCS_sockaddr *sa   = (struct OCS_sockaddr *)&addr.AddrData;
 
     /* Unknown domain */
@@ -380,55 +460,10 @@ void Test_OS_SocketAddrInit_Impl(void)
     UtAssert_INT32_EQ(addr.ActualLength, sizeof(struct OCS_sockaddr_in6));
 }
 
-void Test_OS_SocketAddrToString_Impl(void)
-{
-    char                 buffer[UT_BUFFER_SIZE];
-    OS_SockAddr_t        addr = {0};
-    struct OCS_sockaddr *sa   = (struct OCS_sockaddr *)&addr.AddrData;
-
-    /* Bad family */
-    sa->sa_family = -1;
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAddrToString_Impl, (buffer, sizeof(buffer), &addr), OS_ERR_BAD_ADDRESS);
-
-    /* AF_INET6 failed inet_ntop */
-    sa->sa_family = OCS_AF_INET6;
-    UT_SetDeferredRetcode(UT_KEY(OCS_inet_ntop), 1, -1);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAddrToString_Impl, (buffer, sizeof(buffer), &addr), OS_ERROR);
-
-    /* AF_INET, success */
-    sa->sa_family = OCS_AF_INET;
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAddrToString_Impl, (buffer, sizeof(buffer), &addr), OS_SUCCESS);
-}
-
-void Test_OS_SocketAddrFromString_Impl(void)
-{
-    const char           buffer[UT_BUFFER_SIZE] = "UT";
-    OS_SockAddr_t        addr                   = {0};
-    struct OCS_sockaddr *sa                     = (struct OCS_sockaddr *)&addr.AddrData;
-
-    /* Bad family */
-    sa->sa_family = -1;
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAddrFromString_Impl, (&addr, buffer), OS_ERR_BAD_ADDRESS);
-
-    /* AF_INET6 failed inet_ntop */
-    sa->sa_family = OCS_AF_INET6;
-    UT_SetDeferredRetcode(UT_KEY(OCS_inet_pton), 1, -1);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAddrFromString_Impl, (&addr, buffer), OS_ERROR);
-
-    /* AF_INET, unable to convert (note inet_pton returns 0 if it failed) */
-    sa->sa_family = OCS_AF_INET;
-    UT_SetDeferredRetcode(UT_KEY(OCS_inet_pton), 1, 0);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAddrFromString_Impl, (&addr, buffer), OS_ERROR);
-
-    /* AF_INET, success */
-    UT_SetDeferredRetcode(UT_KEY(OCS_inet_pton), 1, 1);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAddrFromString_Impl, (&addr, buffer), OS_SUCCESS);
-}
-
 void Test_OS_SocketAddrGetPort_Impl(void)
 {
     uint16               port;
-    OS_SockAddr_t        addr = {0};
+    OS_SockAddr_t        addr = { 0 };
     struct OCS_sockaddr *sa   = (struct OCS_sockaddr *)&addr.AddrData;
 
     /* Bad family */
@@ -447,7 +482,7 @@ void Test_OS_SocketAddrGetPort_Impl(void)
 void Test_OS_SocketAddrSetPort_Impl(void)
 {
     uint16               port = 1;
-    OS_SockAddr_t        addr = {0};
+    OS_SockAddr_t        addr = { 0 };
     struct OCS_sockaddr *sa   = (struct OCS_sockaddr *)&addr.AddrData;
 
     /* Bad family */
@@ -482,7 +517,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /* UtTest_Setup
  *
@@ -502,8 +539,8 @@ void UtTest_Setup(void)
     ADD_TEST(OS_SocketSendTo_Impl);
     ADD_TEST(OS_SocketGetInfo_Impl);
     ADD_TEST(OS_SocketAddrInit_Impl);
-    ADD_TEST(OS_SocketAddrToString_Impl);
-    ADD_TEST(OS_SocketAddrFromString_Impl);
     ADD_TEST(OS_SocketAddrGetPort_Impl);
     ADD_TEST(OS_SocketAddrSetPort_Impl);
+    ADD_TEST(OS_SocketGetOption_Impl);
+    ADD_TEST(OS_SocketSetOption_Impl);
 }

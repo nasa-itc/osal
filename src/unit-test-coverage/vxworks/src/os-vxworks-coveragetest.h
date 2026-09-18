@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -45,21 +45,9 @@
 #define UT_INDEX_1 OSAL_INDEX_C(1)
 #define UT_INDEX_2 OSAL_INDEX_C(2)
 
-#define UT_TOKEN_0                                    \
-    (OS_object_token_t)                               \
-    {                                                 \
-        .obj_id = (osal_id_t) {0x10000}, .obj_idx = 0 \
-    }
-#define UT_TOKEN_1                                    \
-    (OS_object_token_t)                               \
-    {                                                 \
-        .obj_id = (osal_id_t) {0x10001}, .obj_idx = 1 \
-    }
-#define UT_TOKEN_2                                    \
-    (OS_object_token_t)                               \
-    {                                                 \
-        .obj_id = (osal_id_t) {0x10002}, .obj_idx = 2 \
-    }
+#define UT_TOKEN_0 (OS_object_token_t) { .obj_id = (osal_id_t) { 0x10000 }, .obj_idx = 0 }
+#define UT_TOKEN_1 (OS_object_token_t) { .obj_id = (osal_id_t) { 0x10001 }, .obj_idx = 1 }
+#define UT_TOKEN_2 (OS_object_token_t) { .obj_id = (osal_id_t) { 0x10002 }, .obj_idx = 2 }
 
 /* Osapi_Test_Setup
  *

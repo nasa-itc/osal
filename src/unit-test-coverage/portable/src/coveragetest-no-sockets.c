@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -29,10 +29,10 @@ void Test_No_Sockets(void)
     OSAPI_TEST_FUNCTION_RC(OS_SocketOpen_Impl, (NULL), OS_ERR_NOT_IMPLEMENTED);
     OSAPI_TEST_FUNCTION_RC(OS_SocketBindAddress_Impl, (NULL, NULL), OS_ERR_NOT_IMPLEMENTED);
     OSAPI_TEST_FUNCTION_RC(OS_SocketListen_Impl, (NULL), OS_ERR_NOT_IMPLEMENTED);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (NULL, NULL, 0), OS_ERR_NOT_IMPLEMENTED);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketAccept_Impl, (NULL, NULL, NULL, 0), OS_ERR_NOT_IMPLEMENTED);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketConnect_Impl, (NULL, NULL, OS_TIME_MIN), OS_ERR_NOT_IMPLEMENTED);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketAccept_Impl, (NULL, NULL, NULL, OS_TIME_MIN), OS_ERR_NOT_IMPLEMENTED);
     OSAPI_TEST_FUNCTION_RC(OS_SocketShutdown_Impl, (NULL, 0), OS_ERR_NOT_IMPLEMENTED);
-    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (NULL, NULL, 0, NULL, 0), OS_ERR_NOT_IMPLEMENTED);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketRecvFrom_Impl, (NULL, NULL, 0, NULL, OS_TIME_MIN), OS_ERR_NOT_IMPLEMENTED);
     OSAPI_TEST_FUNCTION_RC(OS_SocketSendTo_Impl, (NULL, NULL, 0, NULL), OS_ERR_NOT_IMPLEMENTED);
     OSAPI_TEST_FUNCTION_RC(OS_SocketGetInfo_Impl, (NULL, NULL), OS_SUCCESS);
     OSAPI_TEST_FUNCTION_RC(OS_SocketAddrInit_Impl, (NULL, 0), OS_ERR_NOT_IMPLEMENTED);
@@ -40,6 +40,8 @@ void Test_No_Sockets(void)
     OSAPI_TEST_FUNCTION_RC(OS_SocketAddrFromString_Impl, (NULL, NULL), OS_ERR_NOT_IMPLEMENTED);
     OSAPI_TEST_FUNCTION_RC(OS_SocketAddrGetPort_Impl, (NULL, NULL), OS_ERR_NOT_IMPLEMENTED);
     OSAPI_TEST_FUNCTION_RC(OS_SocketAddrSetPort_Impl, (NULL, 0), OS_ERR_NOT_IMPLEMENTED);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketGetOption_Impl, (NULL, 0, NULL), OS_ERR_NOT_IMPLEMENTED);
+    OSAPI_TEST_FUNCTION_RC(OS_SocketSetOption_Impl, (NULL, 0, NULL), OS_ERR_NOT_IMPLEMENTED);
 }
 
 /* ------------------- End of test cases --------------------------------------*/
@@ -60,7 +62,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /* UtTest_Setup
  *

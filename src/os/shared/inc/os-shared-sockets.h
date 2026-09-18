@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -74,8 +74,10 @@ int32 OS_SocketListen_Impl(const OS_object_token_t *token);
 
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
-int32 OS_SocketAccept_Impl(const OS_object_token_t *sock_token, const OS_object_token_t *conn_token,
-                           OS_SockAddr_t *Addr, int32 timeout);
+int32 OS_SocketAccept_Impl(const OS_object_token_t *sock_token,
+                           const OS_object_token_t *conn_token,
+                           OS_SockAddr_t           *Addr,
+                           OS_time_t                abs_timeout);
 
 /*----------------------------------------------------------------
 
@@ -84,7 +86,7 @@ int32 OS_SocketAccept_Impl(const OS_object_token_t *sock_token, const OS_object_
 
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
-int32 OS_SocketConnect_Impl(const OS_object_token_t *token, const OS_SockAddr_t *Addr, int32 timeout);
+int32 OS_SocketConnect_Impl(const OS_object_token_t *token, const OS_SockAddr_t *Addr, OS_time_t abs_timeout);
 
 /*----------------------------------------------------------------
 
@@ -104,8 +106,11 @@ int32 OS_SocketShutdown_Impl(const OS_object_token_t *token, OS_SocketShutdownMo
 
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
-int32 OS_SocketRecvFrom_Impl(const OS_object_token_t *token, void *buffer, size_t buflen, OS_SockAddr_t *RemoteAddr,
-                             int32 timeout);
+int32 OS_SocketRecvFrom_Impl(const OS_object_token_t *token,
+                             void                    *buffer,
+                             size_t                   buflen,
+                             OS_SockAddr_t           *RemoteAddr,
+                             OS_time_t                abs_timeout);
 
 /*----------------------------------------------------------------
 
@@ -115,8 +120,10 @@ int32 OS_SocketRecvFrom_Impl(const OS_object_token_t *token, void *buffer, size_
 
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
-int32 OS_SocketSendTo_Impl(const OS_object_token_t *token, const void *buffer, size_t buflen,
-                           const OS_SockAddr_t *RemoteAddr);
+int32 OS_SocketSendTo_Impl(const OS_object_token_t *token,
+                           const void              *buffer,
+                           size_t                   buflen,
+                           const OS_SockAddr_t     *RemoteAddr);
 
 /*----------------------------------------------------------------
 
@@ -125,6 +132,24 @@ int32 OS_SocketSendTo_Impl(const OS_object_token_t *token, const void *buffer, s
     Returns: OS_SUCCESS on success, or relevant error code
  ------------------------------------------------------------------*/
 int32 OS_SocketGetInfo_Impl(const OS_object_token_t *token, OS_socket_prop_t *sock_prop);
+
+/*----------------------------------------------------------------
+
+    Purpose: Get OS-specific option value for a socket
+
+    Returns: OS_SUCCESS on success, or relevant error code
+ ------------------------------------------------------------------*/
+int32 OS_SocketGetOption_Impl(const OS_object_token_t *token, OS_socket_option_t opt_id, OS_socket_optval_t *optval);
+
+/*----------------------------------------------------------------
+
+    Purpose: Set OS-specific option value for a socket
+
+    Returns: OS_SUCCESS on success, or relevant error code
+ ------------------------------------------------------------------*/
+int32 OS_SocketSetOption_Impl(const OS_object_token_t  *token,
+                              OS_socket_option_t        opt_id,
+                              const OS_socket_optval_t *optval);
 
 /*----------------------------------------------------------------
 

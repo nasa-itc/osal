@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -26,6 +26,7 @@
 #ifndef OS_SHARED_SELECT_H
 #define OS_SHARED_SELECT_H
 
+#include "osapi-clock.h"
 #include "osapi-select.h"
 #include "os-shared-globaldefs.h"
 
@@ -48,7 +49,7 @@
     Returns: OS_SUCCESS on success, or relevant error code
              OS_ERR_OPERATION_NOT_SUPPORTED if the specified file handle does not support select
  ------------------------------------------------------------------*/
-int32 OS_SelectSingle_Impl(const OS_object_token_t *token, uint32 *SelectFlags, int32 msecs);
+int32 OS_SelectSingle_Impl(const OS_object_token_t *token, uint32 *SelectFlags, OS_time_t abs_timeout);
 
 /*----------------------------------------------------------------
 
@@ -71,6 +72,6 @@ int32 OS_SelectSingle_Impl(const OS_object_token_t *token, uint32 *SelectFlags, 
     Returns: OS_SUCCESS on success, or relevant error code
              OS_ERR_OPERATION_NOT_SUPPORTED if the specified file handle(s) do not support select
  ------------------------------------------------------------------*/
-int32 OS_SelectMultiple_Impl(OS_FdSet *ReadSet, OS_FdSet *WriteSet, int32 msecs);
+int32 OS_SelectMultiple_Impl(OS_FdSet *ReadSet, OS_FdSet *WriteSet, OS_time_t abs_timeout);
 
 #endif /* OS_SHARED_SELECT_H */

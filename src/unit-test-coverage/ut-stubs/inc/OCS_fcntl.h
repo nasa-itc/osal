@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -27,6 +27,7 @@
 #define OCS_FCNTL_H
 
 #include "OCS_basetypes.h"
+#include "OCS_sys_types.h"
 
 /* ----------------------------------------- */
 /* constants normally defined in fcntl.h */
@@ -59,7 +60,7 @@
 #define OCS_S_IWUSR 0x0040
 
 #define OCS_S_IFDIR    0x0001
-#define OCS_S_ISDIR(x) (((x)&OCS_S_IFDIR) == OCS_S_IFDIR)
+#define OCS_S_ISDIR(x) (((x) & OCS_S_IFDIR) == OCS_S_IFDIR)
 
 #define OCS_O_RDONLY   0x1501
 #define OCS_O_WRONLY   0x1502
@@ -84,5 +85,7 @@
 
 extern int OCS_fcntl(int fd, int cmd, ...);
 extern int OCS_open(const char *file, int oflag, ...);
+extern int OCS_posix_fallocate(int fd, OCS_off_t offset, OCS_off_t len);
+extern int OCS_ftruncate(int fd, OCS_off_t len);
 
 #endif /* OCS_FCNTL_H */

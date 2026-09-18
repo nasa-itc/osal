@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -126,7 +126,7 @@ int32 OS_FileOpen_Impl(const OS_object_token_t *token, const char *local_path, i
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_FileStat_Impl(const char *local_path, os_fstat_t *FileStats)
+int32 OS_FileStat_Impl(const char *local_path, os_fstat_t *filestat)
 {
     struct stat     st;
     mode_t          readbits;
@@ -139,7 +139,7 @@ int32 OS_FileStat_Impl(const char *local_path, os_fstat_t *FileStats)
         return OS_ERROR;
     }
 
-    FileStats->FileSize = st.st_size;
+    filestat->FileSize = st.st_size;
 
     /*
      * NOTE: Traditional timestamps are only a whole number of seconds (time_t)
@@ -164,12 +164,12 @@ int32 OS_FileStat_Impl(const char *local_path, os_fstat_t *FileStats)
     filetime.tv_nsec = 0;
 #endif
 
-    FileStats->FileTime = OS_TimeAssembleFromNanoseconds(filetime.tv_sec, filetime.tv_nsec);
+    filestat->FileTime = OS_TimeAssembleFromNanoseconds(filetime.tv_sec, filetime.tv_nsec);
 
     /* note that the "fst_mode" member is already zeroed by the caller */
     if (S_ISDIR(st.st_mode))
     {
-        FileStats->FileModeBits |= OS_FILESTAT_MODE_DIR;
+        filestat->FileModeBits |= OS_FILESTAT_MODE_DIR;
     }
 
     /* always check world bits */
@@ -180,30 +180,30 @@ int32 OS_FileStat_Impl(const char *local_path, os_fstat_t *FileStats)
     if (OS_IMPL_SELF_EUID == st.st_uid)
     {
         /* we own the file so use user bits for simplified perms */
-        readbits |= S_IRUSR;
+        readbits  |= S_IRUSR;
         writebits |= S_IWUSR;
-        execbits |= S_IXUSR;
+        execbits  |= S_IXUSR;
     }
 
     if (OS_IMPL_SELF_EGID == st.st_gid)
     {
         /* our group owns the file so use group bits for simplified perms */
-        readbits |= S_IRGRP;
+        readbits  |= S_IRGRP;
         writebits |= S_IWGRP;
-        execbits |= S_IXGRP;
+        execbits  |= S_IXGRP;
     }
 
     if (st.st_mode & readbits)
     {
-        FileStats->FileModeBits |= OS_FILESTAT_MODE_READ;
+        filestat->FileModeBits |= OS_FILESTAT_MODE_READ;
     }
     if (st.st_mode & writebits)
     {
-        FileStats->FileModeBits |= OS_FILESTAT_MODE_WRITE;
+        filestat->FileModeBits |= OS_FILESTAT_MODE_WRITE;
     }
     if (st.st_mode & execbits)
     {
-        FileStats->FileModeBits |= OS_FILESTAT_MODE_EXEC;
+        filestat->FileModeBits |= OS_FILESTAT_MODE_EXEC;
     }
 
     return OS_SUCCESS;
@@ -263,14 +263,14 @@ int32 OS_FileChmod_Impl(const char *local_path, uint32 access_mode)
         if (OS_IMPL_SELF_EUID == st.st_uid)
         {
             /* we own the file so use user bits */
-            readbits |= S_IRUSR;
+            readbits  |= S_IRUSR;
             writebits |= S_IWUSR;
         }
 
         if (OS_IMPL_SELF_EGID == st.st_gid)
         {
             /* our group owns the file so use group bits */
-            readbits |= S_IRGRP;
+            readbits  |= S_IRGRP;
             writebits |= S_IWGRP;
         }
 
@@ -358,4 +358,37 @@ int32 OS_FileRename_Impl(const char *old_path, const char *new_path)
     }
 
     return OS_SUCCESS;
+}
+
+/*----------------------------------------------------------------
+ *
+ *  Purpose: Implemented per internal OSAL API
+ *           See prototype for argument/return detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_FileTruncate_Impl(const OS_object_token_t *token, osal_offset_t len)
+{
+    OS_impl_file_internal_record_t *impl;
+    int32                           Status;
+
+    impl = OS_OBJECT_TABLE_GET(OS_impl_filehandle_table, *token);
+
+    if (ftruncate(impl->fd, len) >= 0)
+    {
+        Status = OS_SUCCESS;
+    }
+    else if (errno == EACCES || errno == EPERM || errno == ETXTBSY || errno == EROFS)
+    {
+        Status = OS_ERR_OPERATION_NOT_SUPPORTED;
+    }
+    else if (errno == EFBIG)
+    {
+        Status = OS_ERR_OUTPUT_TOO_LARGE;
+    }
+    else
+    {
+        Status = OS_ERROR;
+    }
+
+    return Status;
 }

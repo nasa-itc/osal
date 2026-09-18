@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -57,7 +57,7 @@ OS_timecb_internal_record_t OS_timecb_table[OS_MAX_TIMERS];
 typedef union
 {
     OS_TimerCallback_t timer_callback_func;
-    void *             opaque_arg;
+    void              *opaque_arg;
 } OS_Timer_ArgWrapper_t;
 
 /****************************************************************************************
@@ -87,16 +87,20 @@ int32 OS_TimerCbAPI_Init(void)
  *  Return:     OS_SUCCESS or error code
  *
  *-----------------------------------------------------------------*/
-static int32 OS_DoTimerAdd(osal_id_t *timer_id, const char *timer_name, osal_id_t timebase_ref_id,
-                           OS_ArgCallback_t callback_ptr, void *callback_arg, uint32 flags)
+static int32 OS_DoTimerAdd(osal_id_t       *timer_id,
+                           const char      *timer_name,
+                           osal_id_t        timebase_ref_id,
+                           OS_ArgCallback_t callback_ptr,
+                           void            *callback_arg,
+                           uint32           flags)
 {
     int32                          return_code;
     osal_objtype_t                 objtype;
     OS_object_token_t              timebase_token;
     OS_object_token_t              timecb_token;
     OS_object_token_t              listcb_token;
-    OS_timecb_internal_record_t *  timecb;
-    OS_timecb_internal_record_t *  list_timecb;
+    OS_timecb_internal_record_t   *timecb;
+    OS_timecb_internal_record_t   *list_timecb;
     OS_timebase_internal_record_t *timebase;
 
     /*
@@ -159,16 +163,16 @@ static int32 OS_DoTimerAdd(osal_id_t *timer_id, const char *timer_name, osal_id_
          */
         OS_TimeBaseLock_Impl(&timebase_token);
 
-        if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMECB, timebase->first_cb, &listcb_token) ==
-            OS_SUCCESS)
+        if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMECB, timebase->first_cb, &listcb_token)
+            == OS_SUCCESS)
         {
             list_timecb = OS_OBJECT_TABLE_GET(OS_timecb_table, listcb_token);
 
             timecb->next_cb = OS_ObjectIdFromToken(&listcb_token);
             timecb->prev_cb = list_timecb->prev_cb;
 
-            if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMECB, timecb->prev_cb, &listcb_token) ==
-                OS_SUCCESS)
+            if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMECB, timecb->prev_cb, &listcb_token)
+                == OS_SUCCESS)
             {
                 list_timecb->prev_cb = OS_ObjectIdFromToken(&timecb_token);
                 list_timecb          = OS_OBJECT_TABLE_GET(OS_timecb_table, listcb_token);
@@ -197,10 +201,13 @@ static int32 OS_DoTimerAdd(osal_id_t *timer_id, const char *timer_name, osal_id_
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_TimerAdd(osal_id_t *timer_id, const char *timer_name, osal_id_t timebase_ref_id, OS_ArgCallback_t callback_ptr,
-                  void *callback_arg)
+int32 OS_TimerAdd(osal_id_t       *timer_id,
+                  const char      *timer_name,
+                  osal_id_t        timebase_id,
+                  OS_ArgCallback_t callback_ptr,
+                  void            *callback_arg)
 {
-    return (OS_DoTimerAdd(timer_id, timer_name, timebase_ref_id, callback_ptr, callback_arg, 0));
+    return (OS_DoTimerAdd(timer_id, timer_name, timebase_id, callback_ptr, callback_arg, 0));
 }
 
 /*----------------------------------------------------------------
@@ -226,7 +233,10 @@ static void OS_Timer_NoArgCallback(osal_id_t objid, void *arg)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_TimerCreate(osal_id_t *timer_id, const char *timer_name, uint32 *accuracy, OS_TimerCallback_t callback_ptr)
+int32 OS_TimerCreate(osal_id_t         *timer_id,
+                     const char        *timer_name,
+                     uint32            *clock_accuracy,
+                     OS_TimerCallback_t callback_ptr)
 {
     int32                 return_code;
     osal_id_t             timebase_ref_id;
@@ -239,7 +249,7 @@ int32 OS_TimerCreate(osal_id_t *timer_id, const char *timer_name, uint32 *accura
     */
     OS_CHECK_POINTER(timer_id);
     OS_CHECK_APINAME(timer_name);
-    OS_CHECK_POINTER(accuracy);
+    OS_CHECK_POINTER(clock_accuracy);
     OS_CHECK_POINTER(callback_ptr);
 
     /*
@@ -264,7 +274,11 @@ int32 OS_TimerCreate(osal_id_t *timer_id, const char *timer_name, uint32 *accura
     Conv.opaque_arg          = NULL;
     Conv.timer_callback_func = callback_ptr;
 
-    return_code = OS_DoTimerAdd(timer_id, timer_name, timebase_ref_id, OS_Timer_NoArgCallback, Conv.opaque_arg,
+    return_code = OS_DoTimerAdd(timer_id,
+                                timer_name,
+                                timebase_ref_id,
+                                OS_Timer_NoArgCallback,
+                                Conv.opaque_arg,
                                 TIMECB_FLAG_DEDICATED_TIMEBASE);
 
     /*
@@ -277,7 +291,7 @@ int32 OS_TimerCreate(osal_id_t *timer_id, const char *timer_name, uint32 *accura
     }
     else
     {
-        *accuracy = OS_SharedGlobalVars.MicroSecPerTick;
+        *clock_accuracy = OS_SharedGlobalVars.MicroSecPerTick;
     }
 
     return return_code;
@@ -368,8 +382,8 @@ int32 OS_TimerDelete(osal_id_t timer_id)
     OS_object_token_t              timebase_token;
     OS_object_token_t              listcb_token;
     OS_timebase_internal_record_t *timebase;
-    OS_timecb_internal_record_t *  timecb;
-    OS_timecb_internal_record_t *  list_timecb;
+    OS_timecb_internal_record_t   *timecb;
+    OS_timecb_internal_record_t   *list_timecb;
 
     dedicated_timebase_id = OS_OBJECT_ID_UNDEFINED;
     memset(&timebase_token, 0, sizeof(timebase_token));
@@ -417,14 +431,14 @@ int32 OS_TimerDelete(osal_id_t timer_id)
             }
         }
 
-        if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMECB, timecb->prev_cb, &listcb_token) ==
-            OS_SUCCESS)
+        if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMECB, timecb->prev_cb, &listcb_token)
+            == OS_SUCCESS)
         {
             list_timecb          = OS_OBJECT_TABLE_GET(OS_timecb_table, listcb_token);
             list_timecb->next_cb = timecb->next_cb;
         }
-        if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMECB, timecb->next_cb, &listcb_token) ==
-            OS_SUCCESS)
+        if (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMECB, timecb->next_cb, &listcb_token)
+            == OS_SUCCESS)
         {
             list_timecb          = OS_OBJECT_TABLE_GET(OS_timecb_table, listcb_token);
             list_timecb->prev_cb = timecb->prev_cb;
@@ -493,11 +507,11 @@ int32 OS_TimerGetIdByName(osal_id_t *timer_id, const char *timer_name)
  *-----------------------------------------------------------------*/
 int32 OS_TimerGetInfo(osal_id_t timer_id, OS_timer_prop_t *timer_prop)
 {
-    OS_common_record_t *           record;
+    OS_common_record_t            *record;
     int32                          return_code;
     osal_objtype_t                 objtype;
     OS_object_token_t              token;
-    OS_timecb_internal_record_t *  timecb;
+    OS_timecb_internal_record_t   *timecb;
     OS_timebase_internal_record_t *timebase;
 
     /* Check parameters */

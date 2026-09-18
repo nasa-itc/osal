@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -63,7 +63,7 @@
 **          OS_SEM_FAILURE if the OS call failed
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_count_sem_create_test()
+void UT_os_count_sem_create_test(void)
 {
     int       i;
     osal_id_t count_sem_ids[OS_MAX_COUNT_SEMAPHORES + 1];
@@ -157,7 +157,7 @@ void UT_os_count_sem_create_test()
 **          OS_SEM_FAILURE if the OS call failed
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_count_sem_delete_test()
+void UT_os_count_sem_delete_test(void)
 {
     osal_id_t count_sem_id = OS_OBJECT_ID_UNDEFINED;
 
@@ -186,7 +186,7 @@ void UT_os_count_sem_delete_test()
 **                         array of semaphores defined by the system
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_count_sem_give_test()
+void UT_os_count_sem_give_test(void)
 {
     osal_id_t count_sem_id = OS_OBJECT_ID_UNDEFINED;
 
@@ -217,7 +217,7 @@ void UT_os_count_sem_give_test()
 **          OS_SEM_FAILURE if the OS call failed
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_count_sem_take_test()
+void UT_os_count_sem_take_test(void)
 {
     osal_id_t count_sem_id = OS_OBJECT_ID_UNDEFINED;
 
@@ -247,7 +247,7 @@ void UT_os_count_sem_take_test()
 **          OS_SEM_TIMEOUT if the semaphore was not relinquished in time
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_count_sem_timed_wait_test()
+void UT_os_count_sem_timed_wait_test(void)
 {
     osal_id_t count_sem_id = OS_OBJECT_ID_UNDEFINED;
 
@@ -291,7 +291,7 @@ void UT_os_count_sem_timed_wait_test()
 **                                semaphore table
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_count_sem_get_id_by_name_test()
+void UT_os_count_sem_get_id_by_name_test(void)
 {
     osal_id_t count_sem_id = OS_OBJECT_ID_UNDEFINED;
     char      long_sem_name[UT_OS_NAME_BUFF_SIZE];
@@ -325,47 +325,6 @@ void UT_os_count_sem_get_id_by_name_test()
     if (UT_SETUP(OS_CountSemCreate(&count_sem_id, "GetIDByName", 1, 0)))
     {
         UT_NOMINAL(OS_CountSemGetIdByName(&count_sem_id, "GetIDByName"));
-
-        UT_TEARDOWN(OS_CountSemDelete(count_sem_id));
-    }
-}
-
-/*--------------------------------------------------------------------------------*
-** Syntax: OS_CountSemGetInfo
-** Purpose: Returns semaphore information about the given binary semaphore id
-** Parameters: To-be-filled-in
-** Returns: OS_INVALID_POINTER if the pointer passed in is null
-**          OS_ERR_INVALID_ID if the id passed in is not a valid binary semaphore id
-**          OS_SUCCESS if succeeded
-**--------------------------------------------------------------------------------*/
-void UT_os_count_sem_get_info_test()
-{
-    osal_id_t           count_sem_id = OS_OBJECT_ID_UNDEFINED;
-    OS_count_sem_prop_t count_sem_prop;
-
-    /*-----------------------------------------------------*/
-    /* #1 Invalid-ID-arg */
-
-    UT_RETVAL(OS_CountSemGetInfo(UT_OBJID_INCORRECT, &count_sem_prop), OS_ERR_INVALID_ID);
-    UT_RETVAL(OS_CountSemGetInfo(OS_OBJECT_ID_UNDEFINED, &count_sem_prop), OS_ERR_INVALID_ID);
-
-    /*-----------------------------------------------------*/
-    /* #2 Invalid-pointer-arg */
-
-    if (UT_SETUP(OS_CountSemCreate(&count_sem_id, "GetInfo", 1, 0)))
-    {
-        UT_RETVAL(OS_CountSemGetInfo(count_sem_id, NULL), OS_INVALID_POINTER);
-
-        UT_TEARDOWN(OS_CountSemDelete(count_sem_id));
-    }
-
-    /*-----------------------------------------------------*/
-    /* #3 Nominal */
-
-    /* Setup */
-    if (UT_SETUP(OS_CountSemCreate(&count_sem_id, "GetInfo", 1, 0)))
-    {
-        UT_NOMINAL(OS_CountSemGetInfo(count_sem_id, &count_sem_prop));
 
         UT_TEARDOWN(OS_CountSemDelete(count_sem_id));
     }

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -77,7 +77,7 @@ void Test_OS_TimeBaseCreate(void)
 {
     /*
      * Test Case For:
-     * int32 OS_TimeBaseCreate(uint32 *timer_id, const char *timebase_name, OS_TimerSync_t external_sync)
+     * int32 OS_TimeBaseCreate(osal_id_t *timebase_id, const char *timebase_name, OS_TimerSync_t external_sync)
      */
     osal_id_t objid;
 
@@ -103,7 +103,7 @@ void Test_OS_TimeBaseSet(void)
 {
     /*
      * Test Case For:
-     * int32 OS_TimeBaseSet(uint32 timer_id, uint32 start_time, uint32 interval_time)
+     * int32 OS_TimeBaseSet(osal_id_t timebase_id, uint32 start_time, uint32 interval_time)
      */
     OSAPI_TEST_FUNCTION_RC(OS_TimeBaseSet(UT_OBJID_1, 1000, 1000), OS_SUCCESS);
 
@@ -126,7 +126,7 @@ void Test_OS_TimeBaseDelete(void)
 {
     /*
      * Test Case For:
-     * int32 OS_TimeBaseDelete(uint32 timer_id)
+     * int32 OS_TimeBaseDelete(osal_id_t timebase_id)
      */
     OSAPI_TEST_FUNCTION_RC(OS_TimeBaseDelete(UT_OBJID_1), OS_SUCCESS);
 
@@ -142,7 +142,7 @@ void Test_OS_TimeBaseGetIdByName(void)
 {
     /*
      * Test Case For:
-     * int32 OS_TimeBaseGetIdByName (uint32 *timer_id, const char *timebase_name)
+     * int32 OS_TimeBaseGetIdByName(osal_id_t *timebase_id, const char *timebase_name)
      */
     osal_id_t objid = OS_OBJECT_ID_UNDEFINED;
 
@@ -183,11 +183,14 @@ void Test_OS_TimeBaseGetInfo(void)
 
     OSAPI_TEST_OBJID(timebase_prop.creator, ==, UT_OBJID_OTHER);
     UtAssert_True(strcmp(timebase_prop.name, "ABC") == 0, "timebase_prop.name (%s) == ABC", timebase_prop.name);
-    UtAssert_True(timebase_prop.nominal_interval_time == 2222, "timebase_prop.nominal_interval_time (%lu) == 2222",
+    UtAssert_True(timebase_prop.nominal_interval_time == 2222,
+                  "timebase_prop.nominal_interval_time (%lu) == 2222",
                   (unsigned long)timebase_prop.nominal_interval_time);
-    UtAssert_True(timebase_prop.freerun_time == 3333, "timebase_prop.freerun_time (%lu) == 3333",
+    UtAssert_True(timebase_prop.freerun_time == 3333,
+                  "timebase_prop.freerun_time (%lu) == 3333",
                   (unsigned long)timebase_prop.freerun_time);
-    UtAssert_True(timebase_prop.accuracy == 4444, "timebase_prop.accuracy (%lu) == 4444",
+    UtAssert_True(timebase_prop.accuracy == 4444,
+                  "timebase_prop.accuracy (%lu) == 4444",
                   (unsigned long)timebase_prop.accuracy);
 
     /* test error paths */
@@ -330,7 +333,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /*
  * Register the test cases to execute with the unit test tool

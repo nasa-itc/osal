@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -91,7 +91,10 @@ void UtTest_AddTeardown(void (*Teardown)(void), const char *SequenceName);
  * \param GroupName Name of group for logging purposes
  * \param TestName Name of test for logging purposes
  */
-void UtTest_AddSubTest(void (*Test)(void), void (*Setup)(void), void (*Teardown)(void), const char *GroupName,
+void UtTest_AddSubTest(void (*Test)(void),
+                       void (*Setup)(void),
+                       void (*Teardown)(void),
+                       const char *GroupName,
                        const char *TestName);
 
 /**

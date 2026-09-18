@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -56,7 +56,8 @@ void Test_OS_ConsoleOutput_Impl(void)
 
     OS_console_table[0].WritePos = 2;
     OS_ConsoleOutput_Impl(&token);
-    UtAssert_True(strcmp(TestOutputBuffer, "abcdefghijklmnopab") == 0, "TestOutputBuffer (%s) == abcdefghijklmnopab",
+    UtAssert_True(strcmp(TestOutputBuffer, "abcdefghijklmnopab") == 0,
+                  "TestOutputBuffer (%s) == abcdefghijklmnopab",
                   TestOutputBuffer);
 }
 
@@ -79,7 +80,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /* UtTest_Setup
  *

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -25,6 +25,8 @@
 #include "osapi-common.h"
 #include "utgenstub.h"
 
+void UT_DefaultHandler_OS_strnlen(void *, UT_EntryKey_t, const UT_StubContext_t *);
+
 /*
  * ----------------------------------------------------
  * Generated stub function for OS_API_Init()
@@ -46,7 +48,6 @@ int32 OS_API_Init(void)
  */
 void OS_API_Teardown(void)
 {
-
     UT_GenStub_Execute(OS_API_Teardown, Basic, NULL);
 }
 
@@ -81,7 +82,6 @@ void OS_ApplicationShutdown(uint8 flag)
  */
 void OS_DeleteAllObjects(void)
 {
-
     UT_GenStub_Execute(OS_DeleteAllObjects, Basic, NULL);
 }
 
@@ -92,7 +92,6 @@ void OS_DeleteAllObjects(void)
  */
 void OS_IdleLoop(void)
 {
-
     UT_GenStub_Execute(OS_IdleLoop, Basic, NULL);
 }
 
@@ -110,4 +109,21 @@ int32 OS_RegisterEventHandler(OS_EventHandler_t handler)
     UT_GenStub_Execute(OS_RegisterEventHandler, Basic, NULL);
 
     return UT_GenStub_GetReturnValue(OS_RegisterEventHandler, int32);
+}
+
+/*
+ * ----------------------------------------------------
+ * Generated stub function for OS_strnlen()
+ * ----------------------------------------------------
+ */
+size_t OS_strnlen(const char *s, size_t maxlen)
+{
+    UT_GenStub_SetupReturnBuffer(OS_strnlen, size_t);
+
+    UT_GenStub_AddParam(OS_strnlen, const char *, s);
+    UT_GenStub_AddParam(OS_strnlen, size_t, maxlen);
+
+    UT_GenStub_Execute(OS_strnlen, Basic, UT_DefaultHandler_OS_strnlen);
+
+    return UT_GenStub_GetReturnValue(OS_strnlen, size_t);
 }

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -32,6 +32,8 @@
 /****************************************************************************************
                                     INCLUDE FILES
  ***************************************************************************************/
+#define _GNU_SOURCE
+#include <pthread.h>
 
 #include "os-rtems.h"
 #include "os-shared-printf.h"
@@ -102,8 +104,8 @@ static void OS_ConsoleTask_Entry(rtems_task_argument arg)
     OS_object_token_t                  token;
     OS_impl_console_internal_record_t *local;
 
-    if (OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, OS_OBJECT_TYPE_OS_CONSOLE, OS_ObjectIdFromInteger(arg), &token) ==
-        OS_SUCCESS)
+    if (OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, OS_OBJECT_TYPE_OS_CONSOLE, OS_ObjectIdFromInteger(arg), &token)
+        == OS_SUCCESS)
     {
         local = OS_OBJECT_TABLE_GET(OS_impl_console_table, token);
 
@@ -126,7 +128,7 @@ static void OS_ConsoleTask_Entry(rtems_task_argument arg)
 int32 OS_ConsoleCreate_Impl(const OS_object_token_t *token)
 {
     OS_impl_console_internal_record_t *local;
-    OS_console_internal_record_t *     console;
+    OS_console_internal_record_t      *console;
     int32                              return_code;
     rtems_name                         r_name;
     rtems_id                           r_task_id;
@@ -156,9 +158,12 @@ int32 OS_ConsoleCreate_Impl(const OS_object_token_t *token)
             }
             else
             {
-                status = rtems_task_create(r_name, OS_CONSOLE_TASK_PRIORITY, OS_CONSOLE_TASK_STACKSIZE,
+                status = rtems_task_create(r_name,
+                                           OS_CONSOLE_TASK_PRIORITY,
+                                           OS_CONSOLE_TASK_STACKSIZE,
                                            RTEMS_PREEMPT | RTEMS_NO_ASR | RTEMS_NO_TIMESLICE | RTEMS_INTERRUPT_LEVEL(0),
-                                           RTEMS_LOCAL, &r_task_id);
+                                           RTEMS_LOCAL,
+                                           &r_task_id);
 
                 /* check if task_create failed */
                 if (status != RTEMS_SUCCESSFUL)
@@ -170,6 +175,8 @@ int32 OS_ConsoleCreate_Impl(const OS_object_token_t *token)
                 }
                 else
                 {
+                    pthread_setname_np(r_task_id, "OS_CONSOLE");
+
                     /* will place the task in 'ready for scheduling' state */
                     status = rtems_task_start(r_task_id,                    /*rtems task id*/
                                               OS_ConsoleTask_Entry,         /* task entry point */

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -79,10 +79,12 @@ extern "C"
 #include "osapi-network.h"
 #include "osapi-printf.h"
 #include "osapi-queue.h"
+#include "osapi-rwlock.h"
 #include "osapi-select.h"
 #include "osapi-shell.h"
 #include "osapi-sockets.h"
 #include "osapi-task.h"
+#include "osapi-task-affinity.h"
 #include "osapi-timebase.h"
 #include "osapi-timer.h"
 

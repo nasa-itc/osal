@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -61,7 +61,7 @@ void Test_OS_TimerAdd(void)
 {
     /*
      * Test Case For:
-     * int32 OS_TimerAdd(uint32 *timer_id, const char *timer_name, uint32 timebase_ref_id, OS_ArgCallback_t
+     * int32 OS_TimerAdd(osal_id_t *timer_id, const char *timer_name, osal_id_t timebase_id, OS_ArgCallback_t
      * callback_ptr, void *callback_arg)
      */
     osal_id_t objid = OS_OBJECT_ID_UNDEFINED;
@@ -99,7 +99,8 @@ void Test_OS_TimerCreate(void)
 {
     /*
      * Test Case For:
-     * int32 OS_TimerCreate(uint32 *timer_id, const char *timer_name, uint32 *accuracy, OS_TimerCallback_t callback_ptr)
+     * int32 OS_TimerCreate(osal_id_t *timer_id, const char *timer_name, uint32 *clock_accuracy, OS_TimerCallback_t
+     * callback_ptr)
      */
     osal_id_t    objid    = OS_OBJECT_ID_UNDEFINED;
     osal_index_t local_id = OSAL_INDEX_C(0);
@@ -107,8 +108,10 @@ void Test_OS_TimerCreate(void)
 
     OSAPI_TEST_FUNCTION_RC(OS_TimerCreate(&objid, "UT", &accuracy, UT_TimerCallback), OS_SUCCESS);
     OS_ObjectIdToArrayIndex(OS_OBJECT_TYPE_OS_TIMECB, objid, &local_id);
-    UtAssert_True(OS_timecb_table[local_id].callback_ptr != NULL, "OS_timecb_table[%lu].callback_ptr (%lx) != NULL",
-                  (unsigned long)local_id, (unsigned long)OS_timecb_table[local_id].callback_ptr);
+    UtAssert_True(OS_timecb_table[local_id].callback_ptr != NULL,
+                  "OS_timecb_table[%lu].callback_ptr (%lx) != NULL",
+                  (unsigned long)local_id,
+                  (unsigned long)OS_timecb_table[local_id].callback_ptr);
     UT_TimerCount = 0;
     OS_timecb_table[local_id].callback_ptr(objid, OS_timecb_table[local_id].callback_arg);
     UtAssert_True(UT_TimerCount == 1, "UT_TimerCount (%lu) == 1", (unsigned long)UT_TimerCount);
@@ -275,7 +278,8 @@ void Test_OS_TimerGetInfo(void)
 
     OSAPI_TEST_FUNCTION_RC(OS_TimerGetInfo(UT_OBJID_1, &timer_prop), OS_SUCCESS);
     UtAssert_True(strcmp(timer_prop.name, "ABC") == 0, "timer_prop.name (%s) == ABC", timer_prop.name);
-    UtAssert_True(timer_prop.interval_time == 2222, "timer_prop.interval_time (%lu) == 2222",
+    UtAssert_True(timer_prop.interval_time == 2222,
+                  "timer_prop.interval_time (%lu) == 2222",
                   (unsigned long)timer_prop.interval_time);
     UtAssert_True(timer_prop.accuracy == 3333, "timer_prop.accuracy (%lu) == 3333", (unsigned long)timer_prop.accuracy);
 
@@ -304,7 +308,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /*
  * Register the test cases to execute with the unit test tool

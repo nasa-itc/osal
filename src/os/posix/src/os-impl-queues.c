@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -84,7 +84,7 @@ int32 OS_QueueCreate_Impl(const OS_object_token_t *token, uint32 flags)
     struct mq_attr                   queueAttr;
     char                             name[OS_MAX_API_NAME * 2];
     OS_impl_queue_internal_record_t *impl;
-    OS_queue_internal_record_t *     queue;
+    OS_queue_internal_record_t      *queue;
 
     impl  = OS_OBJECT_TABLE_GET(OS_impl_queue_table, *token);
     queue = OS_OBJECT_TABLE_GET(OS_queue_table, *token);

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -43,7 +43,7 @@ typedef struct OCS_FILE OCS_FILE;
 /* ----------------------------------------- */
 
 extern int       OCS_fclose(OCS_FILE *stream);
-extern char *    OCS_fgets(char *s, int n, OCS_FILE *stream);
+extern char     *OCS_fgets(char *s, int n, OCS_FILE *stream);
 extern OCS_FILE *OCS_fopen(const char *filename, const char *modes);
 extern int       OCS_fputs(const char *s, OCS_FILE *stream);
 extern int       OCS_remove(const char *filename);

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -234,7 +234,9 @@ void Test_OS_CleanUpObject(void)
             OS_CleanUpObject(OS_OBJECT_ID_UNDEFINED, &ActualObjs);
 
             CallCount = UT_GetStubCount(delhandler);
-            UtAssert_True(CallCount == 1, "Objtype %lu call count (%lu) == 1", (unsigned long)objtype,
+            UtAssert_True(CallCount == 1,
+                          "Objtype %lu call count (%lu) == 1",
+                          (unsigned long)objtype,
                           (unsigned long)CallCount);
         }
         else
@@ -245,7 +247,9 @@ void Test_OS_CleanUpObject(void)
         ++ExpObjs;
     }
 
-    UtAssert_True(ActualObjs == ExpObjs, "Total objects cleaned up (%lu) == %lu", (unsigned long)ActualObjs,
+    UtAssert_True(ActualObjs == ExpObjs,
+                  "Total objects cleaned up (%lu) == %lu",
+                  (unsigned long)ActualObjs,
                   (unsigned long)ExpObjs);
 }
 
@@ -332,6 +336,26 @@ void Test_OS_NotifyEvent(void)
     OS_SharedGlobalVars.EventHandler = NULL;
 }
 
+void Test_OS_strnlen(void)
+{
+    size_t result;
+    char   str[OS_MAX_FILE_NAME];
+
+    memset(str, 0xFF, sizeof(str));
+
+    /* Test case where null character is not found */
+    result = OS_strnlen(str, sizeof(str));
+
+    UtAssert_INT32_EQ(result, sizeof(str));
+
+    /* Test case where null character is found */
+    str[OS_MAX_FILE_NAME - 1] = '\0';
+
+    result = OS_strnlen(str, sizeof(str));
+
+    UtAssert_INT32_EQ(result, sizeof(str) - 1);
+}
+
 /* ------------------- End of test cases --------------------------------------*/
 
 /* Osapi_Test_Setup
@@ -350,7 +374,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /*
  * Register the test cases to execute with the unit test tool
@@ -364,4 +390,5 @@ void UtTest_Setup(void)
     ADD_TEST(OS_ApplicationExit);
     ADD_TEST(OS_NotifyEvent);
     ADD_TEST(OS_API_Teardown);
+    ADD_TEST(OS_strnlen);
 }

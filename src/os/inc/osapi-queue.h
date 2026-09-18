@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -64,8 +64,11 @@ typedef struct
  * @retval #OS_QUEUE_INVALID_SIZE if the queue depth exceeds the limit
  * @retval #OS_ERROR if the OS create call fails
  */
-int32 OS_QueueCreate(osal_id_t *queue_id, const char *queue_name, osal_blockcount_t queue_depth, size_t data_size,
-                     uint32 flags);
+int32 OS_QueueCreate(osal_id_t        *queue_id,
+                     const char       *queue_name,
+                     osal_blockcount_t queue_depth,
+                     size_t            data_size,
+                     uint32            flags);
 
 /*-------------------------------------------------------------------------------------*/
 /**

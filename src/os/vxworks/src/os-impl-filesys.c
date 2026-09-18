@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -75,7 +75,7 @@ OS_impl_filesys_internal_record_t OS_impl_filesys_table[OS_MAX_FILE_SYSTEMS];
  *-----------------------------------------------------------------*/
 int32 OS_FileSysStartVolume_Impl(const OS_object_token_t *token)
 {
-    OS_filesys_internal_record_t *     local;
+    OS_filesys_internal_record_t      *local;
     OS_impl_filesys_internal_record_t *impl;
     int32                              return_code;
 
@@ -140,6 +140,12 @@ int32 OS_FileSysStartVolume_Impl(const OS_object_token_t *token)
             OS_DEBUG("OSAL: Error creating low level block device\n");
             return_code = OS_FS_ERR_DRIVE_NOT_CREATED;
         }
+        else if (local->volume_name[0] == 0)
+        {
+            /* this requires that the user has specified the volume name to mount */
+            OS_DEBUG("OSAL: No volume name specified to mount\n");
+            return_code = OS_FS_ERR_DRIVE_NOT_CREATED;
+        }
         else
         {
             /*
@@ -191,7 +197,7 @@ int32 OS_FileSysStartVolume_Impl(const OS_object_token_t *token)
  *-----------------------------------------------------------------*/
 int32 OS_FileSysStopVolume_Impl(const OS_object_token_t *token)
 {
-    OS_filesys_internal_record_t *     local;
+    OS_filesys_internal_record_t      *local;
     OS_impl_filesys_internal_record_t *impl;
 
     impl  = OS_OBJECT_TABLE_GET(OS_impl_filesys_table, *token);

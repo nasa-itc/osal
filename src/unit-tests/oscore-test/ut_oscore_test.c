@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -62,7 +62,6 @@ void UT_os_setup_install_delete_handler_test(void);
 void UT_os_init_task_exit_test(void);
 void UT_os_init_task_delay_test(void);
 void UT_os_init_task_set_priority_test(void);
-void UT_os_init_task_register_test(void);
 void UT_os_init_task_get_id_test(void);
 void UT_os_init_task_get_id_by_name_test(void);
 void UT_os_init_task_get_info_test(void);
@@ -71,7 +70,7 @@ void UT_os_init_task_get_info_test(void);
 ** Local function definitions
 **--------------------------------------------------------------------------------*/
 
-void UT_os_init_task_misc()
+void UT_os_init_task_misc(void)
 {
     memset(g_long_task_name, 'X', sizeof(g_long_task_name));
     g_long_task_name[sizeof(g_long_task_name) - 1] = '\0';
@@ -79,7 +78,7 @@ void UT_os_init_task_misc()
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_init_task_create_test()
+void UT_os_init_task_create_test(void)
 {
     g_task_names[0] = "Create_NotImpl";
     g_task_names[1] = "Create_NullPtr1";
@@ -95,7 +94,7 @@ void UT_os_init_task_create_test()
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_init_task_delete_test()
+void UT_os_init_task_delete_test(void)
 {
     g_task_names[0] = "Delete_NotImpl";
     g_task_names[1] = "Delete_InvArg";
@@ -105,7 +104,7 @@ void UT_os_init_task_delete_test()
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_setup_install_delete_handler_test()
+void UT_os_setup_install_delete_handler_test(void)
 {
     g_task_names[0] = "DelHandler_NotImpl";
     g_task_names[1] = "DelHandler_InvArg";
@@ -114,7 +113,7 @@ void UT_os_setup_install_delete_handler_test()
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_init_task_exit_test()
+void UT_os_init_task_exit_test(void)
 {
     g_task_names[0] = "Exit_NotImpl";
     g_task_names[1] = "Exit_Nominal";
@@ -122,7 +121,7 @@ void UT_os_init_task_exit_test()
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_init_task_delay_test()
+void UT_os_init_task_delay_test(void)
 {
     g_task_names[0] = "Delay_NotImpl";
     g_task_names[1] = "Delay_OsErr";
@@ -131,7 +130,7 @@ void UT_os_init_task_delay_test()
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_init_task_set_priority_test()
+void UT_os_init_task_set_priority_test(void)
 {
     g_task_names[0] = "SetPrio_NotImpl";
     g_task_names[1] = "SetPrio_InvArg";
@@ -142,17 +141,7 @@ void UT_os_init_task_set_priority_test()
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_init_task_register_test()
-{
-    g_task_names[0] = "Register_NotImpl";
-    g_task_names[1] = "Register_InvArg";
-    g_task_names[2] = "Register_OsErr";
-    g_task_names[3] = "Register_Nominal";
-}
-
-/*--------------------------------------------------------------------------------*/
-
-void UT_os_init_task_get_id_test()
+void UT_os_init_task_get_id_test(void)
 {
     g_task_names[0] = "GetId_NotImpl";
     g_task_names[1] = "GetId_Nominal";
@@ -160,7 +149,7 @@ void UT_os_init_task_get_id_test()
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_init_task_get_id_by_name_test()
+void UT_os_init_task_get_id_by_name_test(void)
 {
     g_task_names[0] = "GetIdByName_NotImpl";
     g_task_names[1] = "GetIdByName_InvPtr1";
@@ -172,7 +161,7 @@ void UT_os_init_task_get_id_by_name_test()
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_init_task_get_info_test()
+void UT_os_init_task_get_info_test(void)
 {
     g_task_names[0] = "GetInfo_NotImpl";
     g_task_names[1] = "GetInfo_InvId";
@@ -203,7 +192,6 @@ void UtTest_Setup(void)
     UtTest_Add(UT_os_bin_sem_take_test, NULL, NULL, "OS_BinSemTake");
     UtTest_Add(UT_os_bin_sem_timed_wait_test, NULL, NULL, "OS_BinSemTimedWait");
     UtTest_Add(UT_os_bin_sem_get_id_by_name_test, NULL, NULL, "OS_BinSemGetIdByName");
-    UtTest_Add(UT_os_bin_sem_get_info_test, NULL, NULL, "OS_BinSemGetInfo");
 
     UtTest_Add(UT_os_count_sem_create_test, NULL, NULL, "OS_CountSemCreate");
     UtTest_Add(UT_os_count_sem_delete_test, NULL, NULL, "OS_CountSemDelete");
@@ -211,7 +199,6 @@ void UtTest_Setup(void)
     UtTest_Add(UT_os_count_sem_take_test, NULL, NULL, "OS_CountSemTake");
     UtTest_Add(UT_os_count_sem_timed_wait_test, NULL, NULL, "OS_CountSemTimedWait");
     UtTest_Add(UT_os_count_sem_get_id_by_name_test, NULL, NULL, "OS_CountSemGetIdByName");
-    UtTest_Add(UT_os_count_sem_get_info_test, NULL, NULL, "OS_CountSemGetInfo");
 
     UtTest_Add(UT_os_mut_sem_create_test, NULL, NULL, "OS_MutSemCreate");
     UtTest_Add(UT_os_mut_sem_delete_test, NULL, NULL, "OS_MutSemDelete");
@@ -234,7 +221,9 @@ void UtTest_Setup(void)
     UtTest_Add(NULL, UT_os_init_task_misc, NULL, "UT_os_init_task_misc");
     UtTest_Add(UT_os_task_create_test, UT_os_init_task_create_test, NULL, "OS_TaskCreate");
     UtTest_Add(UT_os_task_delete_test, UT_os_init_task_delete_test, NULL, "OS_TaskDelete");
-    UtTest_Add(UT_os_task_install_delete_handler_test, UT_os_setup_install_delete_handler_test, NULL,
+    UtTest_Add(UT_os_task_install_delete_handler_test,
+               UT_os_setup_install_delete_handler_test,
+               NULL,
                "OS_TaskInstallDeleteHandler");
     UtTest_Add(UT_os_task_exit_test, UT_os_init_task_exit_test, NULL, "OS_TaskExit");
     UtTest_Add(UT_os_task_delay_test, UT_os_init_task_delay_test, NULL, "OS_TaskDelay");
@@ -242,7 +231,7 @@ void UtTest_Setup(void)
     UtTest_Add(UT_os_task_get_id_test, UT_os_init_task_get_id_test, NULL, "OS_TaskGetId");
     UtTest_Add(UT_os_task_get_id_by_name_test, UT_os_init_task_get_id_by_name_test, NULL, "OS_TaskGetIdByName");
     UtTest_Add(UT_os_task_get_info_test, UT_os_init_task_get_info_test, NULL, "OS_TaskGetInfo");
-    UtTest_Add(UT_os_task_getid_by_sysdata_test, UT_os_task_getid_by_sysdata_test, NULL, "OS_TaskFindIdBySystemData");
+    UtTest_Add(UT_os_task_getid_by_sysdata_test, NULL, NULL, "OS_TaskFindIdBySystemData");
 
     UtTest_Add(UT_os_geterrorname_test, NULL, NULL, "OS_GetErrorName");
     UtTest_Add(UT_os_statustostring_test, NULL, NULL, "OS_StatusToString");

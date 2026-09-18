@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -84,7 +84,7 @@
 int32 OS_GenericSymbolLookup_Impl(void *dl_handle, cpuaddr *SymbolAddress, const char *SymbolName)
 {
     const char *dlError; /*  Pointer to error string   */
-    void *      Function;
+    void       *Function;
     int32       status;
 
     status = OS_ERROR;
@@ -111,12 +111,12 @@ int32 OS_GenericSymbolLookup_Impl(void *dl_handle, cpuaddr *SymbolAddress, const
      */
     if (dlError != NULL)
     {
-        OS_DEBUG("Error: %s: %s\n", SymbolName, dlError);
+        OS_DEBUG("%s: %s\n", SymbolName, dlError);
     }
     else if (Function == NULL)
     {
         /* technically not an error per POSIX, but in practice should not happen */
-        OS_DEBUG("Error: %s: dlsym() returned NULL\n", SymbolName);
+        OS_DEBUG("%s: dlsym() returned NULL\n", SymbolName);
     }
     else
     {
@@ -188,7 +188,7 @@ int32 OS_ModuleSymbolLookup_Impl(const OS_object_token_t *token, cpuaddr *Symbol
  *  POSIX DL does not provide
  *
  *-----------------------------------------------------------------*/
-int32 OS_SymbolTableDump_Impl(const char *filename, size_t SizeLimit)
+int32 OS_SymbolTableDump_Impl(const char *filename, size_t size_limit)
 {
     /*
      * Limiting strictly to POSIX-defined API means there is no defined

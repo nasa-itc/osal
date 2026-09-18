@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -18,7 +18,6 @@
 
 /* OSAL coverage stub replacement for pthread.h */
 #include <string.h>
-#include <stdlib.h>
 #include "utstubs.h"
 
 #include "OCS_pthread.h"
@@ -149,7 +148,9 @@ int OCS_pthread_cond_wait(OCS_pthread_cond_t *cond, OCS_pthread_mutex_t *mutex)
     return Status;
 }
 
-int OCS_pthread_create(OCS_pthread_t *newthread, const OCS_pthread_attr_t *attr, void *(*start_routine)(void *),
+int OCS_pthread_create(OCS_pthread_t            *newthread,
+                       const OCS_pthread_attr_t *attr,
+                       void *(*start_routine)(void *),
                        void *arg)
 {
     int32 Status;

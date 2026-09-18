@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -114,6 +114,13 @@ typedef uint32 osal_id_t;
      * This is used with file system and queue implementations.
      */
     typedef size_t osal_blockcount_t;
+
+    /**
+     * A type used to represent an offset into a file
+     *
+     * This is used with file system implementation.
+     */
+    typedef long osal_offset_t;
 
     /**
      * A type used to represent an index into a table structure

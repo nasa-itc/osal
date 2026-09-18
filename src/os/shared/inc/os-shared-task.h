@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -37,7 +37,7 @@ typedef struct
     osal_priority_t priority;
     osal_task_entry entry_function_pointer;
     osal_task_entry delete_hook_pointer;
-    void *          entry_arg;
+    void           *entry_arg;
     osal_stackptr_t stack_pointer;
 } OS_task_internal_record_t;
 

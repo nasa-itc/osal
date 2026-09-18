@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -41,7 +41,14 @@
 /* prototypes normally declared in shellLib.h */
 /* ----------------------------------------- */
 
-extern OCS_STATUS OCS_shellGenericInit(const char *config, int stackSize, const char *shellName, char **pShellName,
-                                       OCS_BOOL interactive, OCS_BOOL loginAccess, int fdin, int fdout, int fderr);
+extern OCS_STATUS OCS_shellGenericInit(const char *config,
+                                       int         stackSize,
+                                       const char *shellName,
+                                       char      **pShellName,
+                                       OCS_BOOL    interactive,
+                                       OCS_BOOL    loginAccess,
+                                       int         fdin,
+                                       int         fdout,
+                                       int         fderr);
 
 #endif /* OCS_SHELLLIB_H */

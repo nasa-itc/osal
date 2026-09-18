@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -26,6 +26,9 @@
 /****************************************************************************************
                                     INCLUDE FILES
  ***************************************************************************************/
+#define _GNU_SOURCE
+#include <pthread.h>
+
 #include "os-rtems.h"
 
 #include "os-shared-common.h"
@@ -299,7 +302,7 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
     rtems_status_code                   rtems_sc;
     OS_impl_timebase_internal_record_t *local;
     rtems_name                          r_name;
-    OS_timebase_internal_record_t *     timebase;
+    OS_timebase_internal_record_t      *timebase;
 
     return_code = OS_SUCCESS;
     local       = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
@@ -375,9 +378,12 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
          * Using "RTEMS_MINIMUM_PRIORITY + 1" because rtems seems to not schedule it at all if
          * the priority is set to RTEMS_MINIMUM_PRIORITY.
          */
-        rtems_sc = rtems_task_create(r_name, RTEMS_MINIMUM_PRIORITY + 1, 0,
+        rtems_sc = rtems_task_create(r_name,
+                                     RTEMS_MINIMUM_PRIORITY + 1,
+                                     0,
                                      RTEMS_PREEMPT | RTEMS_NO_ASR | RTEMS_NO_TIMESLICE | RTEMS_INTERRUPT_LEVEL(0),
-                                     RTEMS_LOCAL, &local->handler_task);
+                                     RTEMS_LOCAL,
+                                     &local->handler_task);
 
         /* check if task_create failed */
         if (rtems_sc != RTEMS_SUCCESSFUL)
@@ -388,6 +394,8 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
         }
         else
         {
+            pthread_setname_np(local->handler_task, "OS_TIMEBASE");
+
             /* will place the task in 'ready for scheduling' state */
             rtems_sc = rtems_task_start(local->handler_task,             /* rtems task id */
                                         OS_TimeBase_CallbackThreadEntry, /* task entry point */
@@ -427,7 +435,7 @@ int32 OS_TimeBaseSet_Impl(const OS_object_token_t *token, uint32 start_time, uin
     int32                               return_code;
     int                                 status;
     rtems_interval                      start_ticks;
-    OS_timebase_internal_record_t *     timebase;
+    OS_timebase_internal_record_t      *timebase;
 
     local       = OS_OBJECT_TABLE_GET(OS_impl_timebase_table, *token);
     timebase    = OS_OBJECT_TABLE_GET(OS_timebase_table, *token);
@@ -481,21 +489,23 @@ int32 OS_TimeBaseSet_Impl(const OS_object_token_t *token, uint32 start_time, uin
             }
             else
             {
-                local->configured_start_time    = (10000 * start_ticks) / OS_SharedGlobalVars.TicksPerSecond;
-                local->configured_interval_time = (10000 * local->interval_ticks) / OS_SharedGlobalVars.TicksPerSecond;
-                local->configured_start_time *= 100;
+                local->configured_start_time     = (10000 * start_ticks) / OS_SharedGlobalVars.TicksPerSecond;
+                local->configured_interval_time  = (10000 * local->interval_ticks) / OS_SharedGlobalVars.TicksPerSecond;
+                local->configured_start_time    *= 100;
                 local->configured_interval_time *= 100;
 
                 if (local->configured_start_time != start_time)
                 {
                     OS_DEBUG("WARNING: timer %lu start_time requested=%luus, configured=%luus\n",
-                             OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)), (unsigned long)start_time,
+                             OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)),
+                             (unsigned long)start_time,
                              (unsigned long)local->configured_start_time);
                 }
                 if (local->configured_interval_time != interval_time)
                 {
                     OS_DEBUG("WARNING: timer %lu interval_time requested=%luus, configured=%luus\n",
-                             OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)), (unsigned long)interval_time,
+                             OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)),
+                             (unsigned long)interval_time,
                              (unsigned long)local->configured_interval_time);
                 }
 

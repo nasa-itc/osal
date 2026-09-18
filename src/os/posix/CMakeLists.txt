@@ -25,14 +25,15 @@ set(POSIX_BASE_SRCLIST
     src/os-impl-timebase.c
 )
 
-
 # Use portable blocks for basic I/O
 set(POSIX_IMPL_SRCLIST
     ../portable/os-impl-posix-gettime.c
+    ../portable/os-impl-posix-gettime-monotonic.c
     ../portable/os-impl-console-bsp.c
     ../portable/os-impl-bsd-select.c
     ../portable/os-impl-posix-io.c
     ../portable/os-impl-posix-files.c
+    ../portable/os-impl-posix-file-allocate.c
     ../portable/os-impl-posix-dirs.c
 )
 
@@ -65,14 +66,49 @@ endif ()
 if (OSAL_CONFIG_INCLUDE_NETWORK)
     list(APPEND POSIX_IMPL_SRCLIST
         ../portable/os-impl-bsd-sockets.c   # Use BSD socket layer implementation
-        ../portable/os-impl-posix-network.c # Use POSIX-defined hostname/id implementation
+        ../portable/os-impl-posix-network-gethostname.c # Use POSIX-defined hostname implementation
+        ../portable/os-impl-posix-network-gethostid.c # Use POSIX-defined hostid implementation
+    )
+    if (OSAL_CONFIG_INCLUDE_DNS)
+        list(APPEND POSIX_IMPL_SRCLIST
+            ../portable/os-impl-bsd-sockets-dns.c   # Use functions that invoke DNS
+        )
+    else (OSAL_CONFIG_INCLUDE_DNS)
+        list(APPEND POSIX_IMPL_SRCLIST
+            ../portable/os-impl-bsd-sockets-no-dns.c    # Use basic impl without DNS
+        )
+    endif(OSAL_CONFIG_INCLUDE_DNS)
+else(OSAL_CONFIG_INCLUDE_NETWORK)
+    list(APPEND POSIX_IMPL_SRCLIST
+        ../portable/os-impl-no-sockets.c    # non-implemented versions of all socket APIs
+    )
+endif (OSAL_CONFIG_INCLUDE_NETWORK)
+
+if (OSAL_CONFIG_RWLOCK)
+    list(APPEND POSIX_IMPL_SRCLIST
+       src/os-impl-rwlock.c
+    )
+else ()
+    list(APPEND POSIX_IMPL_SRCLIST
+       ../portable/os-impl-no-rwlock.c
+    )
+endif ()
+
+if (OSAL_CONFIG_MAX_CPUS GREATER 1)
+    list(APPEND POSIX_IMPL_SRCLIST
+        ../portable/os-impl-pthread-affinity-np.c #    use the real affinity code
+    )
+    
+    # _GNU_SOURCE is required for pthread_setaffinity_np and CPU_SET macros
+    set_source_files_properties(
+        ../portable/os-impl-pthread-affinity-np.c 
+        PROPERTIES COMPILE_DEFINITIONS "_GNU_SOURCE"
     )
 else()
     list(APPEND POSIX_IMPL_SRCLIST
-        ../portable/os-impl-no-network.c    # non-implemented versions of all network APIs
-        ../portable/os-impl-no-sockets.c    # non-implemented versions of all socket APIs
+        ../portable/os-impl-pthread-no-affinity-np.c
     )
-endif ()
+endif()
 
 # Defines an OBJECT target named "osal_posix_impl" with selected source files
 add_library(osal_posix_impl OBJECT

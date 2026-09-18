@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -34,13 +34,31 @@
 #include "os-impl-tasks.h"
 
 #include "os-shared-task.h"
+#include "os-shared-task-affinity.h"
 #include "os-shared-idmap.h"
+#include "os-shared-common.h"
 
 /*
- * Defines
+ * Extra Stack Space for overhead -
+ *
+ * glibc pthreads implicitly puts its TCB/TLS structures at the base of the stack.
+ * The actual size of these structures is highly system and configuration dependent.
+ * Experimentation/measurement on an x64-64 system with glibc shows this to consume
+ * between 9-10kB of stack space off the top.
+ *
+ * There does not seem to be a reliable/standardized way of determining how large this
+ * is going to be, but PTHREAD_STACK_MIN (if defined) should include adequate space for it.
+ * If this is not defined, then just assume 1 page.
+ *
+ * Importantly - when the user passes a stack size to OS_TaskCreate() - the expectation is
+ * that there will be at least this amount of real _usable_ space for the task.  If 10kB
+ * is used before the entry point is even called, this needs to be accounted for, or else
+ * the stack might end up being too small.
  */
-#ifndef PTHREAD_STACK_MIN
-#define PTHREAD_STACK_MIN (8 * 1024)
+#ifdef PTHREAD_STACK_MIN
+#define OS_IMPL_STACK_EXTRA PTHREAD_STACK_MIN
+#else
+#define OS_IMPL_STACK_EXTRA POSIX_GlobalVars.PageSize
 #endif
 
 /* Tables where the OS object information is stored */
@@ -98,7 +116,9 @@ static int OS_PriorityRemap(osal_priority_t InputPri)
  *           A POSIX signal handler that does nothing
  *
  *-----------------------------------------------------------------*/
-static void OS_NoopSigHandler(int signal) {} /* end OS_NoopSigHandler */
+static void OS_NoopSigHandler(int signal)
+{
+} /* end OS_NoopSigHandler */
 
 /*---------------------------------------------------------------------------------------
    Name: OS_PthreadEntry
@@ -177,13 +197,17 @@ static bool OS_Posix_GetSchedulerParams(int sched_policy, POSIX_PriorityLimits_t
      */
     if ((PriLim->PriorityMax - PriLim->PriorityMin) < 4)
     {
-        OS_DEBUG("Policy %d: Insufficient spread between priority min-max: %d-%d\n", sched_policy,
-                 (int)PriLim->PriorityMin, (int)PriLim->PriorityMax);
+        OS_DEBUG("Policy %d: Insufficient spread between priority min-max: %d-%d\n",
+                 sched_policy,
+                 (int)PriLim->PriorityMin,
+                 (int)PriLim->PriorityMax);
         return false;
     }
 
     /* If we get here, then the sched_policy is potentially valid */
-    OS_DEBUG("Policy %d: available, min-max: %d-%d\n", sched_policy, (int)PriLim->PriorityMin,
+    OS_DEBUG("Policy %d: available, min-max: %d-%d\n",
+             sched_policy,
+             (int)PriLim->PriorityMin,
              (int)PriLim->PriorityMax);
     return true;
 }
@@ -220,6 +244,11 @@ int32 OS_Posix_TaskAPI_Impl_Init(void)
      */
     memset(&sched_fifo_limits, 0, sizeof(sched_fifo_limits));
     memset(&sched_rr_limits, 0, sizeof(sched_rr_limits));
+
+    /*
+     * Get number of configured cores
+     */
+    OS_SharedGlobalVars.CoresConfigured = OS_TaskAffinityGetCoresConfigured_Impl();
 
     /*
      * Create the key used to store OSAL task IDs
@@ -369,7 +398,8 @@ int32 OS_Posix_TaskAPI_Impl_Init(void)
             sched_param.sched_priority = POSIX_GlobalVars.PriLimits.PriorityMax;
             --POSIX_GlobalVars.PriLimits.PriorityMax;
 
-            OS_DEBUG("Selected policy %d for RT tasks, root task = %d\n", sched_policy,
+            OS_DEBUG("Selected policy %d for RT tasks, root task = %d\n",
+                     sched_policy,
                      (int)sched_param.sched_priority);
 
             /*
@@ -377,8 +407,8 @@ int32 OS_Posix_TaskAPI_Impl_Init(void)
              * then truncate it at the number of OSAL priorities.  This will end up mapping 1:1.
              * and leaving the highest priority numbers unused.
              */
-            if ((POSIX_GlobalVars.PriLimits.PriorityMax - POSIX_GlobalVars.PriLimits.PriorityMin) >
-                OS_MAX_TASK_PRIORITY)
+            if ((POSIX_GlobalVars.PriLimits.PriorityMax - POSIX_GlobalVars.PriLimits.PriorityMin)
+                > OS_MAX_TASK_PRIORITY)
             {
                 POSIX_GlobalVars.PriLimits.PriorityMax = POSIX_GlobalVars.PriLimits.PriorityMin + OS_MAX_TASK_PRIORITY;
             }
@@ -431,8 +461,12 @@ int32 OS_Posix_TaskAPI_Impl_Init(void)
  *  Purpose: Local helper routine, not part of OSAL API.
  *
  *-----------------------------------------------------------------*/
-int32 OS_Posix_InternalTaskCreate_Impl(pthread_t *pthr, osal_priority_t priority, size_t stacksz,
-                                       PthreadFuncPtr_t entry, void *entry_arg)
+int32 OS_Posix_InternalTaskCreate_Impl(pthread_t       *pthr,
+                                       osal_priority_t  priority,
+                                       osal_stackptr_t  stackptr,
+                                       size_t           stacksz,
+                                       PthreadFuncPtr_t entry,
+                                       void            *entry_arg)
 {
     int                return_code = 0;
     pthread_attr_t     custom_attr;
@@ -451,31 +485,30 @@ int32 OS_Posix_InternalTaskCreate_Impl(pthread_t *pthr, osal_priority_t priority
     }
 
     /*
-     * Adjust the stack size parameter.
-     *
-     * POSIX has additional restrictions/limitations on the stack size of tasks that
-     * other RTOS environments may not have.  Specifically POSIX says that the stack
-     * size must be at least PTHREAD_STACK_MIN and may also need to be a multiple of the
-     * system page size.
-     *
-     * Rounding up means the user might get a bigger stack than they requested, but
-     * that should not break anything aside from consuming extra memory.
-     */
-    if (stacksz < PTHREAD_STACK_MIN)
+    ** Set the Stack Pointer and/or Size
+    */
+    if (stackptr != OSAL_TASK_STACK_ALLOCATE)
     {
-        stacksz = PTHREAD_STACK_MIN;
+        return_code = pthread_attr_setstack(&custom_attr, stackptr, stacksz);
+    }
+    else
+    {
+        /*
+         * Adjust the stack size parameter, add budget for TCB/TLS overhead.
+         * Note that this budget can only be added when allocating the stack here,
+         * if the caller passed in a stack, they take responsibility for adding this.
+         */
+        stacksz += OS_IMPL_STACK_EXTRA;
+
+        stacksz += POSIX_GlobalVars.PageSize - 1;
+        stacksz -= stacksz % POSIX_GlobalVars.PageSize;
+
+        return_code = pthread_attr_setstacksize(&custom_attr, stacksz);
     }
 
-    stacksz += POSIX_GlobalVars.PageSize - 1;
-    stacksz -= stacksz % POSIX_GlobalVars.PageSize;
-
-    /*
-    ** Set the Stack Size
-    */
-    return_code = pthread_attr_setstacksize(&custom_attr, stacksz);
     if (return_code != 0)
     {
-        OS_DEBUG("pthread_attr_setstacksize error in OS_TaskCreate: %s\n", strerror(return_code));
+        OS_DEBUG("Error configuring stack in OS_TaskCreate: %s\n", strerror(return_code));
         return OS_ERROR;
     }
 
@@ -534,7 +567,6 @@ int32 OS_Posix_InternalTaskCreate_Impl(pthread_t *pthr, osal_priority_t priority
             OS_DEBUG("pthread_attr_setschedparam error in OS_TaskCreate: %s\n", strerror(return_code));
             return OS_ERROR;
         }
-
     } /* End if user is root */
 
     /*
@@ -573,7 +605,7 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
     OS_VoidPtrValueWrapper_t        arg;
     int32                           return_code;
     OS_impl_task_internal_record_t *impl;
-    OS_task_internal_record_t *     task;
+    OS_task_internal_record_t      *task;
 
     memset(&arg, 0, sizeof(arg));
 
@@ -583,7 +615,17 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
     task = OS_OBJECT_TABLE_GET(OS_task_table, *token);
     impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
 
-    return_code = OS_Posix_InternalTaskCreate_Impl(&impl->id, task->priority, task->stack_size, OS_PthreadTaskEntry,
+    /* If task priorities are not enabled then override the user-supplied priority value */
+    if (!POSIX_GlobalVars.EnableTaskPriorities)
+    {
+        task->priority = OS_MAX_TASK_PRIORITY;
+    }
+
+    return_code = OS_Posix_InternalTaskCreate_Impl(&impl->id,
+                                                   task->priority,
+                                                   task->stack_pointer,
+                                                   task->stack_size,
+                                                   OS_PthreadTaskEntry,
                                                    arg.opaque_arg);
 
     return return_code;
@@ -607,7 +649,8 @@ int32 OS_TaskDetach_Impl(const OS_object_token_t *token)
     if (ret != 0)
     {
         OS_DEBUG("pthread_detach: Failed on Task ID = %lu, err = %s\n",
-                 OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)), strerror(ret));
+                 OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)),
+                 strerror(ret));
         return OS_ERROR;
     }
 
@@ -643,7 +686,7 @@ int32 OS_TaskMatch_Impl(const OS_object_token_t *token)
 int32 OS_TaskDelete_Impl(const OS_object_token_t *token)
 {
     OS_impl_task_internal_record_t *impl;
-    void *                          retval;
+    void                           *retval;
     int                             ret;
 
     impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
@@ -658,7 +701,8 @@ int32 OS_TaskDelete_Impl(const OS_object_token_t *token)
     if (ret != 0)
     {
         OS_DEBUG("pthread_cancel: Failed on Task ID = %lu, err = %s\n",
-                 OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)), strerror(ret));
+                 OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)),
+                 strerror(ret));
 
         /* fall through (will still return OS_SUCCESS) */
     }
@@ -680,7 +724,8 @@ int32 OS_TaskDelete_Impl(const OS_object_token_t *token)
         if (ret != 0)
         {
             OS_DEBUG("pthread_join: Failed on Task ID = %lu, err = %s\n",
-                     OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)), strerror(ret));
+                     OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)),
+                     strerror(ret));
         }
     }
     return OS_SUCCESS;
@@ -692,7 +737,7 @@ int32 OS_TaskDelete_Impl(const OS_object_token_t *token)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-void OS_TaskExit_Impl()
+void OS_TaskExit_Impl(void)
 {
     pthread_exit(NULL);
 }
@@ -709,7 +754,7 @@ int32 OS_TaskDelay_Impl(uint32 millisecond)
     int             status;
 
     clock_gettime(CLOCK_MONOTONIC, &sleep_end);
-    sleep_end.tv_sec += millisecond / 1000;
+    sleep_end.tv_sec  += millisecond / 1000;
     sleep_end.tv_nsec += 1000000 * (millisecond % 1000);
 
     if (sleep_end.tv_nsec >= 1000000000)
@@ -760,7 +805,9 @@ int32 OS_TaskSetPriority_Impl(const OS_object_token_t *token, osal_priority_t ne
         if (ret != 0)
         {
             OS_DEBUG("pthread_setschedprio: Task ID = %lu, prio = %d, err = %s\n",
-                     OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)), os_priority, strerror(ret));
+                     OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)),
+                     os_priority,
+                     strerror(ret));
             return OS_ERROR;
         }
     }
@@ -844,7 +891,7 @@ int32 OS_TaskGetInfo_Impl(const OS_object_token_t *token, OS_task_prop_t *task_p
  *-----------------------------------------------------------------*/
 bool OS_TaskIdMatchSystemData_Impl(void *ref, const OS_object_token_t *token, const OS_common_record_t *obj)
 {
-    const pthread_t *               target = (const pthread_t *)ref;
+    const pthread_t                *target = (const pthread_t *)ref;
     OS_impl_task_internal_record_t *impl;
 
     impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);

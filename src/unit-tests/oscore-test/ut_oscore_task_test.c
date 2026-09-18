@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -102,7 +102,7 @@ void generic_test_task(void)
 **          OS_ERROR if the OS call failed
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_task_create_test()
+void UT_os_task_create_test(void)
 {
     int32 i = 0;
     char  task_name[UT_OS_NAME_BUFF_SIZE];
@@ -110,36 +110,61 @@ void UT_os_task_create_test()
     /*-----------------------------------------------------*/
     /* #1 Null-pointer-arg-1 */
 
-    UT_RETVAL(OS_TaskCreate(NULL, g_task_names[1], generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[1]),
-                            sizeof(g_task_stacks[1]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0),
+    UT_RETVAL(OS_TaskCreate(NULL,
+                            g_task_names[1],
+                            generic_test_task,
+                            OSAL_STACKPTR_C(&g_task_stacks[1]),
+                            sizeof(g_task_stacks[1]),
+                            OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                            0),
               OS_INVALID_POINTER);
 
     /*-----------------------------------------------------*/
     /* #2 Null-pointer-arg-2 */
 
-    UT_RETVAL(OS_TaskCreate(&g_task_ids[2], NULL, generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[2]),
-                            sizeof(g_task_stacks[2]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0),
+    UT_RETVAL(OS_TaskCreate(&g_task_ids[2],
+                            NULL,
+                            generic_test_task,
+                            OSAL_STACKPTR_C(&g_task_stacks[2]),
+                            sizeof(g_task_stacks[2]),
+                            OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                            0),
               OS_INVALID_POINTER);
 
     /*-----------------------------------------------------*/
     /* #3 Null-pointer-arg-3 */
 
-    UT_RETVAL(OS_TaskCreate(&g_task_ids[3], g_task_names[3], NULL, OSAL_STACKPTR_C(&g_task_stacks[3]),
-                            sizeof(g_task_stacks[3]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0),
+    UT_RETVAL(OS_TaskCreate(&g_task_ids[3],
+                            g_task_names[3],
+                            NULL,
+                            OSAL_STACKPTR_C(&g_task_stacks[3]),
+                            sizeof(g_task_stacks[3]),
+                            OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                            0),
               OS_INVALID_POINTER);
 
     /*-----------------------------------------------------*/
     /* Bad stack size */
 
-    UT_RETVAL(OS_TaskCreate(&g_task_ids[3], g_task_names[3], generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[3]), 0,
-                            OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0),
+    UT_RETVAL(OS_TaskCreate(&g_task_ids[3],
+                            g_task_names[3],
+                            generic_test_task,
+                            OSAL_STACKPTR_C(&g_task_stacks[3]),
+                            0,
+                            OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                            0),
               OS_ERR_INVALID_SIZE);
 
     /*-----------------------------------------------------*/
     /* #4 Name-too-long */
 
-    UT_RETVAL(OS_TaskCreate(&g_task_ids[4], g_long_task_name, generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[4]),
-                            sizeof(g_task_stacks[4]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0),
+    UT_RETVAL(OS_TaskCreate(&g_task_ids[4],
+                            g_long_task_name,
+                            generic_test_task,
+                            OSAL_STACKPTR_C(&g_task_stacks[4]),
+                            sizeof(g_task_stacks[4]),
+                            OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                            0),
               OS_ERR_NAME_TOO_LONG);
 
     /*-----------------------------------------------------*/
@@ -151,13 +176,22 @@ void UT_os_task_create_test()
         UT_os_sprintf(task_name, "CREATE_TASK%d", (int)i);
         if (i == OS_MAX_TASKS)
         {
-            UT_RETVAL(OS_TaskCreate(&g_task_ids[i], task_name, generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[i]),
-                                    sizeof(g_task_stacks[i]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0),
+            UT_RETVAL(OS_TaskCreate(&g_task_ids[i],
+                                    task_name,
+                                    generic_test_task,
+                                    OSAL_STACKPTR_C(&g_task_stacks[i]),
+                                    sizeof(g_task_stacks[i]),
+                                    OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                                    0),
                       OS_ERR_NO_FREE_IDS);
         }
-        else if (!UT_SETUP(OS_TaskCreate(&g_task_ids[i], task_name, generic_test_task,
-                                         OSAL_STACKPTR_C(&g_task_stacks[i]), sizeof(g_task_stacks[i]),
-                                         OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0)))
+        else if (!UT_SETUP(OS_TaskCreate(&g_task_ids[i],
+                                         task_name,
+                                         generic_test_task,
+                                         OSAL_STACKPTR_C(&g_task_stacks[i]),
+                                         sizeof(g_task_stacks[i]),
+                                         OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                                         0)))
         {
             break;
         }
@@ -175,11 +209,21 @@ void UT_os_task_create_test()
     /*-----------------------------------------------------*/
     /* #7 Duplicate-name */
 
-    if (UT_SETUP(OS_TaskCreate(&g_task_ids[7], g_task_names[7], generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[7]),
-                               sizeof(g_task_stacks[7]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0)))
+    if (UT_SETUP(OS_TaskCreate(&g_task_ids[7],
+                               g_task_names[7],
+                               generic_test_task,
+                               OSAL_STACKPTR_C(&g_task_stacks[7]),
+                               sizeof(g_task_stacks[7]),
+                               OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                               0)))
     {
-        UT_RETVAL(OS_TaskCreate(&g_task_ids[8], g_task_names[7], generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[8]),
-                                sizeof(g_task_stacks[8]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0),
+        UT_RETVAL(OS_TaskCreate(&g_task_ids[8],
+                                g_task_names[7],
+                                generic_test_task,
+                                OSAL_STACKPTR_C(&g_task_stacks[8]),
+                                sizeof(g_task_stacks[8]),
+                                OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                                0),
                   OS_ERR_NAME_TAKEN);
 
         /* Delay to let child task run */
@@ -192,14 +236,24 @@ void UT_os_task_create_test()
     /*-----------------------------------------------------*/
     /* Nominal, fixed stack */
 
-    UT_NOMINAL(OS_TaskCreate(&g_task_ids[9], g_task_names[9], generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[9]),
-                             sizeof(g_task_stacks[9]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0));
+    UT_NOMINAL(OS_TaskCreate(&g_task_ids[9],
+                             g_task_names[9],
+                             generic_test_task,
+                             OSAL_STACKPTR_C(&g_task_stacks[9]),
+                             sizeof(g_task_stacks[9]),
+                             OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                             0));
 
     /*-----------------------------------------------------*/
     /* Nominal, dynamic stack */
 
-    UT_NOMINAL(OS_TaskCreate(&g_task_ids[8], g_task_names[8], generic_test_task, NULL, sizeof(g_task_stacks[8]),
-                             OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0));
+    UT_NOMINAL(OS_TaskCreate(&g_task_ids[8],
+                             g_task_names[8],
+                             generic_test_task,
+                             NULL,
+                             sizeof(g_task_stacks[8]),
+                             OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                             0));
 
     /* Delay to let child task run */
     OS_TaskDelay(200);
@@ -217,7 +271,7 @@ void UT_os_task_create_test()
 **          OS_ERROR if the OS call failed
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_task_delete_test()
+void UT_os_task_delete_test(void)
 {
     /*-----------------------------------------------------*/
     /* #1 Invalid-ID-arg */
@@ -229,8 +283,13 @@ void UT_os_task_delete_test()
     /* #3 Nominal */
 
     /* Setup */
-    if (UT_SETUP(OS_TaskCreate(&g_task_ids[3], g_task_names[3], generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[3]),
-                               sizeof(g_task_stacks[3]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0)))
+    if (UT_SETUP(OS_TaskCreate(&g_task_ids[3],
+                               g_task_names[3],
+                               generic_test_task,
+                               OSAL_STACKPTR_C(&g_task_stacks[3]),
+                               sizeof(g_task_stacks[3]),
+                               OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                               0)))
     {
         /* Delay to let child task run */
         OS_TaskDelay(200);
@@ -300,9 +359,13 @@ void UT_os_task_install_delete_handler_test(void)
 
         g_task_handler_called = false;
 
-        if (UT_SETUP(OS_TaskCreate(&g_task_ids[2], g_task_names[2], delete_handler_test_task,
-                                   OSAL_STACKPTR_C(&g_task_stacks[2]), sizeof(g_task_stacks[2]),
-                                   OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0)))
+        if (UT_SETUP(OS_TaskCreate(&g_task_ids[2],
+                                   g_task_names[2],
+                                   delete_handler_test_task,
+                                   OSAL_STACKPTR_C(&g_task_stacks[2]),
+                                   sizeof(g_task_stacks[2]),
+                                   OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                                   0)))
         {
             /* Wait for the task to finish the test */
             UT_SETUP(OS_BinSemTake(g_task_sync_sem));
@@ -312,7 +375,8 @@ void UT_os_task_install_delete_handler_test(void)
 
             UT_TEARDOWN(OS_TaskDelete(g_task_ids[2]));
 
-            UtAssert_True(g_task_result == OS_SUCCESS, "OS_TaskInstallDeleteHandler() (%d) == OS_SUCCESS",
+            UtAssert_True(g_task_result == OS_SUCCESS,
+                          "OS_TaskInstallDeleteHandler() (%d) == OS_SUCCESS",
                           (int)g_task_result);
             UtAssert_True(g_task_handler_called, "OS_TaskInstallDeleteHandler() callback invoked");
         }
@@ -363,8 +427,13 @@ void UT_os_task_exit_test(void)
     {
         UT_SETUP(OS_BinSemTake(g_task_sync_sem));
 
-        if (UT_SETUP(OS_TaskCreate(&g_task_ids[1], g_task_names[1], exit_test_task, OSAL_STACKPTR_C(&g_task_stacks[1]),
-                                   sizeof(g_task_stacks[1]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0)))
+        if (UT_SETUP(OS_TaskCreate(&g_task_ids[1],
+                                   g_task_names[1],
+                                   exit_test_task,
+                                   OSAL_STACKPTR_C(&g_task_stacks[1]),
+                                   sizeof(g_task_stacks[1]),
+                                   OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                                   0)))
         {
             /* Wait for the task to finish the test */
             UT_SETUP(OS_BinSemTake(g_task_sync_sem));
@@ -390,7 +459,7 @@ void UT_os_task_exit_test(void)
 ** Returns: OS_ERROR if sleep failed
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_task_delay_test()
+void UT_os_task_delay_test(void)
 {
     OS_time_t before_time;
     OS_time_t after_time;
@@ -434,7 +503,7 @@ void UT_os_task_delay_test()
 **          OS_ERROR if the OS call failed
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_task_set_priority_test()
+void UT_os_task_set_priority_test(void)
 {
     /*-----------------------------------------------------*/
     /* #1 Invalid-ID-arg */
@@ -445,8 +514,13 @@ void UT_os_task_set_priority_test()
     /*-----------------------------------------------------*/
     /* #4 Nominal */
 
-    if (UT_SETUP(OS_TaskCreate(&g_task_ids[4], g_task_names[4], generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[4]),
-                               sizeof(g_task_stacks[4]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0)))
+    if (UT_SETUP(OS_TaskCreate(&g_task_ids[4],
+                               g_task_names[4],
+                               generic_test_task,
+                               OSAL_STACKPTR_C(&g_task_stacks[4]),
+                               sizeof(g_task_stacks[4]),
+                               OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                               0)))
     {
         UT_NOMINAL(OS_TaskSetPriority(g_task_ids[4], OSAL_PRIORITY_C(UT_TASK_PRIORITY - 10)));
 
@@ -481,7 +555,7 @@ void getid_test_task(void)
 ** Parameters: To-be-filled-in
 ** Returns: Task id of the task that calls this routine
 **--------------------------------------------------------------------------------*/
-void UT_os_task_get_id_test()
+void UT_os_task_get_id_test(void)
 {
     /*
      * Note this function does not return a normal status code,
@@ -491,13 +565,20 @@ void UT_os_task_get_id_test()
     /*-----------------------------------------------------*/
     /* #1 Nominal */
 
-    if (UT_SETUP(OS_TaskCreate(&g_task_ids[1], g_task_names[1], getid_test_task, OSAL_STACKPTR_C(&g_task_stacks[1]),
-                               sizeof(g_task_stacks[1]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0)))
+    if (UT_SETUP(OS_TaskCreate(&g_task_ids[1],
+                               g_task_names[1],
+                               getid_test_task,
+                               OSAL_STACKPTR_C(&g_task_stacks[1]),
+                               sizeof(g_task_stacks[1]),
+                               OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                               0)))
     {
         OS_TaskDelay(500);
 
-        UtAssert_True(OS_ObjectIdEqual(g_task_get_id_result, g_task_ids[1]), "OS_TaskGetId() (%lu) == %lu",
-                      OS_ObjectIdToInteger(g_task_get_id_result), OS_ObjectIdToInteger(g_task_ids[1]));
+        UtAssert_True(OS_ObjectIdEqual(g_task_get_id_result, g_task_ids[1]),
+                      "OS_TaskGetId() (%lu) == %lu",
+                      OS_ObjectIdToInteger(g_task_get_id_result),
+                      OS_ObjectIdToInteger(g_task_ids[1]));
 
         UT_TEARDOWN(OS_TaskDelete(g_task_ids[1]));
     }
@@ -512,7 +593,7 @@ void UT_os_task_get_id_test()
 **          OS_ERR_NAME_NOT_FOUND if the name passed in is not in the task table
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_task_get_id_by_name_test()
+void UT_os_task_get_id_by_name_test(void)
 {
     /*-----------------------------------------------------*/
     /* #1 Invalid-pointer-arg-1 */
@@ -538,13 +619,20 @@ void UT_os_task_get_id_by_name_test()
     /* #5 Nominal */
 
     /* Setup */
-    if (UT_SETUP(OS_TaskCreate(&g_task_ids[5], g_task_names[5], generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[5]),
-                               sizeof(g_task_stacks[5]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0)))
+    if (UT_SETUP(OS_TaskCreate(&g_task_ids[5],
+                               g_task_names[5],
+                               generic_test_task,
+                               OSAL_STACKPTR_C(&g_task_stacks[5]),
+                               sizeof(g_task_stacks[5]),
+                               OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                               0)))
     {
         UT_NOMINAL(OS_TaskGetIdByName(&g_task_ids[6], g_task_names[5]));
 
-        UtAssert_True(OS_ObjectIdEqual(g_task_ids[5], g_task_ids[6]), "OS_TaskGetIdByName() ID (%lu) == %lu",
-                      OS_ObjectIdToInteger(g_task_ids[5]), OS_ObjectIdToInteger(g_task_ids[6]));
+        UtAssert_True(OS_ObjectIdEqual(g_task_ids[5], g_task_ids[6]),
+                      "OS_TaskGetIdByName() ID (%lu) == %lu",
+                      OS_ObjectIdToInteger(g_task_ids[5]),
+                      OS_ObjectIdToInteger(g_task_ids[6]));
 
         OS_TaskDelay(500); /* Delay to let task run */
         UT_TEARDOWN(OS_TaskDelete(g_task_ids[5]));
@@ -559,7 +647,7 @@ void UT_os_task_get_id_by_name_test()
 **          OS_ERR_INVALID_ID if the id passed in is not a valid task id
 **          OS_SUCCESS if succeeded
 **--------------------------------------------------------------------------------*/
-void UT_os_task_get_info_test()
+void UT_os_task_get_info_test(void)
 {
     OS_task_prop_t task_prop;
 
@@ -573,8 +661,13 @@ void UT_os_task_get_info_test()
     /* #2 Invalid-pointer-arg */
 
     /* Setup */
-    if (UT_SETUP(OS_TaskCreate(&g_task_ids[2], g_task_names[2], generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[2]),
-                               sizeof(g_task_stacks[2]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0)))
+    if (UT_SETUP(OS_TaskCreate(&g_task_ids[2],
+                               g_task_names[2],
+                               generic_test_task,
+                               OSAL_STACKPTR_C(&g_task_stacks[2]),
+                               sizeof(g_task_stacks[2]),
+                               OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                               0)))
     {
         UT_RETVAL(OS_TaskGetInfo(g_task_ids[2], NULL), OS_INVALID_POINTER);
 
@@ -588,8 +681,13 @@ void UT_os_task_get_info_test()
     /*-----------------------------------------------------*/
     /* #3 Nominal */
 
-    if (UT_SETUP(OS_TaskCreate(&g_task_ids[3], g_task_names[3], generic_test_task, OSAL_STACKPTR_C(&g_task_stacks[3]),
-                               sizeof(g_task_stacks[3]), OSAL_PRIORITY_C(UT_TASK_PRIORITY), 0)))
+    if (UT_SETUP(OS_TaskCreate(&g_task_ids[3],
+                               g_task_names[3],
+                               generic_test_task,
+                               OSAL_STACKPTR_C(&g_task_stacks[3]),
+                               sizeof(g_task_stacks[3]),
+                               OSAL_PRIORITY_C(UT_TASK_PRIORITY),
+                               0)))
     {
         UT_NOMINAL(OS_TaskGetInfo(g_task_ids[3], &task_prop));
 
@@ -605,7 +703,7 @@ void UT_os_task_get_info_test()
 ** Syntax: OS_TaskFindIdBySystemData
 ** Purpose: Finds the abstract OSAL task ID from the system ID data
 **--------------------------------------------------------------------------------*/
-void UT_os_task_getid_by_sysdata_test()
+void UT_os_task_getid_by_sysdata_test(void)
 {
     uint8     sysdata = 0;
     osal_id_t task_id;

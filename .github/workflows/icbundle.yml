@@ -19,7 +19,7 @@ jobs:
           sudo apt update
           sudo apt install -y w3m
       - name: Checkout IC Branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           fetch-depth: '0'
           ref: main
@@ -58,11 +58,10 @@ jobs:
             see_entry="${see_entry}"$' <https://github.com/nasa/cFE/pull/'${pr}$'>'
           done
           changelog_entry="${changelog_entry}\n${see_entry}\n"
-          echo "s|# Changelog|$changelog_entry|"
-          sed -ir "s|Changelog|$changelog_entry|" CHANGELOG.md
+          sed -ir "s|# Changelog|$changelog_entry|" CHANGELOG.md
           
           buildnumber_entry=$'#define OS_BUILD_NUMBER   '${rev_num}
-          sed -ir "s|define OS_BUILD_NUMBER.*|$buildnumber_entry|" src/os/inc/osapi-version.h
+          sed -ir "s|#define OS_BUILD_NUMBER.*|$buildnumber_entry|" src/os/inc/osapi-version.h
       - name: Commit and Push Updates to IC Branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

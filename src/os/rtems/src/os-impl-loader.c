@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -109,7 +109,7 @@ int32 OS_ModuleLoad_Impl(const OS_object_token_t *token, const char *translated_
 {
     int32                             status = OS_ERROR;
     int                               unresolved;
-    void *                            dl_handle;
+    void                             *dl_handle;
     OS_impl_module_internal_record_t *impl;
 
     impl = OS_OBJECT_TABLE_GET(OS_impl_module_table, *token);
@@ -118,7 +118,7 @@ int32 OS_ModuleLoad_Impl(const OS_object_token_t *token, const char *translated_
     dl_handle = dlopen(translated_path, RTLD_NOW | RTLD_GLOBAL);
     if (dl_handle == NULL)
     {
-        OS_DEBUG("Error loading shared library: %s\n", dlerror());
+        OS_DEBUG("loading shared library: %s\n", dlerror());
         status = OS_ERROR;
     }
     else if (dlinfo(dl_handle, RTLD_DI_UNRESOLVED, &unresolved) < 0)
@@ -210,7 +210,7 @@ int32 OS_ModuleUnload_Impl(const OS_object_token_t *token)
  *-----------------------------------------------------------------*/
 int32 OS_ModuleGetInfo_Impl(const OS_object_token_t *token, OS_module_prop_t *module_prop)
 {
-    rtems_rtl_obj *                   obj;
+    rtems_rtl_obj                    *obj;
     OS_impl_module_internal_record_t *impl;
     int32                             status = OS_ERROR;
 

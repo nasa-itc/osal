@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -175,12 +175,22 @@ void SemSetup(void)
     /*
     ** Create the tasks
     */
-    status = OS_TaskCreate(&task_1_id, "Task 1", task_1, OSAL_TASK_STACK_ALLOCATE, OSAL_SIZE_C(4096),
-                           OSAL_PRIORITY_C(SEMTEST_TASK_PRIORITY), 0);
+    status = OS_TaskCreate(&task_1_id,
+                           "Task 1",
+                           task_1,
+                           OSAL_TASK_STACK_ALLOCATE,
+                           OSAL_SIZE_C(4096),
+                           OSAL_PRIORITY_C(SEMTEST_TASK_PRIORITY),
+                           0);
     UtAssert_True(status == OS_SUCCESS, "Task 1 create Id=%lx Rc=%d", OS_ObjectIdToInteger(task_1_id), (int)status);
 
-    status = OS_TaskCreate(&task_2_id, "Task 2", task_2, OSAL_TASK_STACK_ALLOCATE, OSAL_SIZE_C(4096),
-                           OSAL_PRIORITY_C(SEMTEST_TASK_PRIORITY), 0);
+    status = OS_TaskCreate(&task_2_id,
+                           "Task 2",
+                           task_2,
+                           OSAL_TASK_STACK_ALLOCATE,
+                           OSAL_SIZE_C(4096),
+                           OSAL_PRIORITY_C(SEMTEST_TASK_PRIORITY),
+                           0);
     UtAssert_True(status == OS_SUCCESS, "Task 2 create Id=%lx Rc=%d", OS_ObjectIdToInteger(task_2_id), (int)status);
 
     /* A small delay just to allow the tasks

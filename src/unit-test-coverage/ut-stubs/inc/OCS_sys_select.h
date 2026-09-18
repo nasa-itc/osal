@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -47,8 +47,8 @@ typedef struct
 /* prototypes normally declared in sys/select.h */
 /* ----------------------------------------- */
 
-extern int OCS_select(int nfds, OCS_fd_set *readfds, OCS_fd_set *writefds, OCS_fd_set *exceptfds,
-                      struct OCS_timeval *timeout);
+extern int
+OCS_select(int nfds, OCS_fd_set *readfds, OCS_fd_set *writefds, OCS_fd_set *exceptfds, struct OCS_timeval *timeout);
 
 extern void OCS_FD_SET(int fd, OCS_fd_set *set);
 extern int  OCS_FD_ISSET(int fd, OCS_fd_set *set);

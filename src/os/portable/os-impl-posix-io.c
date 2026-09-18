@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -96,7 +96,7 @@ int32 OS_GenericClose_Impl(const OS_object_token_t *token)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_GenericSeek_Impl(const OS_object_token_t *token, int32 offset, uint32 whence)
+int32 OS_GenericSeek_Impl(const OS_object_token_t *token, osal_offset_t offset, uint32 whence)
 {
     int                             where;
     off_t                           os_result;
@@ -162,7 +162,7 @@ int32 OS_GenericSeek_Impl(const OS_object_token_t *token, int32 offset, uint32 w
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_GenericRead_Impl(const OS_object_token_t *token, void *buffer, size_t nbytes, int32 timeout)
+int32 OS_GenericRead_Impl(const OS_object_token_t *token, void *buffer, size_t nbytes, OS_time_t abs_timeout)
 {
     int32                           return_code;
     ssize_t                         os_result;
@@ -187,7 +187,7 @@ int32 OS_GenericRead_Impl(const OS_object_token_t *token, void *buffer, size_t n
          */
         if (impl->selectable)
         {
-            return_code = OS_SelectSingle_Impl(token, &operation, timeout);
+            return_code = OS_SelectSingle_Impl(token, &operation, abs_timeout);
         }
 
         if (return_code == OS_SUCCESS && (operation & OS_STREAM_STATE_READABLE) != 0)
@@ -215,7 +215,7 @@ int32 OS_GenericRead_Impl(const OS_object_token_t *token, void *buffer, size_t n
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_GenericWrite_Impl(const OS_object_token_t *token, const void *buffer, size_t nbytes, int32 timeout)
+int32 OS_GenericWrite_Impl(const OS_object_token_t *token, const void *buffer, size_t nbytes, OS_time_t abs_timeout)
 {
     int32                           return_code;
     ssize_t                         os_result;
@@ -240,7 +240,7 @@ int32 OS_GenericWrite_Impl(const OS_object_token_t *token, const void *buffer, s
          */
         if (impl->selectable)
         {
-            return_code = OS_SelectSingle_Impl(token, &operation, timeout);
+            return_code = OS_SelectSingle_Impl(token, &operation, abs_timeout);
         }
 
         if (return_code == OS_SUCCESS && (operation & OS_STREAM_STATE_WRITABLE) != 0)

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -28,10 +28,14 @@
 
 #include "os-vxworks.h"
 #include "os-impl-tasks.h"
+#include "osapi-task-affinity.h"
 
 #include "os-shared-task.h"
+#include "os-shared-task-affinity.h"
 #include "os-shared-idmap.h"
 #include "os-shared-timebase.h"
+#include "os-shared-common.h"
+
 #include "osapi-bsp.h"
 
 #include <errnoLib.h>
@@ -90,7 +94,6 @@ int OS_VxWorks_TaskEntry(int arg)
 /****************************************************************************************
                                     TASK API
 ****************************************************************************************/
-
 /*----------------------------------------------------------------
  *
  *  Purpose: Local helper routine, not part of OSAL API.
@@ -99,6 +102,12 @@ int OS_VxWorks_TaskEntry(int arg)
 int32 OS_VxWorks_TaskAPI_Impl_Init(void)
 {
     memset(OS_impl_task_table, 0, sizeof(OS_impl_task_table));
+
+    /*
+     * Get number of configured cores
+     */
+    OS_SharedGlobalVars.CoresConfigured = OS_TaskAffinityGetCoresConfigured_Impl();
+
     return OS_SUCCESS;
 }
 
@@ -117,7 +126,7 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
     unsigned long                   userstackbase;
     unsigned long                   actualstackbase;
     OS_impl_task_internal_record_t *lrec;
-    OS_task_internal_record_t *     task;
+    OS_task_internal_record_t      *task;
 
     lrec = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);
     task = OS_OBJECT_TABLE_GET(OS_task_table, *token);
@@ -174,7 +183,7 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
          * this helps ensure that the final aligned stack is not less
          * than what was originally requested (but might be a bit more)  */
         actualsz += VX_IMPL_STACK_ALIGN_SIZE;
-        actualsz = VX_IMPL_STACK_ROUND_UP(actualsz);
+        actualsz  = VX_IMPL_STACK_ROUND_UP(actualsz);
 
         /*
          * VxWorks does not provide a way to deallocate
@@ -217,9 +226,9 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
     actualstackbase = userstackbase;
 
     /* also round the base address */
-    actualstackbase = VX_IMPL_STACK_ROUND_UP(actualstackbase);
-    actualsz -= (actualstackbase - userstackbase);
-    actualsz = VX_IMPL_STACK_ROUND_DOWN(actualsz);
+    actualstackbase  = VX_IMPL_STACK_ROUND_UP(actualstackbase);
+    actualsz        -= (actualstackbase - userstackbase);
+    actualsz         = VX_IMPL_STACK_ROUND_DOWN(actualsz);
 
     /*
      * On most CPUs the stack grows downward, so assume that to be
@@ -229,14 +238,23 @@ int32 OS_TaskCreate_Impl(const OS_object_token_t *token, uint32 flags)
     actualstackbase += actualsz; /* move to last byte of stack block */
 #endif
 
-    status = taskInit((WIND_TCB *)&lrec->tcb,                            /* address of new task's TCB */
-                      (char *)task->task_name, vxpri,                    /* priority of new task */
+    status = taskInit((WIND_TCB *)&lrec->tcb, /* address of new task's TCB */
+                      (char *)task->task_name,
+                      vxpri,                                             /* priority of new task */
                       vxflags,                                           /* task option word */
                       (char *)actualstackbase,                           /* base of new task's stack */
                       actualsz,                                          /* size (bytes) of stack needed */
                       (FUNCPTR)OS_VxWorks_TaskEntry,                     /* entry point of new task */
                       OS_ObjectIdToInteger(OS_ObjectIdFromToken(token)), /* 1st arg is ID */
-                      0, 0, 0, 0, 0, 0, 0, 0, 0);
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0);
 
     if (status != OK)
     {
@@ -296,7 +314,7 @@ int32 OS_TaskDetach_Impl(const OS_object_token_t *token)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-void OS_TaskExit_Impl()
+void OS_TaskExit_Impl(void)
 {
     taskExit(0);
 }
@@ -389,7 +407,7 @@ int32 OS_TaskRegister_Impl(osal_id_t global_task_id)
  *-----------------------------------------------------------------*/
 osal_id_t OS_TaskGetId_Impl(void)
 {
-    void *    lrec;
+    void     *lrec;
     size_t    idx;
     osal_id_t id;
 
@@ -442,7 +460,7 @@ int32 OS_TaskValidateSystemData_Impl(const void *sysdata, size_t sysdata_size)
  *-----------------------------------------------------------------*/
 bool OS_TaskIdMatchSystemData_Impl(void *ref, const OS_object_token_t *token, const OS_common_record_t *obj)
 {
-    const TASK_ID *                 target = (const TASK_ID *)ref;
+    const TASK_ID                  *target = (const TASK_ID *)ref;
     OS_impl_task_internal_record_t *impl;
 
     impl = OS_OBJECT_TABLE_GET(OS_impl_task_table, *token);

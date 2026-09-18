@@ -28,11 +28,14 @@ set(RTEMS_BASE_SRCLIST
 # Use portable blocks for basic I/O
 set(RTEMS_IMPL_SRCLIST
     ../portable/os-impl-posix-gettime.c
+    ../portable/os-impl-posix-gettime-monotonic.c
     ../portable/os-impl-console-bsp.c
     ../portable/os-impl-posix-io.c
     ../portable/os-impl-posix-files.c
     ../portable/os-impl-posix-dirs.c
     ../portable/os-impl-no-condvar.c
+    ../portable/os-impl-no-rwlock.c
+    ../portable/os-impl-no-file-allocate.c    
 )
 
 # Currently the "shell output to file" for RTEMS is not implemented
@@ -63,7 +66,17 @@ if (OSAL_CONFIG_INCLUDE_NETWORK)
         ../portable/os-impl-bsd-select.c
     )
 
-    # In RTEMS 6+ the networking subsystem is not included with the defualt libs,
+    if (OSAL_CONFIG_INCLUDE_DNS)
+        list(APPEND RTEMS_IMPL_SRCLIST
+            ../portable/os-impl-bsd-sockets-dns.c   # Use functions that invoke DNS
+        )
+    else (OSAL_CONFIG_INCLUDE_DNS)
+        list(APPEND RTEMS_IMPL_SRCLIST
+            ../portable/os-impl-bsd-sockets-no-dns.c    # Use basic impl without DNS
+        )
+    endif(OSAL_CONFIG_INCLUDE_DNS)
+
+    # In RTEMS 6+ the networking subsystem is not included with the default libs,
     # it needs to be explicitly added to the final link.  Note the "VERSION_GREATER_EQUAL"
     # operation was not added until CMake 3.7, so this uses not "VERSION_LESS" instead.
     if(NOT CMAKE_SYSTEM_VERSION VERSION_LESS 6.0)
@@ -73,11 +86,28 @@ if (OSAL_CONFIG_INCLUDE_NETWORK)
     endif()
 else()
     list(APPEND RTEMS_IMPL_SRCLIST
-        ../portable/os-impl-no-network.c
+        ../portable/os-impl-no-network-gethostid.c
+        ../portable/os-impl-no-network-gethostname.c
         ../portable/os-impl-no-sockets.c
         ../portable/os-impl-no-select.c
     )
 endif ()
+
+if (OSAL_CONFIG_MAX_CPUS GREATER 1)
+    list(APPEND RTEMS_IMPL_SRCLIST
+        ../portable/os-impl-pthread-affinity-np.c #    use the real affinity code
+    )
+    
+    # _GNU_SOURCE is required for pthread_setaffinity_np and CPU_SET macros
+    set_source_files_properties(
+        ../portable/os-impl-pthread-affinity-np.c 
+        PROPERTIES COMPILE_DEFINITIONS "_GNU_SOURCE"
+    )
+else()
+    list(APPEND RTEMS_IMPL_SRCLIST
+        ../portable/os-impl-pthread-no-affinity-np.c
+    )
+endif()
 
 # Defines an OBJECT target named "osal_rtems_impl" with selected source files
 add_library(osal_rtems_impl OBJECT

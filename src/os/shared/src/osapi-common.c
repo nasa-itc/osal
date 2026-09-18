@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -65,6 +65,7 @@ OS_SharedGlobalVars_t OS_SharedGlobalVars = {
 #if defined(OSAL_CONFIG_DEBUG_PRINTF)
     .DebugLevel = 1,
 #endif
+    .CoresConfigured = 1,
 };
 
 /*----------------------------------------------------------------
@@ -212,8 +213,8 @@ int32 OS_API_Init(void)
      * Confirm that somewhere during initialization,
      * the time variables got set to something valid
      */
-    if (return_code == OS_SUCCESS &&
-        (OS_SharedGlobalVars.MicroSecPerTick == 0 || OS_SharedGlobalVars.TicksPerSecond == 0))
+    if (return_code == OS_SUCCESS
+        && (OS_SharedGlobalVars.MicroSecPerTick == 0 || OS_SharedGlobalVars.TicksPerSecond == 0))
     {
         OS_DEBUG("Implementation failed to initialize tick time globals\n");
         return_code = OS_ERROR;
@@ -225,7 +226,8 @@ int32 OS_API_Init(void)
     {
         OS_DEBUG("Warning: Microsecs per sec value of %lu does not equal 1000000 (MicroSecPerTick: %ld   "
                  "TicksPerSecond: %ld)\n",
-                 (unsigned long)microSecPerSec, (long)OS_SharedGlobalVars.MicroSecPerTick,
+                 (unsigned long)microSecPerSec,
+                 (long)OS_SharedGlobalVars.MicroSecPerTick,
                  (long)OS_SharedGlobalVars.TicksPerSecond);
     }
 
@@ -390,7 +392,7 @@ void OS_DeleteAllObjects(void)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-void OS_IdleLoop()
+void OS_IdleLoop(void)
 {
     /*
      * Wait until the shutdown value is set to the shutdown number
@@ -422,4 +424,21 @@ void OS_ApplicationShutdown(uint8 flag)
      * should do whatever is needed to wake that task up.
      */
     OS_ApplicationShutdown_Impl();
+}
+
+/*----------------------------------------------------------------
+ *
+ *  Purpose: Implemented per public OSAL API
+ *           See description in API and header file for detail
+ *
+ *-----------------------------------------------------------------*/
+size_t OS_strnlen(const char *s, size_t maxlen)
+{
+    const char *end = (const char *)memchr(s, 0, maxlen);
+    if (end != NULL)
+    {
+        /* actual length of string is difference */
+        maxlen = end - s;
+    }
+    return maxlen;
 }

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -134,12 +134,12 @@ void OS_Unlock_Global_Impl(osal_objtype_t idtype)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-void OS_WaitForStateChange_Impl(osal_objtype_t idtype, uint32 attempts)
+void OS_WaitForStateChange_Impl(osal_objtype_t objtype, uint32 attempts)
 {
     OS_impl_objtype_lock_t *impl;
     struct timespec         ts;
 
-    impl = OS_impl_objtype_lock_table[idtype];
+    impl = OS_impl_objtype_lock_table[objtype];
 
     /*
      * because pthread_cond_timedwait() is also a cancellation point,

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -92,7 +92,7 @@ int OCS_system(const char *command)
 void *OCS_malloc(size_t sz)
 {
     int32             Status;
-    void *            PoolPtr;
+    void             *PoolPtr;
     cpuaddr           PoolStart;
     cpuaddr           PoolEnd;
     cpuaddr           NextBlock;
@@ -112,11 +112,15 @@ void *OCS_malloc(size_t sz)
         PoolStart = (PoolStart + MPOOL_ALIGN - 1) & ~((cpuaddr)MPOOL_ALIGN - 1);
         PoolSize  = PoolEnd - PoolStart;
 
-        if (PoolSize > (MPOOL_ALIGN * 2))
+        /*
+         * Verify PollSize is greater than minimun size and
+         * that PoolStart didn't go past the PoolEnd during alignment.
+         */
+        if (PoolSize > (MPOOL_ALIGN * 2) && PoolStart < PoolEnd)
         {
-            Rec       = (struct MPOOL_REC *)PoolStart;
-            NextBlock = PoolStart + MPOOL_ALIGN;
-            PoolSize -= MPOOL_ALIGN;
+            Rec        = (struct MPOOL_REC *)PoolStart;
+            NextBlock  = PoolStart + MPOOL_ALIGN;
+            PoolSize  -= MPOOL_ALIGN;
             if (CallCnt == 0)
             {
                 Rec->Magic     = MPOOL_START_SIGNATURE;
@@ -150,10 +154,10 @@ void *OCS_malloc(size_t sz)
         return NULL;
     }
 
-    NextSize  = (NextSize + MPOOL_ALIGN - 1) & ~((size_t)MPOOL_ALIGN);
-    NextBlock = Rec->BlockAddr + MPOOL_ALIGN;
+    NextSize        = (NextSize + MPOOL_ALIGN - 1) & ~((size_t)MPOOL_ALIGN - 1);
+    NextBlock       = Rec->BlockAddr + MPOOL_ALIGN;
     Rec->BlockAddr += NextSize;
-    Rec->Size += NextSize;
+    Rec->Size      += NextSize;
 
     Rec            = (struct MPOOL_REC *)(NextBlock - sizeof(struct MPOOL_REC));
     Rec->BlockAddr = NextBlock;
@@ -167,7 +171,7 @@ void OCS_free(void *ptr)
 {
     int32             Status;
     cpuaddr           BlockAddr;
-    void *            PoolPtr;
+    void             *PoolPtr;
     size_t            PoolSize;
     struct MPOOL_REC *Rec;
 

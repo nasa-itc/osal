@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -43,7 +43,7 @@ UtListHead_t *UtList_Create(uint32 NumTags)
         UtListNode_t Tags[];
     };
     struct ListAllocator *NewList;
-    UtListNode_t *        TagHead;
+    UtListNode_t         *TagHead;
     size_t                ActualSize;
     uint32                i;
 
@@ -126,9 +126,9 @@ UtListNode_t *UtList_NewNode(void *Data, uint32 DataSize)
     {
         UtListNode_t Node;
         double       AlignDbl;
-        void *       AlignPtr;
+        void        *AlignPtr;
         long         AlignLong;
-    } * AllocNode;
+    } *AllocNode;
 
     AllocNode = malloc(sizeof(union NodeAllocator) + DataSize);
     memset(AllocNode, 0, sizeof(union NodeAllocator));

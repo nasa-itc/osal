@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -38,14 +38,14 @@
  */
 void UT_DefaultHandler_OS_NetworkGetHostName(void *UserObj, UT_EntryKey_t FuncKey, const UT_StubContext_t *Context)
 {
-    char * host_name = UT_Hook_GetArgValueByName(Context, "host_name", char *);
+    char  *host_name = UT_Hook_GetArgValueByName(Context, "host_name", char *);
     size_t name_len  = UT_Hook_GetArgValueByName(Context, "name_len", size_t);
     int32  status;
 
     UT_Stub_GetInt32StatusCode(Context, &status);
 
-    if (status == OS_SUCCESS && name_len > 0 &&
-        UT_Stub_CopyToLocal(UT_KEY(OS_NetworkGetHostName), host_name, name_len) == 0)
+    if (status == OS_SUCCESS && name_len > 0
+        && UT_Stub_CopyToLocal(UT_KEY(OS_NetworkGetHostName), host_name, name_len) == 0)
     {
         strncpy(host_name, "ut", name_len - 1);
         host_name[name_len - 1] = 0;

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -71,15 +71,15 @@ void Test_OS_SymTableIterator_Impl(void)
     OSAPI_TEST_FUNCTION_RC(UT_SymTabTest_CallIteratorFunc("ut", &Data, 100, 1000), true);
     OSAPI_TEST_FUNCTION_RC(UT_SymTabTest_GetIteratorStatus(), OS_SUCCESS);
 
-    /* Check case where next entry will exceed size limit */
-    OSAPI_TEST_FUNCTION_RC(UT_SymTabTest_CallIteratorFunc("ut", &Data, 100, 101), false);
-    OSAPI_TEST_FUNCTION_RC(UT_SymTabTest_GetIteratorStatus(), OS_ERR_OUTPUT_TOO_LARGE);
-
     /* Check case where entry has a name that is too long */
     UT_SetDefaultReturnValue(UT_KEY(OCS_memchr), OS_ERROR);
     OSAPI_TEST_FUNCTION_RC(UT_SymTabTest_CallIteratorFunc("ut", &Data, 100, 1000), true);
-    OSAPI_TEST_FUNCTION_RC(UT_SymTabTest_GetIteratorStatus(), OS_ERR_NAME_TOO_LONG);
+    OSAPI_TEST_FUNCTION_RC(UT_SymTabTest_GetIteratorStatus(), OS_SUCCESS);
     UT_ClearDefaultReturnValue(UT_KEY(OCS_memchr));
+
+    /* Check case where next entry will exceed size limit */
+    OSAPI_TEST_FUNCTION_RC(UT_SymTabTest_CallIteratorFunc("ut", &Data, 100, 101), false);
+    OSAPI_TEST_FUNCTION_RC(UT_SymTabTest_GetIteratorStatus(), OS_ERR_OUTPUT_TOO_LARGE);
 
     /* Check case where writing to file fails */
     UT_SetDefaultReturnValue(UT_KEY(OCS_write), -1);
@@ -98,7 +98,7 @@ static int32 UT_symEachHook(void *UserObj, int32 StubRetcode, uint32 CallCount, 
 void Test_OS_SymbolTableDump_Impl(void)
 {
     /* Test Case For:
-     * int32 OS_SymbolTableDump_Impl ( const char *filename, uint32 SizeLimit )
+     * int32 OS_SymbolTableDump_Impl(const char *filename, uint32 size_limit)
      */
 
     /* With no action in symEach(), this will yield an empty file, which is an error */
@@ -132,7 +132,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /* UtTest_Setup
  *

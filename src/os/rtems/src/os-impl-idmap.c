@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -126,7 +126,7 @@ void OS_Unlock_Global_Impl(osal_objtype_t idtype)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-void OS_WaitForStateChange_Impl(osal_objtype_t idtype, uint32 attempts)
+void OS_WaitForStateChange_Impl(osal_objtype_t objtype, uint32 attempts)
 {
     rtems_interval wait_ticks;
 
@@ -139,9 +139,9 @@ void OS_WaitForStateChange_Impl(osal_objtype_t idtype, uint32 attempts)
         wait_ticks = 100;
     }
 
-    OS_Unlock_Global_Impl(idtype);
+    OS_Unlock_Global_Impl(objtype);
     rtems_task_wake_after(wait_ticks);
-    OS_Lock_Global_Impl(idtype);
+    OS_Lock_Global_Impl(objtype);
 }
 
 /****************************************************************************************

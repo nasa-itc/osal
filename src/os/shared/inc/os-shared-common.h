@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -70,6 +70,10 @@ struct OS_shared_global_vars
 #ifdef OSAL_CONFIG_DEBUG_PRINTF
     uint8 DebugLevel;
 #endif
+    /*
+     * The numbers of cores configured recognized by the OS
+     */
+    uint32 CoresConfigured;
 };
 
 /*
@@ -128,26 +132,5 @@ void OS_IdleLoop_Impl(void);
 
  ------------------------------------------------------------------*/
 void OS_ApplicationShutdown_Impl(void);
-
-/*----------------------------------------------------------------
-
-    Purpose: Utility function to safely find the length of a string
-             within a fixed-size array buffer.
-
-             Provides a local OSAL routine to get the functionality
-             of the (non-C99) "strnlen()" function, via the
-             C89/C99 standard "memchr()" function instead.
-
- ------------------------------------------------------------------*/
-static inline size_t OS_strnlen(const char *s, size_t maxlen)
-{
-    const char *end = (const char *)memchr(s, 0, maxlen);
-    if (end != NULL)
-    {
-        /* actual length of string is difference */
-        maxlen = end - s;
-    }
-    return maxlen;
-}
 
 #endif /* OS_SHARED_COMMON_H */

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -68,8 +68,10 @@ void OS_ForEachObject(osal_id_t creator_id, OS_ArgCallback_t callback_ptr, void 
  * Generated stub function for OS_ForEachObjectOfType()
  * ----------------------------------------------------
  */
-void OS_ForEachObjectOfType(osal_objtype_t objtype, osal_id_t creator_id, OS_ArgCallback_t callback_ptr,
-                            void *callback_arg)
+void OS_ForEachObjectOfType(osal_objtype_t   objtype,
+                            osal_id_t        creator_id,
+                            OS_ArgCallback_t callback_ptr,
+                            void            *callback_arg)
 {
     UT_GenStub_AddParam(OS_ForEachObjectOfType, osal_objtype_t, objtype);
     UT_GenStub_AddParam(OS_ForEachObjectOfType, osal_id_t, creator_id);

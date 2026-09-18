@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -90,7 +90,7 @@ int32 OS_TimeBaseAPI_Init(void)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_TimeBaseCreate(osal_id_t *timer_id, const char *timebase_name, OS_TimerSync_t external_sync)
+int32 OS_TimeBaseCreate(osal_id_t *timebase_id, const char *timebase_name, OS_TimerSync_t external_sync)
 {
     int32                          return_code;
     osal_objtype_t                 objtype;
@@ -105,7 +105,7 @@ int32 OS_TimeBaseCreate(osal_id_t *timer_id, const char *timebase_name, OS_Timer
     /*
      ** Check Parameters
      */
-    OS_CHECK_POINTER(timer_id);
+    OS_CHECK_POINTER(timebase_id);
     OS_CHECK_APINAME(timebase_name);
 
     /*
@@ -141,7 +141,7 @@ int32 OS_TimeBaseCreate(osal_id_t *timer_id, const char *timebase_name, OS_Timer
         return_code = OS_TimeBaseCreate_Impl(&token);
 
         /* Check result, finalize record, and unlock global table. */
-        return_code = OS_ObjectIdFinalizeNew(return_code, &token, timer_id);
+        return_code = OS_ObjectIdFinalizeNew(return_code, &token, timebase_id);
     }
 
     return return_code;
@@ -153,7 +153,7 @@ int32 OS_TimeBaseCreate(osal_id_t *timer_id, const char *timebase_name, OS_Timer
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_TimeBaseSet(osal_id_t timer_id, uint32 start_time, uint32 interval_time)
+int32 OS_TimeBaseSet(osal_id_t timebase_id, uint32 start_time, uint32 interval_time)
 {
     int32                          return_code;
     osal_objtype_t                 objtype;
@@ -181,7 +181,7 @@ int32 OS_TimeBaseSet(osal_id_t timer_id, uint32 start_time, uint32 interval_time
         return OS_ERR_INCORRECT_OBJ_STATE;
     }
 
-    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_GLOBAL, OS_OBJECT_TYPE_OS_TIMEBASE, timer_id, &token);
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_GLOBAL, OS_OBJECT_TYPE_OS_TIMEBASE, timebase_id, &token);
     if (return_code == OS_SUCCESS)
     {
         timebase = OS_OBJECT_TABLE_GET(OS_timebase_table, token);
@@ -212,7 +212,7 @@ int32 OS_TimeBaseSet(osal_id_t timer_id, uint32 start_time, uint32 interval_time
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_TimeBaseDelete(osal_id_t timer_id)
+int32 OS_TimeBaseDelete(osal_id_t timebase_id)
 {
     int32             return_code;
     osal_objtype_t    objtype;
@@ -228,7 +228,7 @@ int32 OS_TimeBaseDelete(osal_id_t timer_id)
         return OS_ERR_INCORRECT_OBJ_STATE;
     }
 
-    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_EXCLUSIVE, OS_OBJECT_TYPE_OS_TIMEBASE, timer_id, &token);
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_EXCLUSIVE, OS_OBJECT_TYPE_OS_TIMEBASE, timebase_id, &token);
     if (return_code == OS_SUCCESS)
     {
         return_code = OS_TimeBaseDelete_Impl(&token);
@@ -246,13 +246,13 @@ int32 OS_TimeBaseDelete(osal_id_t timer_id)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_TimeBaseGetIdByName(osal_id_t *timer_id, const char *timebase_name)
+int32 OS_TimeBaseGetIdByName(osal_id_t *timebase_id, const char *timebase_name)
 {
     int32          return_code;
     osal_objtype_t objtype;
 
     /* Check parameters */
-    OS_CHECK_POINTER(timer_id);
+    OS_CHECK_POINTER(timebase_id);
     OS_CHECK_APINAME(timebase_name);
 
     /*
@@ -265,7 +265,7 @@ int32 OS_TimeBaseGetIdByName(osal_id_t *timer_id, const char *timebase_name)
         return OS_ERR_INCORRECT_OBJ_STATE;
     }
 
-    return_code = OS_ObjectIdFindByName(OS_OBJECT_TYPE_OS_TIMEBASE, timebase_name, timer_id);
+    return_code = OS_ObjectIdFindByName(OS_OBJECT_TYPE_OS_TIMEBASE, timebase_name, timebase_id);
 
     return return_code;
 }
@@ -278,7 +278,7 @@ int32 OS_TimeBaseGetIdByName(osal_id_t *timer_id, const char *timebase_name)
  *-----------------------------------------------------------------*/
 int32 OS_TimeBaseGetInfo(osal_id_t timebase_id, OS_timebase_prop_t *timebase_prop)
 {
-    OS_common_record_t *           record;
+    OS_common_record_t            *record;
     int32                          return_code;
     osal_objtype_t                 objtype;
     OS_object_token_t              token;
@@ -366,8 +366,8 @@ void OS_TimeBase_CallbackThread(osal_id_t timebase_id)
 {
     OS_TimerSync_t                 syncfunc;
     OS_timebase_internal_record_t *timebase;
-    OS_timecb_internal_record_t *  timecb;
-    OS_common_record_t *           record;
+    OS_timecb_internal_record_t   *timecb;
+    OS_common_record_t            *record;
     OS_object_token_t              token;
     OS_object_token_t              cb_token;
     uint32                         tick_time;
@@ -462,8 +462,8 @@ void OS_TimeBase_CallbackThread(osal_id_t timebase_id)
         {
             do
             {
-                timecb          = OS_OBJECT_TABLE_GET(OS_timecb_table, cb_token);
-                saved_wait_time = timecb->wait_time;
+                timecb             = OS_OBJECT_TABLE_GET(OS_timecb_table, cb_token);
+                saved_wait_time    = timecb->wait_time;
                 timecb->wait_time -= tick_time;
                 while (timecb->wait_time <= 0)
                 {
@@ -500,9 +500,9 @@ void OS_TimeBase_CallbackThread(osal_id_t timebase_id)
                     }
                 }
 
-            } while (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMECB, timecb->next_cb, &cb_token) ==
-                         OS_SUCCESS &&
-                     !OS_ObjectIdEqual(OS_ObjectIdFromToken(&cb_token), timebase->first_cb));
+            } while (OS_ObjectIdGetById(OS_LOCK_MODE_NONE, OS_OBJECT_TYPE_OS_TIMECB, timecb->next_cb, &cb_token)
+                         == OS_SUCCESS
+                     && !OS_ObjectIdEqual(OS_ObjectIdFromToken(&cb_token), timebase->first_cb));
         }
 
         OS_TimeBaseUnlock_Impl(&token);

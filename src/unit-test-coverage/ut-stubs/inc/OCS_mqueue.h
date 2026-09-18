@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -53,9 +53,15 @@ struct OCS_mq_attr
 extern int         OCS_mq_close(OCS_mqd_t mqdes);
 extern OCS_mqd_t   OCS_mq_open(const char *name, int oflag, ...);
 extern OCS_ssize_t OCS_mq_receive(OCS_mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned int *msg_prio);
-extern OCS_ssize_t OCS_mq_timedreceive(OCS_mqd_t mqdes, char *msg_ptr, size_t msg_len, unsigned int *msg_prio,
+extern OCS_ssize_t OCS_mq_timedreceive(OCS_mqd_t                  mqdes,
+                                       char                      *msg_ptr,
+                                       size_t                     msg_len,
+                                       unsigned int              *msg_prio,
                                        const struct OCS_timespec *abs_timeout);
-extern int         OCS_mq_timedsend(OCS_mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned int msg_prio,
+extern int         OCS_mq_timedsend(OCS_mqd_t                  mqdes,
+                                    const char                *msg_ptr,
+                                    size_t                     msg_len,
+                                    unsigned int               msg_prio,
                                     const struct OCS_timespec *abs_timeout);
 extern int         OCS_mq_unlink(const char *name);
 

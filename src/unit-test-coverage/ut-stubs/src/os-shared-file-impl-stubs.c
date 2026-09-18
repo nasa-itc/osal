@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -27,6 +27,24 @@
 
 void UT_DefaultHandler_OS_GenericRead_Impl(void *, UT_EntryKey_t, const UT_StubContext_t *);
 void UT_DefaultHandler_OS_GenericWrite_Impl(void *, UT_EntryKey_t, const UT_StubContext_t *);
+
+/*
+ * ----------------------------------------------------
+ * Generated stub function for OS_FileAllocate_Impl()
+ * ----------------------------------------------------
+ */
+int32 OS_FileAllocate_Impl(const OS_object_token_t *token, osal_offset_t offset, osal_offset_t len)
+{
+    UT_GenStub_SetupReturnBuffer(OS_FileAllocate_Impl, int32);
+
+    UT_GenStub_AddParam(OS_FileAllocate_Impl, const OS_object_token_t *, token);
+    UT_GenStub_AddParam(OS_FileAllocate_Impl, osal_offset_t, offset);
+    UT_GenStub_AddParam(OS_FileAllocate_Impl, osal_offset_t, len);
+
+    UT_GenStub_Execute(OS_FileAllocate_Impl, Basic, NULL);
+
+    return UT_GenStub_GetReturnValue(OS_FileAllocate_Impl, int32);
+}
 
 /*
  * ----------------------------------------------------
@@ -116,6 +134,23 @@ int32 OS_FileStat_Impl(const char *local_path, os_fstat_t *filestat)
 
 /*
  * ----------------------------------------------------
+ * Generated stub function for OS_FileTruncate_Impl()
+ * ----------------------------------------------------
+ */
+int32 OS_FileTruncate_Impl(const OS_object_token_t *token, osal_offset_t len)
+{
+    UT_GenStub_SetupReturnBuffer(OS_FileTruncate_Impl, int32);
+
+    UT_GenStub_AddParam(OS_FileTruncate_Impl, const OS_object_token_t *, token);
+    UT_GenStub_AddParam(OS_FileTruncate_Impl, osal_offset_t, len);
+
+    UT_GenStub_Execute(OS_FileTruncate_Impl, Basic, NULL);
+
+    return UT_GenStub_GetReturnValue(OS_FileTruncate_Impl, int32);
+}
+
+/*
+ * ----------------------------------------------------
  * Generated stub function for OS_GenericClose_Impl()
  * ----------------------------------------------------
  */
@@ -135,14 +170,14 @@ int32 OS_GenericClose_Impl(const OS_object_token_t *token)
  * Generated stub function for OS_GenericRead_Impl()
  * ----------------------------------------------------
  */
-int32 OS_GenericRead_Impl(const OS_object_token_t *token, void *buffer, size_t nbytes, int32 timeout)
+int32 OS_GenericRead_Impl(const OS_object_token_t *token, void *buffer, size_t nbytes, OS_time_t abs_timeout)
 {
     UT_GenStub_SetupReturnBuffer(OS_GenericRead_Impl, int32);
 
     UT_GenStub_AddParam(OS_GenericRead_Impl, const OS_object_token_t *, token);
     UT_GenStub_AddParam(OS_GenericRead_Impl, void *, buffer);
     UT_GenStub_AddParam(OS_GenericRead_Impl, size_t, nbytes);
-    UT_GenStub_AddParam(OS_GenericRead_Impl, int32, timeout);
+    UT_GenStub_AddParam(OS_GenericRead_Impl, OS_time_t, abs_timeout);
 
     UT_GenStub_Execute(OS_GenericRead_Impl, Basic, UT_DefaultHandler_OS_GenericRead_Impl);
 
@@ -154,12 +189,12 @@ int32 OS_GenericRead_Impl(const OS_object_token_t *token, void *buffer, size_t n
  * Generated stub function for OS_GenericSeek_Impl()
  * ----------------------------------------------------
  */
-int32 OS_GenericSeek_Impl(const OS_object_token_t *token, int32 offset, uint32 whence)
+int32 OS_GenericSeek_Impl(const OS_object_token_t *token, osal_offset_t offset, uint32 whence)
 {
     UT_GenStub_SetupReturnBuffer(OS_GenericSeek_Impl, int32);
 
     UT_GenStub_AddParam(OS_GenericSeek_Impl, const OS_object_token_t *, token);
-    UT_GenStub_AddParam(OS_GenericSeek_Impl, int32, offset);
+    UT_GenStub_AddParam(OS_GenericSeek_Impl, osal_offset_t, offset);
     UT_GenStub_AddParam(OS_GenericSeek_Impl, uint32, whence);
 
     UT_GenStub_Execute(OS_GenericSeek_Impl, Basic, NULL);
@@ -172,14 +207,14 @@ int32 OS_GenericSeek_Impl(const OS_object_token_t *token, int32 offset, uint32 w
  * Generated stub function for OS_GenericWrite_Impl()
  * ----------------------------------------------------
  */
-int32 OS_GenericWrite_Impl(const OS_object_token_t *token, const void *buffer, size_t nbytes, int32 timeout)
+int32 OS_GenericWrite_Impl(const OS_object_token_t *token, const void *buffer, size_t nbytes, OS_time_t abs_timeout)
 {
     UT_GenStub_SetupReturnBuffer(OS_GenericWrite_Impl, int32);
 
     UT_GenStub_AddParam(OS_GenericWrite_Impl, const OS_object_token_t *, token);
     UT_GenStub_AddParam(OS_GenericWrite_Impl, const void *, buffer);
     UT_GenStub_AddParam(OS_GenericWrite_Impl, size_t, nbytes);
-    UT_GenStub_AddParam(OS_GenericWrite_Impl, int32, timeout);
+    UT_GenStub_AddParam(OS_GenericWrite_Impl, OS_time_t, abs_timeout);
 
     UT_GenStub_Execute(OS_GenericWrite_Impl, Basic, UT_DefaultHandler_OS_GenericWrite_Impl);
 

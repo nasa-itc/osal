@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -24,6 +24,46 @@
  */
 #include "os-shared-coveragetest.h"
 #include "os-shared-clock.h"
+
+/*----------------------------------------------------------------
+ *
+ * A handler to force the output of OS_GetMonotonicTime_Impl
+ *
+ *-----------------------------------------------------------------*/
+void UT_AltHander_GetMonotonicTime_Impl(void *UserObj, UT_EntryKey_t FuncKey, const UT_StubContext_t *Context)
+{
+    OS_time_t *time_struct = UT_Hook_GetArgValueByName(Context, "time_struct", OS_time_t *);
+
+    if (time_struct != NULL)
+    {
+        if (UserObj != NULL)
+        {
+            memcpy(time_struct, UserObj, sizeof(*time_struct));
+        }
+        else
+        {
+            memset(time_struct, 0, sizeof(*time_struct));
+        }
+    }
+}
+
+void Test_OS_GetMonotonicTime(void)
+{
+    /*
+     * Test Case For:
+     * int32 OS_GetMonotonicTime(OS_time_t *time_struct)
+     */
+    OS_time_t time_struct;
+    OS_time_t ref_time;
+
+    ref_time = OS_TimeFromTotalMilliseconds(12345);
+
+    UT_SetHandlerFunction(UT_KEY(OS_GetMonotonicTime_Impl), UT_AltHander_GetMonotonicTime_Impl, &ref_time);
+
+    UtAssert_INT32_EQ(OS_GetMonotonicTime(&time_struct), OS_SUCCESS);
+    UtAssert_EQ(int64, OS_TimeGetTotalMilliseconds(time_struct), 12345);
+    UtAssert_INT32_EQ(OS_GetMonotonicTime(NULL), OS_INVALID_POINTER);
+}
 
 void Test_OS_GetLocalTime(void)
 {
@@ -171,6 +211,31 @@ void Test_OS_TimeAccessConversions(void)
     UtAssert_UINT32_EQ(OS_TimeGetTotalNanoseconds(OS_TimeFromTotalNanoseconds(347230000)), 347230000);
 }
 
+void Test_OS_TimeFromRelativeMilliseconds(void)
+{
+    /*
+     * Test Case For:
+     * OS_time_t OS_TimeFromRelativeMilliseconds(int32 relative_msec)
+     */
+
+    UtAssert_BOOL_TRUE(OS_TimeEqual(OS_TimeFromRelativeMilliseconds(1000), OS_TimeFromTotalSeconds(1)));
+    UtAssert_BOOL_TRUE(OS_TimeEqual(OS_TimeFromRelativeMilliseconds(OS_CHECK), OS_TIME_ZERO));
+    UtAssert_BOOL_TRUE(OS_TimeEqual(OS_TimeFromRelativeMilliseconds(OS_PEND), OS_TIME_MAX));
+}
+
+void Test_OS_TimeToRelativeMilliseconds(void)
+{
+    /*
+     * Test Case For:
+     * int32 OS_TimeToRelativeMilliseconds(OS_time_t time)
+     */
+
+    UtAssert_INT32_EQ(OS_TimeToRelativeMilliseconds(OS_TIME_MAX), OS_PEND);
+    UtAssert_INT32_EQ(OS_TimeToRelativeMilliseconds(OS_TIME_ZERO), OS_CHECK);
+    UtAssert_INT32_EQ(OS_TimeToRelativeMilliseconds(OS_TIME_MIN), OS_CHECK);
+    UtAssert_INT32_EQ(OS_TimeToRelativeMilliseconds(OS_TimeFromTotalSeconds(1)), 1000);
+}
+
 /* Osapi_Test_Setup
  *
  * Purpose:
@@ -187,7 +252,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /*
  * Register the test cases to execute with the unit test tool
@@ -195,6 +262,9 @@ void Osapi_Test_Teardown(void) {}
 void UtTest_Setup(void)
 {
     ADD_TEST(OS_GetLocalTime);
+    ADD_TEST(OS_GetMonotonicTime);
     ADD_TEST(OS_SetLocalTime);
     ADD_TEST(OS_TimeAccessConversions);
+    ADD_TEST(OS_TimeFromRelativeMilliseconds);
+    ADD_TEST(OS_TimeToRelativeMilliseconds);
 }

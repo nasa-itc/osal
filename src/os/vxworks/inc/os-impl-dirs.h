@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -34,7 +34,7 @@
 
 /*
  * In VxWorks 6.x the system mkdir() function only has a path argument
- * In VxWorks 7 it is now POSIX compilant and adds a mode argument
+ * In VxWorks 7 it is now POSIX-compliant and adds a mode argument
  *
  * This macro simply discards the second argument, allowing code to use
  * mkdir() in a consistent, POSIX compliant fashion.

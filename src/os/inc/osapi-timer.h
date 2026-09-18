@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -61,7 +61,7 @@ typedef struct
  * The callback function should be declared according to the OS_TimerCallback_t
  * function pointer type.  The timer_id value is passed to the callback function.
  *
- * @note clock_accuracy comes from the underlying OS tick value.  The nearest integer
+ * @note clock_accuracy comes from the underlying OS tick value. The nearest integer
  *       microsecond value is returned, so may not be exact.
  *
  * @note This configuration API must not be used from the context of a timer callback.
@@ -85,7 +85,9 @@ typedef struct
  * @retval #OS_ERR_INCORRECT_OBJ_STATE if invoked from a timer context
  * @retval #OS_TIMER_ERR_INTERNAL if there was an error programming the OS timer @covtest
  */
-int32 OS_TimerCreate(osal_id_t *timer_id, const char *timer_name, uint32 *clock_accuracy,
+int32 OS_TimerCreate(osal_id_t         *timer_id,
+                     const char        *timer_name,
+                     uint32            *clock_accuracy,
                      OS_TimerCallback_t callback_ptr);
 
 /*-------------------------------------------------------------------------------------*/
@@ -130,8 +132,11 @@ int32 OS_TimerCreate(osal_id_t *timer_id, const char *timer_name, uint32 *clock_
  * @retval #OS_ERR_INCORRECT_OBJ_STATE if invoked from a timer context
  * @retval #OS_TIMER_ERR_INTERNAL if there was an error programming the OS timer @covtest
  */
-int32 OS_TimerAdd(osal_id_t *timer_id, const char *timer_name, osal_id_t timebase_id, OS_ArgCallback_t callback_ptr,
-                  void *callback_arg);
+int32 OS_TimerAdd(osal_id_t       *timer_id,
+                  const char      *timer_name,
+                  osal_id_t        timebase_id,
+                  OS_ArgCallback_t callback_ptr,
+                  void            *callback_arg);
 
 /*-------------------------------------------------------------------------------------*/
 /**

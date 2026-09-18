@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -182,7 +182,7 @@ int32 OS_close(osal_id_t filedes)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_TimedRead(osal_id_t filedes, void *buffer, size_t nbytes, int32 timeout)
+int32 OS_TimedReadAbs(osal_id_t filedes, void *buffer, size_t nbytes, OS_time_t abstime)
 {
     OS_object_token_t token;
     int32             return_code;
@@ -194,8 +194,44 @@ int32 OS_TimedRead(osal_id_t filedes, void *buffer, size_t nbytes, int32 timeout
     return_code = OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, LOCAL_OBJID_TYPE, filedes, &token);
     if (return_code == OS_SUCCESS)
     {
-        return_code = OS_GenericRead_Impl(&token, buffer, nbytes, timeout);
+        return_code = OS_GenericRead_Impl(&token, buffer, nbytes, abstime);
 
+        OS_ObjectIdRelease(&token);
+    }
+
+    return return_code;
+}
+
+/*----------------------------------------------------------------
+ *
+ *  Purpose: Implemented per public OSAL API
+ *           See description in API and header file for detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_TimedRead(osal_id_t filedes, void *buffer, size_t nbytes, int32 timeout)
+{
+    return OS_TimedReadAbs(filedes, buffer, nbytes, OS_TimeFromRelativeMilliseconds(timeout));
+}
+
+/*----------------------------------------------------------------
+ *
+ *  Purpose: Implemented per public OSAL API
+ *           See description in API and header file for detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_TimedWriteAbs(osal_id_t filedes, const void *buffer, size_t nbytes, OS_time_t abstime)
+{
+    OS_object_token_t token;
+    int32             return_code;
+
+    /* Check Parameters */
+    OS_CHECK_POINTER(buffer);
+    OS_CHECK_SIZE(nbytes);
+
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, LOCAL_OBJID_TYPE, filedes, &token);
+    if (return_code == OS_SUCCESS)
+    {
+        return_code = OS_GenericWrite_Impl(&token, buffer, nbytes, abstime);
         OS_ObjectIdRelease(&token);
     }
 
@@ -210,21 +246,7 @@ int32 OS_TimedRead(osal_id_t filedes, void *buffer, size_t nbytes, int32 timeout
  *-----------------------------------------------------------------*/
 int32 OS_TimedWrite(osal_id_t filedes, const void *buffer, size_t nbytes, int32 timeout)
 {
-    OS_object_token_t token;
-    int32             return_code;
-
-    /* Check Parameters */
-    OS_CHECK_POINTER(buffer);
-    OS_CHECK_SIZE(nbytes);
-
-    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, LOCAL_OBJID_TYPE, filedes, &token);
-    if (return_code == OS_SUCCESS)
-    {
-        return_code = OS_GenericWrite_Impl(&token, buffer, nbytes, timeout);
-        OS_ObjectIdRelease(&token);
-    }
-
-    return return_code;
+    return OS_TimedWriteAbs(filedes, buffer, nbytes, OS_TimeFromRelativeMilliseconds(timeout));
 }
 
 /*----------------------------------------------------------------
@@ -300,7 +322,7 @@ int32 OS_stat(const char *path, os_fstat_t *filestats)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_lseek(osal_id_t filedes, int32 offset, uint32 whence)
+int32 OS_lseek(osal_id_t filedes, osal_offset_t offset, uint32 whence)
 {
     OS_object_token_t token;
     int32             return_code;
@@ -310,6 +332,55 @@ int32 OS_lseek(osal_id_t filedes, int32 offset, uint32 whence)
     if (return_code == OS_SUCCESS)
     {
         return_code = OS_GenericSeek_Impl(&token, offset, whence);
+        OS_ObjectIdRelease(&token);
+    }
+
+    return return_code;
+}
+
+/*----------------------------------------------------------------
+ *
+ *  Purpose: Implemented per public OSAL API
+ *           See description in API and header file for detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_FileAllocate(osal_id_t filedes, osal_offset_t offset, osal_offset_t length)
+{
+    OS_object_token_t token;
+    int32             return_code;
+
+    /* Make sure the file descriptor is legit before using it */
+    /* The allocation might block while space is obtained, so use REFCOUNT lock here */
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, LOCAL_OBJID_TYPE, filedes, &token);
+    if (return_code == OS_SUCCESS)
+    {
+        return_code = OS_FileAllocate_Impl(&token, offset, length);
+        OS_ObjectIdRelease(&token);
+    }
+
+    return return_code;
+}
+
+/*----------------------------------------------------------------
+ *
+ *  Purpose: Implemented per public OSAL API
+ *           See description in API and header file for detail
+ *
+ *-----------------------------------------------------------------*/
+int32 OS_FileTruncate(osal_id_t filedes, osal_offset_t length)
+{
+    OS_object_token_t token;
+    int32             return_code;
+
+    /* Make sure the file descriptor is legit before using it */
+    /* note that ftruncate (or equivalent) is expected to be a quick and easy operation,
+     * it should not TYPICALLY block for any period of time, but it can block if
+     * there are other simultaneous ops on the same file occurring.  Hence why
+     * this still uses a REFCOUNT lock type */
+    return_code = OS_ObjectIdGetById(OS_LOCK_MODE_REFCOUNT, LOCAL_OBJID_TYPE, filedes, &token);
+    if (return_code == OS_SUCCESS)
+    {
+        return_code = OS_FileTruncate_Impl(&token, length);
         OS_ObjectIdRelease(&token);
     }
 
@@ -342,7 +413,7 @@ int32 OS_remove(const char *path)
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_rename(const char *old, const char *new)
+int32 OS_rename(const char *old_filename, const char *new_filename)
 {
     OS_object_iter_t             iter;
     OS_stream_internal_record_t *stream;
@@ -350,10 +421,10 @@ int32 OS_rename(const char *old, const char *new)
     char                         old_path[OS_MAX_LOCAL_PATH_LEN];
     char                         new_path[OS_MAX_LOCAL_PATH_LEN];
 
-    return_code = OS_TranslatePath(old, old_path);
+    return_code = OS_TranslatePath(old_filename, old_path);
     if (return_code == OS_SUCCESS)
     {
-        return_code = OS_TranslatePath(new, new_path);
+        return_code = OS_TranslatePath(new_filename, new_path);
     }
 
     if (return_code == OS_SUCCESS)
@@ -369,9 +440,9 @@ int32 OS_rename(const char *old, const char *new)
         {
             stream = OS_OBJECT_TABLE_GET(OS_stream_table, iter.token);
 
-            if (stream->socket_domain == OS_SocketDomain_INVALID && strcmp(stream->stream_name, old) == 0)
+            if (stream->socket_domain == OS_SocketDomain_INVALID && strcmp(stream->stream_name, old_filename) == 0)
             {
-                strncpy(stream->stream_name, new, sizeof(stream->stream_name) - 1);
+                strncpy(stream->stream_name, new_filename, sizeof(stream->stream_name) - 1);
                 stream->stream_name[sizeof(stream->stream_name) - 1] = 0;
             }
         }

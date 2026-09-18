@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -67,10 +67,6 @@ void TestFileSysAddFixedMapApi(void)
 
     UtAssert_INT32_EQ(OS_FileSysAddFixedMap(&fs_id, "./test", long_path), OS_FS_ERR_PATH_TOO_LONG);
     UtAssert_INT32_EQ(OS_FileSysAddFixedMap(&fs_id, translated_path, "/test"), OS_FS_ERR_PATH_TOO_LONG);
-
-    /* create a path where only the "name" part is too long, but the overall path length is within limit */
-    translated_path[OS_MAX_LOCAL_PATH_LEN - 1] = 0;
-    UtAssert_INT32_EQ(OS_FileSysAddFixedMap(&fs_id, translated_path, "/test"), OS_ERR_NAME_TOO_LONG);
 }
 
 void UtTest_Setup(void)

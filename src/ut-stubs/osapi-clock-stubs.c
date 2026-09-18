@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -46,6 +46,22 @@ int32 OS_GetLocalTime(OS_time_t *time_struct)
 
 /*
  * ----------------------------------------------------
+ * Generated stub function for OS_GetMonotonicTime()
+ * ----------------------------------------------------
+ */
+int32 OS_GetMonotonicTime(OS_time_t *time_struct)
+{
+    UT_GenStub_SetupReturnBuffer(OS_GetMonotonicTime, int32);
+
+    UT_GenStub_AddParam(OS_GetMonotonicTime, OS_time_t *, time_struct);
+
+    UT_GenStub_Execute(OS_GetMonotonicTime, Basic, NULL);
+
+    return UT_GenStub_GetReturnValue(OS_GetMonotonicTime, int32);
+}
+
+/*
+ * ----------------------------------------------------
  * Generated stub function for OS_SetLocalTime()
  * ----------------------------------------------------
  */
@@ -58,4 +74,36 @@ int32 OS_SetLocalTime(const OS_time_t *time_struct)
     UT_GenStub_Execute(OS_SetLocalTime, Basic, UT_DefaultHandler_OS_SetLocalTime);
 
     return UT_GenStub_GetReturnValue(OS_SetLocalTime, int32);
+}
+
+/*
+ * ----------------------------------------------------
+ * Generated stub function for OS_TimeFromRelativeMilliseconds()
+ * ----------------------------------------------------
+ */
+OS_time_t OS_TimeFromRelativeMilliseconds(int32 relative_msec)
+{
+    UT_GenStub_SetupReturnBuffer(OS_TimeFromRelativeMilliseconds, OS_time_t);
+
+    UT_GenStub_AddParam(OS_TimeFromRelativeMilliseconds, int32, relative_msec);
+
+    UT_GenStub_Execute(OS_TimeFromRelativeMilliseconds, Basic, NULL);
+
+    return UT_GenStub_GetReturnValue(OS_TimeFromRelativeMilliseconds, OS_time_t);
+}
+
+/*
+ * ----------------------------------------------------
+ * Generated stub function for OS_TimeToRelativeMilliseconds()
+ * ----------------------------------------------------
+ */
+int32 OS_TimeToRelativeMilliseconds(OS_time_t time)
+{
+    UT_GenStub_SetupReturnBuffer(OS_TimeToRelativeMilliseconds, int32);
+
+    UT_GenStub_AddParam(OS_TimeToRelativeMilliseconds, OS_time_t, time);
+
+    UT_GenStub_Execute(OS_TimeToRelativeMilliseconds, Basic, NULL);
+
+    return UT_GenStub_GetReturnValue(OS_TimeToRelativeMilliseconds, int32);
 }

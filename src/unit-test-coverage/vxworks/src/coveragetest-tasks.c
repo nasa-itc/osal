@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -30,6 +30,11 @@
 #include "os-shared-timebase.h"
 
 #include "OCS_stdlib.h"
+
+uint32 OS_TaskAffinityGetCoresConfigured_Impl(void)
+{
+    return 1; /* Return a safe default number of cores for the test */
+}
 
 /*
  * A chunk of memory usable as a heap for malloc() emulation
@@ -153,7 +158,7 @@ void Test_OS_TaskExit_Impl(void)
 {
     /*
      * Test Case For:
-     * void OS_TaskExit_Impl()
+     * void OS_TaskExit_Impl(void)
      */
     /* just call the function for coverage */
     OS_TaskExit_Impl();
@@ -296,7 +301,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /* UtTest_Setup
  *

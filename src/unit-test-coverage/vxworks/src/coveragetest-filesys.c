@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -57,8 +57,13 @@ void Test_OS_FileSysStartVolume_Impl(void)
     OSAPI_TEST_FUNCTION_RC(OS_FileSysStartVolume_Impl(&token), OS_SUCCESS);
 
     /* Emulate a VOLATILE_DISK entry (ramdisk) */
+    /* Without a volumne name specified, this should fail  */
     OS_filesys_table[1].fstype = OS_FILESYS_TYPE_VOLATILE_DISK;
     token.obj_idx              = UT_INDEX_1;
+    OSAPI_TEST_FUNCTION_RC(OS_FileSysStartVolume_Impl(&token), OS_FS_ERR_DRIVE_NOT_CREATED);
+
+    /* Filling the volume name should permit success (nominal)  */
+    strncpy(OS_filesys_table[1].volume_name, "UT", sizeof(OS_filesys_table[1].volume_name));
     OSAPI_TEST_FUNCTION_RC(OS_FileSysStartVolume_Impl(&token), OS_SUCCESS);
 
     /* Emulate a NORMAL_DISK entry (ATA) */
@@ -254,7 +259,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /* UtTest_Setup
  *

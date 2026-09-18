@@ -41,7 +41,6 @@ PAPER_TYPE             = letter
 COMPACT_RTF            = YES
 
 # Dot tool
-CLASS_DIAGRAMS         = NO
 HAVE_DOT               = YES
 CLASS_GRAPH            = NO
 COLLABORATION_GRAPH    = NO

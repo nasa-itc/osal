@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -88,7 +88,9 @@ void TestOutputToFile(void)
 
         /* Use lseek to determine size of the file */
         filepos = OS_lseek(fd, 0, OS_SEEK_END);
-        UtAssert_True(filepos >= size, "size of output file=%d, echoed string len=%lu", (int)filepos,
+        UtAssert_True(filepos >= size,
+                      "size of output file=%d, echoed string len=%lu",
+                      (int)filepos,
                       (unsigned long)size);
 
         /*
@@ -118,7 +120,9 @@ void TestOutputToFile(void)
         UtAssert_True(status >= size, "status after read = %d, min valid size = %lu", (int)status, (unsigned long)size);
 
         /* The test should pass if the expected string is anywhere in the buffer */
-        UtAssert_True(strstr(buffer, OS_TEST_SHELL_STRING) != NULL, "Read: \'%s\', Expected: \'%s\'", buffer,
+        UtAssert_True(strstr(buffer, OS_TEST_SHELL_STRING) != NULL,
+                      "Read: \'%s\', Expected: \'%s\'",
+                      buffer,
                       OS_TEST_SHELL_STRING);
     }
 

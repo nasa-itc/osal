@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -101,7 +101,7 @@ int32 OS_DirCreate_Impl(const char *local_path, uint32 access)
  *-----------------------------------------------------------------*/
 int32 OS_DirOpen_Impl(const OS_object_token_t *token, const char *local_path)
 {
-    DIR *                          dp = opendir(local_path);
+    DIR                           *dp = opendir(local_path);
     OS_impl_dir_internal_record_t *impl;
 
     if (dp == NULL)
@@ -141,7 +141,7 @@ int32 OS_DirClose_Impl(const OS_object_token_t *token)
  *-----------------------------------------------------------------*/
 int32 OS_DirRead_Impl(const OS_object_token_t *token, os_dirent_t *dirent)
 {
-    struct dirent *                de;
+    struct dirent                 *de;
     OS_impl_dir_internal_record_t *impl;
     impl = OS_OBJECT_TABLE_GET(OS_impl_dir_table, *token);
 

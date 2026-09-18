@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -85,19 +85,19 @@ enum
 };
 
 /** @brief Access file stat mode bits */
-#define OS_FILESTAT_MODE(x) ((x).FileModeBits)
+#define OS_FILESTAT_MODE(x)  ((x).FileModeBits)
 /** @brief File stat is directory logical */
 #define OS_FILESTAT_ISDIR(x) ((x).FileModeBits & OS_FILESTAT_MODE_DIR)
 /** @brief File stat is executable logical */
-#define OS_FILESTAT_EXEC(x) ((x).FileModeBits & OS_FILESTAT_MODE_EXEC)
+#define OS_FILESTAT_EXEC(x)  ((x).FileModeBits & OS_FILESTAT_MODE_EXEC)
 /** @brief File stat is write enabled logical */
 #define OS_FILESTAT_WRITE(x) ((x).FileModeBits & OS_FILESTAT_MODE_WRITE)
 /** @brief File stat is read enabled logical */
-#define OS_FILESTAT_READ(x) ((x).FileModeBits & OS_FILESTAT_MODE_READ)
+#define OS_FILESTAT_READ(x)  ((x).FileModeBits & OS_FILESTAT_MODE_READ)
 /** @brief Access file stat size field */
-#define OS_FILESTAT_SIZE(x) ((x).FileSize)
+#define OS_FILESTAT_SIZE(x)  ((x).FileSize)
 /** @brief Access file stat time field as a whole number of seconds */
-#define OS_FILESTAT_TIME(x) (OS_TimeGetTotalSeconds((x).FileTime))
+#define OS_FILESTAT_TIME(x)  (OS_TimeGetTotalSeconds((x).FileTime))
 
 /**
  * @brief Flags that can be used with opening of a file (bitmask)
@@ -237,7 +237,49 @@ int32 OS_write(osal_id_t filedes, const void *buffer, size_t nbytes);
  * @param[in]  filedes   The handle ID to operate on
  * @param[out] buffer    Storage location for file data @nonnull
  * @param[in]  nbytes    Maximum number of bytes to read @nonzero
- * @param[in]  timeout   Maximum time to wait, in milliseconds (OS_PEND = forever)
+ * @param[in]  abstime   Absolute time at which this function should return, if no data is readable
+ *
+ * @returns Byte count on success or appropriate error code, see @ref OSReturnCodes
+ * @retval #OS_ERROR_TIMEOUT if no data became available during timeout period
+ * @retval #OS_ERR_INVALID_ID if the file descriptor passed in is invalid
+ * @retval #OS_ERR_INVALID_SIZE if the passed-in size is not valid
+ * @retval #OS_INVALID_POINTER if the passed-in buffer is not valid
+ * @retval 0 if at end of file/stream data
+ */
+int32 OS_TimedReadAbs(osal_id_t filedes, void *buffer, size_t nbytes, OS_time_t abstime);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief File/Stream input read with a timeout
+ *
+ * This implements a time-limited read and is primarily intended for use with
+ * sockets but may also work with any other stream-like resource that the underlying
+ * OS supports, such as pipes or special devices.
+ *
+ * If data is immediately available on the file/socket, this will return that data
+ * along with the actual number of bytes that were immediately available.  It will
+ * not block.
+ *
+ * If the file position is at the end of file or end of stream data (e.g. if the remote
+ * end has closed the connection), then this function will immediately return 0 without
+ * blocking for the timeout period.
+ *
+ * If no data is immediately available, but the underlying resource/stream is still
+ * connected to a peer, this will wait up to the given timeout for additional
+ * data to appear.  If no data appears within the timeout period, then this returns
+ * the #OS_ERROR_TIMEOUT status code.  This allows the caller to differentiate
+ * an open (but idle) socket connection from a connection which has been closed
+ * by the remote peer.
+ *
+ * In all cases this will return successfully as soon as at least 1 byte of actual
+ * data is available.  It will not attempt to read the entire input buffer.
+ *
+ * If an EOF condition occurs prior to timeout, this function returns zero.
+ *
+ * @param[in]  filedes   The handle ID to operate on
+ * @param[out] buffer    Storage location for file data @nonnull
+ * @param[in]  nbytes    Maximum number of bytes to read @nonzero
+ * @param[in]  timeout   Maximum time to wait, in milliseconds, relative to current time (OS_PEND = forever)
  *
  * @returns Byte count on success or appropriate error code, see @ref OSReturnCodes
  * @retval #OS_ERROR_TIMEOUT if no data became available during timeout period
@@ -272,7 +314,42 @@ int32 OS_TimedRead(osal_id_t filedes, void *buffer, size_t nbytes, int32 timeout
  * @param[in] filedes   The handle ID to operate on
  * @param[in] buffer    Source location for file data @nonnull
  * @param[in] nbytes    Maximum number of bytes to read @nonzero
- * @param[in] timeout   Maximum time to wait, in milliseconds (OS_PEND = forever)
+ * @param[in] abstime   Absolute time at which this function should return, if no data is readable
+ *
+ * @return A non-negative byte count or appropriate error code, see @ref OSReturnCodes
+ * @retval #OS_ERROR_TIMEOUT if no data became available during timeout period
+ * @retval #OS_ERR_INVALID_ID if the file descriptor passed in is invalid
+ * @retval #OS_ERR_INVALID_SIZE if the passed-in size is not valid
+ * @retval #OS_INVALID_POINTER if the passed-in buffer is not valid
+ * @retval 0 if file/stream cannot accept any more data
+ */
+int32 OS_TimedWriteAbs(osal_id_t filedes, const void *buffer, size_t nbytes, OS_time_t abstime);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief File/Stream output write with a timeout
+ *
+ * This implements a time-limited write and is primarily intended for use with
+ * sockets but may also work with any other stream-like resource that the underlying
+ * OS supports.
+ *
+ * If output buffer space is immediately available on the file/socket, this will
+ * place data into the buffer and return the actual number of bytes that were
+ * queued for output.  It will not block.
+ *
+ * If no output buffer space is immediately available, this will wait up to the
+ * given timeout for space to become available.  If no space becomes available within
+ * the timeout period, then this returns an error code (not zero).
+ *
+ * In all cases this will return successfully as soon as at least 1 byte of actual
+ * data is output.  It will _not_ attempt to write the entire output buffer.
+ *
+ * If an EOF condition occurs prior to timeout, this function returns zero.
+ *
+ * @param[in] filedes   The handle ID to operate on
+ * @param[in] buffer    Source location for file data @nonnull
+ * @param[in] nbytes    Maximum number of bytes to read @nonzero
+ * @param[in] timeout   Maximum time to wait, in milliseconds, relative to current time (OS_PEND = forever)
  *
  * @return A non-negative byte count or appropriate error code, see @ref OSReturnCodes
  * @retval #OS_ERROR_TIMEOUT if no data became available during timeout period
@@ -282,6 +359,48 @@ int32 OS_TimedRead(osal_id_t filedes, void *buffer, size_t nbytes, int32 timeout
  * @retval 0 if file/stream cannot accept any more data
  */
 int32 OS_TimedWrite(osal_id_t filedes, const void *buffer, size_t nbytes, int32 timeout);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Pre-allocates space at the given file location
+ *
+ * Instructs the underlying OS/Filesystem to pre-allocate filesystem blocks
+ * for the given file location and length.  After this, future writes into the
+ * same file area will not fail due to lack of space.
+ *
+ * @param[in] filedes   The handle ID to operate on
+ * @param[in] offset    The offset within the file
+ * @param[in] len       The length of space to pre-allocate
+ *
+ * @note Some file systems do not implement this capability
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS @copybrief OS_SUCCESS @covtest
+ * @retval #OS_ERR_OUTPUT_TOO_LARGE if this would case the file to be too large
+ * @retval #OS_ERR_OPERATION_NOT_SUPPORTED if the filesystem does not support this
+ */
+int32 OS_FileAllocate(osal_id_t filedes, osal_offset_t offset, osal_offset_t len);
+
+/*-------------------------------------------------------------------------------------*/
+/**
+ * @brief Changes the size of the file
+ *
+ * This changes the size of the file on disk to the specified value.  It may either
+ * extend or truncate the file.
+ *
+ * @note No data is written to the extended file area when a file is grown using
+ * this API call.  Depending on the file system in use, data blocks may not be
+ * allocated at the same time (a sparse file).  Data blocks are allocated
+ * at the time file data is written into the extended area.
+ *
+ * @param[in] filedes   The handle ID to operate on
+ * @param[in] len       The desired length of the file
+ *
+ * @return Execution status, see @ref OSReturnCodes
+ * @retval #OS_SUCCESS @copybrief OS_SUCCESS @covtest
+ * @retval #OS_ERR_OUTPUT_TOO_LARGE if this would case the file to be too large
+ */
+int32 OS_FileTruncate(osal_id_t filedes, osal_offset_t len);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -334,7 +453,7 @@ int32 OS_stat(const char *path, os_fstat_t *filestats);
  * @retval #OS_ERR_INVALID_ID if the file descriptor passed in is invalid
  * @retval #OS_ERROR if OS call failed @covtest
  */
-int32 OS_lseek(osal_id_t filedes, int32 offset, uint32 whence);
+int32 OS_lseek(osal_id_t filedes, osal_offset_t offset, uint32 whence);
 
 /*-------------------------------------------------------------------------------------*/
 /**
@@ -377,7 +496,7 @@ int32 OS_remove(const char *path);
  * @return Execution status, see @ref OSReturnCodes
  * @retval #OS_SUCCESS @copybrief OS_SUCCESS
  * @retval #OS_ERROR if the file could not be opened or renamed.
- * @retval #OS_INVALID_POINTER if old or new are NULL
+ * @retval #OS_INVALID_POINTER if old_filename or new_filename are NULL
  * @retval #OS_FS_ERR_PATH_INVALID if path cannot be parsed
  * @retval #OS_FS_ERR_PATH_TOO_LONG if the paths given are too long to be stored locally
  * @retval #OS_FS_ERR_NAME_TOO_LONG if the new name is too long to be stored locally

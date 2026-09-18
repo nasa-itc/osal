@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -55,7 +55,7 @@
  * of lock keys.
  */
 #define OS_LOCK_KEY_FIXED_VALUE 0x4D000000
-#define OS_LOCK_KEY_INVALID     ((osal_key_t) {0})
+#define OS_LOCK_KEY_INVALID     ((osal_key_t) { 0 })
 
 /*
  * A structure containing the user-specified
@@ -65,7 +65,7 @@ typedef struct
 {
     osal_id_t        creator_id;
     OS_ArgCallback_t user_callback;
-    void *           user_arg;
+    void            *user_arg;
 } OS_creator_filter_t;
 
 /*
@@ -94,6 +94,7 @@ OS_common_record_t *const OS_global_queue_table     = &OS_common_table[OS_QUEUE_
 OS_common_record_t *const OS_global_bin_sem_table   = &OS_common_table[OS_BINSEM_BASE];
 OS_common_record_t *const OS_global_count_sem_table = &OS_common_table[OS_COUNTSEM_BASE];
 OS_common_record_t *const OS_global_mutex_table     = &OS_common_table[OS_MUTEX_BASE];
+OS_common_record_t *const OS_global_rwlock_table    = &OS_common_table[OS_RWLOCK_BASE];
 OS_common_record_t *const OS_global_stream_table    = &OS_common_table[OS_STREAM_BASE];
 OS_common_record_t *const OS_global_dir_table       = &OS_common_table[OS_DIR_BASE];
 OS_common_record_t *const OS_global_timebase_table  = &OS_common_table[OS_TIMEBASE_BASE];
@@ -141,6 +142,8 @@ uint32 OS_GetMaxForObjectType(osal_objtype_t idtype)
             return OS_MAX_COUNT_SEMAPHORES;
         case OS_OBJECT_TYPE_OS_MUTEX:
             return OS_MAX_MUTEXES;
+        case OS_OBJECT_TYPE_OS_RWLOCK:
+            return OS_MAX_RWLOCKS;
         case OS_OBJECT_TYPE_OS_STREAM:
             return OS_MAX_NUM_OPEN_FILES;
         case OS_OBJECT_TYPE_OS_DIR:
@@ -181,6 +184,8 @@ uint32 OS_GetBaseForObjectType(osal_objtype_t idtype)
             return OS_COUNTSEM_BASE;
         case OS_OBJECT_TYPE_OS_MUTEX:
             return OS_MUTEX_BASE;
+        case OS_OBJECT_TYPE_OS_RWLOCK:
+            return OS_RWLOCK_BASE;
         case OS_OBJECT_TYPE_OS_STREAM:
             return OS_STREAM_BASE;
         case OS_OBJECT_TYPE_OS_DIR:
@@ -221,8 +226,9 @@ bool OS_ForEachFilterCreator(void *ref, const OS_object_token_t *token, const OS
      * Check if the obj_id is both valid and matches
      * the specified creator_id
      */
-    return (OS_ObjectIdIsValid(obj->active_id) && (OS_ObjectIdEqual(filter->creator_id, OS_OBJECT_CREATOR_ANY) ||
-                                                   OS_ObjectIdEqual(obj->creator, filter->creator_id)));
+    return (OS_ObjectIdIsValid(obj->active_id)
+            && (OS_ObjectIdEqual(filter->creator_id, OS_OBJECT_CREATOR_ANY)
+                || OS_ObjectIdEqual(obj->creator, filter->creator_id)));
 }
 
 /*----------------------------------------------------------------
@@ -292,8 +298,8 @@ int32 OS_ObjectIdTransactionInit(OS_lock_mode_t lock_mode, osal_objtype_t idtype
     /*
      * Confirm that OSAL has been fully initialized before allowing any transactions
      */
-    if (OS_SharedGlobalVars.GlobalState != OS_INIT_MAGIC_NUMBER &&
-        OS_SharedGlobalVars.GlobalState != OS_SHUTDOWN_MAGIC_NUMBER)
+    if (OS_SharedGlobalVars.GlobalState != OS_INIT_MAGIC_NUMBER
+        && OS_SharedGlobalVars.GlobalState != OS_SHUTDOWN_MAGIC_NUMBER)
     {
         return OS_ERROR;
     }
@@ -595,9 +601,8 @@ int32 OS_ObjectIdFindNextFree(OS_object_token_t *token)
     OS_common_record_t *obj = NULL;
     OS_objtype_state_t *objtype_state;
 
-    base_id       = OS_GetBaseForObjectType(token->obj_type);
-    max_id        = OS_GetMaxForObjectType(token->obj_type);
-    objtype_state = &OS_objtype_state[token->obj_type];
+    base_id = OS_GetBaseForObjectType(token->obj_type);
+    max_id  = OS_GetMaxForObjectType(token->obj_type);
 
     if (max_id == 0)
     {
@@ -610,8 +615,9 @@ int32 OS_ObjectIdFindNextFree(OS_object_token_t *token)
     }
     else
     {
-        return_code = OS_ERR_NO_FREE_IDS;
-        serial      = OS_ObjectIdToSerialNumber_Impl(objtype_state->last_id_issued);
+        return_code   = OS_ERR_NO_FREE_IDS;
+        objtype_state = &OS_objtype_state[token->obj_type];
+        serial        = OS_ObjectIdToSerialNumber_Impl(objtype_state->last_id_issued);
     }
 
     for (i = 0; i < max_id; ++i)
@@ -712,7 +718,8 @@ void OS_Lock_Global(OS_object_token_t *token)
         {
             /* this is almost certainly a bug */
             OS_DEBUG("ERROR: global %u acquired by task 0x%lx when already assigned key 0x%lx\n",
-                     (unsigned int)token->obj_type, OS_ObjectIdToInteger(self_task_id),
+                     (unsigned int)token->obj_type,
+                     OS_ObjectIdToInteger(self_task_id),
                      (unsigned long)objtype->owner_key.key_value);
         }
         else
@@ -722,7 +729,8 @@ void OS_Lock_Global(OS_object_token_t *token)
     }
     else
     {
-        OS_DEBUG("ERROR: cannot lock global %u for mode %u\n", (unsigned int)token->obj_type,
+        OS_DEBUG("ERROR: cannot lock global %u for mode %u\n",
+                 (unsigned int)token->obj_type,
                  (unsigned int)token->lock_mode);
     }
 }
@@ -747,12 +755,13 @@ void OS_Unlock_Global(OS_object_token_t *token)
          * This is done before unlocking, while this has exclusive access
          * to the state object.
          */
-        if ((objtype->owner_key.key_value & 0xFF000000) != OS_LOCK_KEY_FIXED_VALUE ||
-            objtype->owner_key.key_value != token->lock_key.key_value)
+        if ((objtype->owner_key.key_value & 0xFF000000) != OS_LOCK_KEY_FIXED_VALUE
+            || objtype->owner_key.key_value != token->lock_key.key_value)
         {
             /* this is almost certainly a bug */
             OS_DEBUG("ERROR: global %u released using mismatched key=0x%lx expected=0x%lx\n",
-                     (unsigned int)token->obj_type, (unsigned long)token->lock_key.key_value,
+                     (unsigned int)token->obj_type,
+                     (unsigned long)token->lock_key.key_value,
                      (unsigned long)objtype->owner_key.key_value);
         }
 
@@ -763,7 +772,8 @@ void OS_Unlock_Global(OS_object_token_t *token)
     }
     else
     {
-        OS_DEBUG("ERROR: cannot unlock global %u for mode %u\n", (unsigned int)token->obj_type,
+        OS_DEBUG("ERROR: cannot unlock global %u for mode %u\n",
+                 (unsigned int)token->obj_type,
                  (unsigned int)token->lock_mode);
     }
 }
@@ -907,8 +917,11 @@ int32 OS_ObjectIdFinalizeDelete(int32 operation_status, OS_object_token_t *token
  *  returns: OS_ERR_NAME_NOT_FOUND if not found, OS_SUCCESS if match is found
  *
  *-----------------------------------------------------------------*/
-int32 OS_ObjectIdGetBySearch(OS_lock_mode_t lock_mode, osal_objtype_t idtype, OS_ObjectMatchFunc_t MatchFunc, void *arg,
-                             OS_object_token_t *token)
+int32 OS_ObjectIdGetBySearch(OS_lock_mode_t       lock_mode,
+                             osal_objtype_t       idtype,
+                             OS_ObjectMatchFunc_t MatchFunc,
+                             void                *arg,
+                             OS_object_token_t   *token)
 {
     int32 return_code;
 
@@ -1230,8 +1243,10 @@ void OS_ObjectIdTransferToken(OS_object_token_t *token_from, OS_object_token_t *
 
     Purpose: Start the process of iterating through OSAL objects
  ------------------------------------------------------------------*/
-int32 OS_ObjectIdIteratorInit(OS_ObjectMatchFunc_t matchfunc, void *matcharg, osal_objtype_t objtype,
-                              OS_object_iter_t *iter)
+int32 OS_ObjectIdIteratorInit(OS_ObjectMatchFunc_t matchfunc,
+                              void                *matcharg,
+                              osal_objtype_t       objtype,
+                              OS_object_iter_t    *iter)
 {
     iter->match = matchfunc;
     iter->arg   = matcharg;
@@ -1358,8 +1373,10 @@ void OS_ForEachObject(osal_id_t creator_id, OS_ArgCallback_t callback_ptr, void 
  *           See description in API and header file for detail
  *
  *-----------------------------------------------------------------*/
-void OS_ForEachObjectOfType(osal_objtype_t idtype, osal_id_t creator_id, OS_ArgCallback_t callback_ptr,
-                            void *callback_arg)
+void OS_ForEachObjectOfType(osal_objtype_t   objtype,
+                            osal_id_t        creator_id,
+                            OS_ArgCallback_t callback_ptr,
+                            void            *callback_arg)
 {
     OS_object_iter_t    iter;
     OS_creator_filter_t filter;
@@ -1368,7 +1385,7 @@ void OS_ForEachObjectOfType(osal_objtype_t idtype, osal_id_t creator_id, OS_ArgC
     filter.user_callback = callback_ptr;
     filter.user_arg      = callback_arg;
 
-    if (OS_ObjectIdIteratorInit(OS_ForEachFilterCreator, &filter, idtype, &iter) == OS_SUCCESS)
+    if (OS_ObjectIdIteratorInit(OS_ForEachFilterCreator, &filter, objtype, &iter) == OS_SUCCESS)
     {
         while (OS_ObjectIdIteratorGetNext(&iter))
         {

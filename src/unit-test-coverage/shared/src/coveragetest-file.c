@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -235,14 +235,15 @@ void Test_OS_rename(void)
 {
     /*
      * Test Case For:
-     * int32 OS_rename (const char *old, const char *new)
+     * int32 OS_rename(const char *old_filename, const char *new_filename)
      */
     OS_UT_SetupIterator(OS_OBJECT_TYPE_OS_STREAM, UT_INDEX_1, 3);
     strncpy(OS_stream_table[1].stream_name, "/cf/file1", sizeof(OS_stream_table[1].stream_name));
     OS_stream_table[2].socket_domain = OS_SocketDomain_INET;
     OSAPI_TEST_FUNCTION_RC(OS_rename("/cf/file1", "/cf/file2"), OS_SUCCESS);
     UtAssert_True(strcmp(OS_stream_table[1].stream_name, "/cf/file2") == 0,
-                  "OS_stream_table[1].stream_name (%s) == /cf/file2", OS_stream_table[1].stream_name);
+                  "OS_stream_table[1].stream_name (%s) == /cf/file2",
+                  OS_stream_table[1].stream_name);
 
     UT_SetDeferredRetcode(UT_KEY(OS_TranslatePath), 2, OS_ERROR);
     OSAPI_TEST_FUNCTION_RC(OS_rename("/cf/file1", "/cf/file2"), OS_ERROR);
@@ -318,6 +319,38 @@ void Test_OS_FDGetInfo(void)
 
     UT_SetDefaultReturnValue(UT_KEY(OS_ObjectIdGetById), OS_ERR_INVALID_ID);
     OSAPI_TEST_FUNCTION_RC(OS_FDGetInfo(UT_OBJID_1, &file_prop), OS_ERR_INVALID_ID);
+}
+
+void Test_OS_FileAllocate(void)
+{
+    /*
+     * Test Case For:
+     * int32 OS_FileAllocate(osal_id_t filedes, osal_offset_t offset, osal_offset_t len)
+     */
+
+    OSAPI_TEST_FUNCTION_RC(OS_FileAllocate(UT_OBJID_1, 0, 0), OS_SUCCESS);
+
+    UT_SetDefaultReturnValue(UT_KEY(OS_FileAllocate_Impl), OS_ERR_OUTPUT_TOO_LARGE);
+    OSAPI_TEST_FUNCTION_RC(OS_FileAllocate(UT_OBJID_1, 0, 0), OS_ERR_OUTPUT_TOO_LARGE);
+
+    UT_SetDefaultReturnValue(UT_KEY(OS_ObjectIdGetById), OS_ERR_INVALID_ID);
+    OSAPI_TEST_FUNCTION_RC(OS_FileAllocate(UT_OBJID_1, 0, 0), OS_ERR_INVALID_ID);
+}
+
+void Test_OS_FileTruncate(void)
+{
+    /*
+     * Test Case For:
+     * int32 OS_FileTruncate(osal_id_t filedes, osal_offset_t len);
+     */
+
+    OSAPI_TEST_FUNCTION_RC(OS_FileTruncate(UT_OBJID_1, 0), OS_SUCCESS);
+
+    UT_SetDefaultReturnValue(UT_KEY(OS_FileTruncate_Impl), OS_ERR_OUTPUT_TOO_LARGE);
+    OSAPI_TEST_FUNCTION_RC(OS_FileTruncate(UT_OBJID_1, 0), OS_ERR_OUTPUT_TOO_LARGE);
+
+    UT_SetDefaultReturnValue(UT_KEY(OS_ObjectIdGetById), OS_ERR_INVALID_ID);
+    OSAPI_TEST_FUNCTION_RC(OS_FileTruncate(UT_OBJID_1, 0), OS_ERR_INVALID_ID);
 }
 
 void Test_OS_FileOpenCheck(void)
@@ -397,7 +430,9 @@ void Osapi_Test_Setup(void)
  * Purpose:
  *   Called by the unit test tool to tear down the app after each test
  */
-void Osapi_Test_Teardown(void) {}
+void Osapi_Test_Teardown(void)
+{
+}
 
 /*
  * Register the test cases to execute with the unit test tool
@@ -411,6 +446,8 @@ void UtTest_Setup(void)
     ADD_TEST(OS_TimedWrite);
     ADD_TEST(OS_read);
     ADD_TEST(OS_write);
+    ADD_TEST(OS_FileTruncate);
+    ADD_TEST(OS_FileAllocate);
     ADD_TEST(OS_chmod);
     ADD_TEST(OS_stat);
     ADD_TEST(OS_lseek);

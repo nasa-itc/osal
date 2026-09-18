@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -30,13 +30,13 @@
  * Generated stub function for OS_SelectMultiple_Impl()
  * ----------------------------------------------------
  */
-int32 OS_SelectMultiple_Impl(OS_FdSet *ReadSet, OS_FdSet *WriteSet, int32 msecs)
+int32 OS_SelectMultiple_Impl(OS_FdSet *ReadSet, OS_FdSet *WriteSet, OS_time_t abs_timeout)
 {
     UT_GenStub_SetupReturnBuffer(OS_SelectMultiple_Impl, int32);
 
     UT_GenStub_AddParam(OS_SelectMultiple_Impl, OS_FdSet *, ReadSet);
     UT_GenStub_AddParam(OS_SelectMultiple_Impl, OS_FdSet *, WriteSet);
-    UT_GenStub_AddParam(OS_SelectMultiple_Impl, int32, msecs);
+    UT_GenStub_AddParam(OS_SelectMultiple_Impl, OS_time_t, abs_timeout);
 
     UT_GenStub_Execute(OS_SelectMultiple_Impl, Basic, NULL);
 
@@ -48,13 +48,13 @@ int32 OS_SelectMultiple_Impl(OS_FdSet *ReadSet, OS_FdSet *WriteSet, int32 msecs)
  * Generated stub function for OS_SelectSingle_Impl()
  * ----------------------------------------------------
  */
-int32 OS_SelectSingle_Impl(const OS_object_token_t *token, uint32 *SelectFlags, int32 msecs)
+int32 OS_SelectSingle_Impl(const OS_object_token_t *token, uint32 *SelectFlags, OS_time_t abs_timeout)
 {
     UT_GenStub_SetupReturnBuffer(OS_SelectSingle_Impl, int32);
 
     UT_GenStub_AddParam(OS_SelectSingle_Impl, const OS_object_token_t *, token);
     UT_GenStub_AddParam(OS_SelectSingle_Impl, uint32 *, SelectFlags);
-    UT_GenStub_AddParam(OS_SelectSingle_Impl, int32, msecs);
+    UT_GenStub_AddParam(OS_SelectSingle_Impl, OS_time_t, abs_timeout);
 
     UT_GenStub_Execute(OS_SelectSingle_Impl, Basic, NULL);
 

@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -47,7 +47,7 @@ OS_BSP_GenericLinuxGlobalData_t OS_BSP_GenericLinuxGlobal;
    --------------------------------------------------------- */
 void OS_BSP_Initialize(void)
 {
-    FILE *              fp;
+    FILE               *fp;
     char                buffer[32];
     pthread_mutexattr_t mutex_attr;
     int                 status;

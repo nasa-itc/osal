@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -85,7 +85,7 @@ int32 OS_ModuleLoad_Impl(const OS_object_token_t *token, const char *translated_
     fd = open(translated_path, O_RDONLY, 0);
     if (fd < 0)
     {
-        OS_DEBUG("OSAL: Error, cannot open application file: %s\n", translated_path);
+        OS_DEBUG("cannot open application file: %s\n", translated_path);
         return_code = OS_ERROR;
     }
     else
@@ -97,7 +97,7 @@ int32 OS_ModuleLoad_Impl(const OS_object_token_t *token, const char *translated_
 
         if (vxModuleId == (MODULE_ID)0)
         {
-            OS_DEBUG("OSAL: Error, cannot load module: %s\n", translated_path);
+            OS_DEBUG("cannot load module: %s\n", translated_path);
             return_code = OS_ERROR;
         }
         else

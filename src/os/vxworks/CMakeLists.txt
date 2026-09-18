@@ -28,12 +28,15 @@ set(VXWORKS_BASE_SRCLIST
 # Use portable blocks for basic I/O
 set(VXWORKS_IMPL_SRCLIST
     ../portable/os-impl-posix-gettime.c
+    ../portable/os-impl-posix-gettime-no-monotonic.c
     ../portable/os-impl-console-bsp.c
     ../portable/os-impl-bsd-select.c
     ../portable/os-impl-posix-io.c
     ../portable/os-impl-posix-files.c
     ../portable/os-impl-posix-dirs.c
     ../portable/os-impl-no-condvar.c
+    ../portable/os-impl-no-rwlock.c
+    ../portable/os-impl-no-file-allocate.c
 )
 
 if (OSAL_CONFIG_INCLUDE_SHELL)
@@ -67,12 +70,32 @@ if (OSAL_CONFIG_INCLUDE_NETWORK)
         ../portable/os-impl-bsd-sockets.c   # Use BSD socket layer implementation
         src/os-impl-sockets.c               # Additional vxworks-specific code to handle socket flags
     )
+    if (OSAL_CONFIG_INCLUDE_DNS)
+        list(APPEND VXWORKS_IMPL_SRCLIST
+            ../portable/os-impl-bsd-sockets-dns.c   # Use functions that invoke DNS
+        )
+    else (OSAL_CONFIG_INCLUDE_DNS)
+        list(APPEND VXWORKS_IMPL_SRCLIST
+            ../portable/os-impl-bsd-sockets-no-dns.c    # Use basic impl without DNS
+        )
+    endif(OSAL_CONFIG_INCLUDE_DNS)
 else()
     list(APPEND VXWORKS_IMPL_SRCLIST
         ../portable/os-impl-no-network.c    # non-implemented versions of all network APIs
         ../portable/os-impl-no-sockets.c    # non-implemented versions of all socket APIs
     )
 endif ()
+
+
+if (OSAL_CONFIG_MAX_CPUS GREATER 1)
+    list(APPEND VXWORKS_IMPL_SRCLIST
+        src/os-impl-pthread-affinity.c #    use the real affinity code
+    )
+else()
+    list(APPEND VXWORKS_IMPL_SRCLIST
+        ../portable/os-impl-pthread-no-affinity-np.c
+    )
+endif()
 
 # Defines an OBJECT target named "osal_vxworks_impl" with selected source files
 add_library(osal_vxworks_impl OBJECT

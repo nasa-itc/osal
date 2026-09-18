@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -29,19 +29,19 @@
 #define OSAL_CORE_TEST_H
 
 /* Task 0 */
-#define TASK_0_STACK_SIZE 1024
+#define TASK_0_STACK_SIZE 16384
 #define TASK_0_PRIORITY   230
 
 /* Task 1 */
-#define TASK_1_STACK_SIZE 1024
+#define TASK_1_STACK_SIZE 16384
 #define TASK_1_PRIORITY   231
 
 /* Task 2 */
-#define TASK_2_STACK_SIZE 1024
+#define TASK_2_STACK_SIZE 16384
 #define TASK_2_PRIORITY   232
 
 /* Task 3 */
-#define TASK_3_STACK_SIZE 1024
+#define TASK_3_STACK_SIZE 16384
 #define TASK_3_PRIORITY   233
 
 /* Global Data */

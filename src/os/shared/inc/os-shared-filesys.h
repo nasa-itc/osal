@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -84,13 +84,13 @@ enum
 
 typedef struct
 {
-    char device_name[OS_FS_DEV_NAME_LEN]; /**< The name of the underlying block device, if applicable */
-    char volume_name[OS_FS_VOL_NAME_LEN];
-    char system_mountpt[OS_MAX_LOCAL_PATH_LEN]; /**< The name/prefix where the contents are accessible in the host
-                                                   operating system */
-    char virtual_mountpt[OS_MAX_PATH_LEN]; /**< The name/prefix in the OSAL Virtual File system exposed to applications
-                                            */
-    char *            address;
+    char  device_name[OS_FS_DEV_NAME_LEN]; /**< The name of the underlying block device, if applicable */
+    char  volume_name[OS_FS_VOL_NAME_LEN];
+    char  system_mountpt[OS_MAX_LOCAL_PATH_LEN]; /**< The name/prefix where the contents are accessible in the host
+                                                    operating system */
+    char  virtual_mountpt[OS_MAX_PATH_LEN]; /**< The name/prefix in the OSAL Virtual File system exposed to applications
+                                             */
+    char *address;
     size_t            blocksize;
     osal_blockcount_t numblocks;
     uint8             flags;
@@ -179,8 +179,12 @@ int32 OS_FileSysUnmountVolume_Impl(const OS_object_token_t *token);
  */
 
 bool  OS_FileSys_FindVirtMountPoint(void *ref, const OS_object_token_t *token, const OS_common_record_t *obj);
-int32 OS_FileSys_Initialize(char *address, const char *fsdevname, const char *fsvolname, size_t blocksize,
-                            osal_blockcount_t numblocks, bool should_format);
+int32 OS_FileSys_Initialize(char             *address,
+                            const char       *fsdevname,
+                            const char       *fsvolname,
+                            size_t            blocksize,
+                            osal_blockcount_t numblocks,
+                            bool              should_format);
 bool  OS_FileSysFilterFree(void *ref, const OS_object_token_t *token, const OS_common_record_t *obj);
 
 #endif /* OS_SHARED_FILESYS_H */

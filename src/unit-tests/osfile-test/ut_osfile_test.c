@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -78,24 +78,23 @@ int32 UT_os_setup_fs()
     if (res != OS_SUCCESS)
     {
         UtPrintf("OS_mkfs() returns %d\n", (int)res);
-        goto UT_os_setup_fs_exit_tag;
     }
-
-    res = OS_mount(g_devName, g_mntName);
-    if (res != OS_SUCCESS)
+    else
     {
-        UtPrintf("OS_mount() returns %d\n", (int)res);
-        OS_rmfs(g_devName);
-        goto UT_os_setup_fs_exit_tag;
+        res = OS_mount(g_devName, g_mntName);
+        if (res != OS_SUCCESS)
+        {
+            UtPrintf("OS_mount() returns %d\n", (int)res);
+            OS_rmfs(g_devName);
+        }
     }
 
-UT_os_setup_fs_exit_tag:
     return res;
 }
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_teardown_fs()
+void UT_os_teardown_fs(void)
 {
     OS_unmount(g_mntName);
     OS_rmfs(g_devName);
@@ -103,7 +102,7 @@ void UT_os_teardown_fs()
 
 /*--------------------------------------------------------------------------------*/
 
-void UT_os_init_file_misc()
+void UT_os_init_file_misc(void)
 {
     memset(g_longPathName, 'Y', sizeof(g_longPathName));
     g_longPathName[0]                          = '/';

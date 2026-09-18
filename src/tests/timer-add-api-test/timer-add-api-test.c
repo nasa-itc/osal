@@ -1,7 +1,7 @@
 /************************************************************************
- * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ * NASA Docket No. GSC-19,200-1, and identified as "cFS Draco"
  *
- * Copyright (c) 2020 United States Government as represented by the
+ * Copyright (c) 2023 United States Government as represented by the
  * Administrator of the National Aeronautics and Space Administration.
  * All Rights Reserved.
  *
@@ -39,8 +39,8 @@
 
 OS_time_t StartTime;
 OS_time_t EndTime;
-uint32    TimerStart[NUMBER_OF_TIMERS]    = {1000, 2000000, 3000000, 4000000};
-uint32    TimerInterval[NUMBER_OF_TIMERS] = {500000, 400000, 800000, 600000};
+uint32    TimerStart[NUMBER_OF_TIMERS]    = { 1000, 2000000, 3000000, 4000000 };
+uint32    TimerInterval[NUMBER_OF_TIMERS] = { 500000, 400000, 800000, 600000 };
 
 uint32 TimerTestTaskStack[TASK_1_STACK_SIZE];
 uint32 timer_counter[NUMBER_OF_TIMERS];
@@ -51,7 +51,9 @@ void counter_func(osal_id_t timer_id, void *arg)
     ++(*counter);
 }
 
-void null_func(osal_id_t timer_id, void *arg) {}
+void null_func(osal_id_t timer_id, void *arg)
+{
+}
 
 /* *************************************** MAIN ************************************** */
 
@@ -59,7 +61,7 @@ void TestTimerAddApi(void)
 {
     /*
      * Test Case For:
-     * int32 OS_TimerAdd(uint32 *timer_id, const char *timer_name, uint32 timebase_ref_id, OS_ArgCallback_t
+     * int32 OS_TimerAdd(osal_id_t *timer_id, const char *timer_name, osal_id_t timebase_id, OS_ArgCallback_t
      * callback_ptr, void *callback_arg)
      */
 
@@ -71,7 +73,7 @@ void TestTimerAddApi(void)
     int32     TimerStatus[NUMBER_OF_TIMERS];
     osal_id_t TimerID[OS_MAX_TIMERS];
     char      temp_name[OS_MAX_API_NAME + 5];
-    char      TimerName[NUMBER_OF_TIMERS][20] = {"TIMER1", "TIMER2", "TIMER3", "TIMER4"};
+    char      TimerName[NUMBER_OF_TIMERS][20] = { "TIMER1", "TIMER2", "TIMER3", "TIMER4" };
     uint32    microsecs;
 
     /* Create and set the TimeBase obj and verify success */
@@ -147,7 +149,10 @@ void TestTimerAddApi(void)
 
     for (i = 0; i < NUMBER_OF_TIMERS; i++)
     {
-        UtAssert_True(TimerStatus[i] == OS_SUCCESS, "Timer %d delete RC=%d. Count total = %d", i, (int)TimerStatus[i],
+        UtAssert_True(TimerStatus[i] == OS_SUCCESS,
+                      "Timer %d delete RC=%d. Count total = %d",
+                      i,
+                      (int)TimerStatus[i],
                       (int)timer_counter[i]);
     }
 
