@@ -165,8 +165,32 @@ static void OS_FdSet_ConvertOut_Impl(fd_set *OS_set, OS_FdSet *OSAL_set)
  *          Actual implementation of select() call
  *          Used by SelectSingle and SelectMultiple implementations (below)
  *-----------------------------------------------------------------*/
-static int32 OS_DoSelect(int maxfd, fd_set *rd_set, fd_set *wr_set, int32 msecs)
+static int32 OS_DoSelect(int maxfd, fd_set *rd_set, fd_set *wr_set, OS_time_t abs_timeout)
 {
+    int32 msecs;
+    OS_time_t curr_time;
+
+    // Calculate the value of msecs to use below
+    if (OS_TimeEqual(abs_timeout, OS_TIME_MAX))
+    {
+        msecs = -1; //wait forever
+    }
+    else
+    {
+        OS_GetLocalTime(&curr_time);
+        curr_time = OS_TimeSubtract(abs_timeout, curr_time);
+    
+        if (OS_TimeGetSign(curr_time) <= 0)
+        {
+            msecs = 0; //Timeout is already past
+        }
+        else
+        {
+            msecs = (OS_TimeGetTotalSeconds(curr_time) * 1000) +
+                    (OS_TimeGetMicrosecondsPart(curr_time) / 1000);
+        }
+    }
+
     int             os_status;
     int32           return_code;
     struct timeval  tv;
@@ -255,7 +279,7 @@ static int32 OS_DoSelect(int maxfd, fd_set *rd_set, fd_set *wr_set, int32 msecs)
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_SelectSingle_Impl(const OS_object_token_t *token, uint32 *SelectFlags, int32 msecs)
+int32 OS_SelectSingle_Impl(const OS_object_token_t *token, uint32 *SelectFlags, OS_time_t abs_timeout)
 {
     int32                           return_code;
     fd_set                          wr_set;
@@ -292,7 +316,7 @@ int32 OS_SelectSingle_Impl(const OS_object_token_t *token, uint32 *SelectFlags, 
             FD_SET(impl->fd, &wr_set);
         }
 
-        return_code = OS_DoSelect(impl->fd, &rd_set, &wr_set, msecs);
+        return_code = OS_DoSelect(impl->fd, &rd_set, &wr_set, abs_timeout);
 
         if (return_code == OS_SUCCESS)
         {
@@ -325,7 +349,7 @@ int32 OS_SelectSingle_Impl(const OS_object_token_t *token, uint32 *SelectFlags, 
  *           See prototype for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 OS_SelectMultiple_Impl(OS_FdSet *ReadSet, OS_FdSet *WriteSet, int32 msecs)
+int32 OS_SelectMultiple_Impl(OS_FdSet *ReadSet, OS_FdSet *WriteSet, OS_time_t abs_timeout)
 {
     fd_set wr_set;
     fd_set rd_set;
@@ -354,7 +378,7 @@ int32 OS_SelectMultiple_Impl(OS_FdSet *ReadSet, OS_FdSet *WriteSet, int32 msecs)
 
     if (maxfd >= 0)
     {
-        return_code = OS_DoSelect(maxfd, &rd_set, &wr_set, msecs);
+        return_code = OS_DoSelect(maxfd, &rd_set, &wr_set, abs_timeout);
     }
     else
     {

@@ -65,7 +65,10 @@ endif ()
 if (OSAL_CONFIG_INCLUDE_NETWORK)
     list(APPEND NOS_IMPL_SRCLIST
         ../portable/os-impl-bsd-sockets.c   # Use BSD socket layer implementation
-        ../portable/os-impl-posix-network.c # Use POSIX-defined hostname/id implementation
+#        ../portable/os-impl-posix-network.c # Use POSIX-defined hostname/id implementation
+        ../portable/os-impl-posix-network-gethostname.c # Use POSIX-defined hostname implementation
+        ../portable/os-impl-posix-network-gethostid.c # Use POSIX-defined hostid implementation
+
     )
 else()
     list(APPEND NOS_IMPL_SRCLIST
