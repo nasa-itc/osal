@@ -73,7 +73,7 @@ int32 OS_GetLocalTime_Impl(OS_time_t *time_struct)
     int32           ReturnCode;
     struct timespec TimeSp;
 
-    Status = NOS_clock_gettime(OSAL_GETTIME_SOURCE_CLOCK, &TimeSp);
+    Status = NOS_clock_gettime(OSAL_GETTIME_LOCAL_CLOCK, &TimeSp);
 
     if (Status == 0)
     {
@@ -109,7 +109,7 @@ int32 OS_SetLocalTime_Impl(const OS_time_t *time_struct)
     TimeSp.tv_sec  = OS_TimeGetTotalSeconds(*time_struct);
     TimeSp.tv_nsec = OS_TimeGetNanosecondsPart(*time_struct);
 
-    Status = NOS_clock_settime(OSAL_GETTIME_SOURCE_CLOCK, &TimeSp);
+    Status = NOS_clock_settime(OSAL_GETTIME_LOCAL_CLOCK, &TimeSp);
 
     if (Status == 0)
     {
