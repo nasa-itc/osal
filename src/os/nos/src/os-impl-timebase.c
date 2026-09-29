@@ -362,7 +362,9 @@ int32 OS_TimeBaseCreate_Impl(const OS_object_token_t *token)
     }
 
     local->assigned_signal = 0;
+    /* Removing the references to 'softsleep' because it no longer exists in cFE 7.0.1
     NOS_clock_gettime(OS_PREFERRED_CLOCK, &local->softsleep);
+    */
 
     /*
      * Set up the necessary OS constructs
